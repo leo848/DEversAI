@@ -1,15 +1,10 @@
-oscar/
-**/target/
-**/node_modules
-wikidata/
-**/*.vocab
-**/*.dump
+node_modules
 
 # Output
-**/.output
-**/.vercel
-**/.svelte-kit
-**/build
+.output
+.vercel
+/.svelte-kit
+/build
 
 # OS
 .DS_Store
