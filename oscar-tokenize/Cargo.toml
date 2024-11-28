@@ -1,0 +1,17 @@
+[package]
+name = "oscar-tokenize"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "oscar_tokenize"
+path = "src/lib.rs"
+
+[dependencies]
+arrow = "53.3.0"
+derive_more = { version = "1.0.0", features = ["add", "add_assign", "sum", "constructor"] }
+indicatif = { version = "0.17.9", features = ["rayon"] }
+itertools = "0.13.0"
+progress_bar = "1.0.5"
+rayon = "1.10.0"
+threadpool = "1.8.1"

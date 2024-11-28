@@ -1,0 +1,6 @@
+oscar/
+**/target/
+**/node_modules/
+wikidata/
+**/*.vocab
+**/*.dump
