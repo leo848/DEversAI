@@ -1,22 +1,29 @@
-use indicatif::ProgressFinish;
 use std::{
+    fs,
     iter::Sum,
     mem,
+    path::Path,
     sync::{mpsc, Arc},
 };
 
-use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
+use indicatif::{ParallelProgressIterator, ProgressBar, ProgressFinish, ProgressStyle};
 use itertools::Itertools;
-use rayon::{iter::IntoParallelRefMutIterator, prelude::ParallelIterator, ThreadPoolBuilder};
+use rayon::{
+    iter::{IntoParallelRefIterator, IntoParallelRefMutIterator},
+    prelude::ParallelIterator,
+    ThreadPoolBuilder,
+};
 
 use crate::{config::TrainResult, Tokenizer};
 
 mod huggingface;
+mod wikipedia;
 
 use derive_more::derive::Constructor;
 pub use huggingface::{
     HuggingfaceShardDataset, HuggingfaceShardDatasetIter, HuggingfaceShardsDataset,
 };
+pub use wikipedia::WikipediaDataset;
 
 use crate::{BpeState, Count, Token, TokenHistogram, TrainConfig};
 
@@ -24,18 +31,18 @@ pub trait Dataset {
     type Iter: Send + DatasetIterator;
     fn iter(&self) -> Self::Iter;
 
-    fn train_step(&self, state: &mut BpeState, config: TrainConfig) -> TrainResult
+    fn train_step(&self, state: &mut BpeState, config: &TrainConfig) -> TrainResult
     where
         Self::Iter: 'static,
     {
-        const PARALLELISM: usize = 12;
+        let parallelism = num_cpus::get();
 
         let (tx, rx) = mpsc::channel::<TokenHistogram>();
-        let iterators = self.iter().split_work(PARALLELISM);
+        let iterators = self.iter().split_work(parallelism);
         let shared_state = Arc::new(mem::take(state));
 
         let threadpool = ThreadPoolBuilder::new()
-            .num_threads(PARALLELISM)
+            .num_threads(parallelism)
             .build()
             .expect("Fehler beim Erstellen des Threadpool");
 
@@ -73,9 +80,9 @@ pub trait Dataset {
         progress_bar.finish();
 
         *state = Arc::into_inner(shared_state).expect("Threads haben Ressourcen behalten");
-        println!("{}", total_histogram.display_with_state(&state));
+        println!("{}", total_histogram.display_with_state(state));
 
-        let merges_to_add = total_histogram.merges_to_add(config);
+        let merges_to_add = total_histogram.merges_to_add(config.eta.for_t(state.additional_vocab_size() as f64 / config.target_vocab_size as f64));
         let mut new_token_count = Count::default();
         for (left, right) in merges_to_add {
             if config.max_token_length.is_some_and(|length| {
@@ -87,7 +94,7 @@ pub trait Dataset {
 
             let count = total_histogram.get_pair(left, right);
             let [left, right, new_token] =
-                [left, right, new_token].map(|token| token.display_with_state(&state));
+                [left, right, new_token].map(|token| token.display_with_state(state));
 
             println!("{left:>10} + {right:<10} -> {new_token:<20} ({count})");
             new_token_count += 1;
@@ -167,7 +174,38 @@ impl Dataset for InMemoryDataset {
                     .template("Regeln werden angewandt: [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
         .expect("Ungültige Vorlage")
             })
-            .for_each(|chunk| *chunk = tokenizer.tokenize(&chunk).into());
+            .for_each(|chunk| *chunk = tokenizer.tokenize(chunk).into());
+    }
+}
+
+impl InMemoryDataset {
+    pub fn load_from_shards(shards: &[&(impl AsRef<Path> + Sync)], tokenizer: &Tokenizer) -> Self {
+        let progress_bar = ProgressBar::new(shards.len() as u64).with_style(
+            ProgressStyle::default_bar()
+                .template("Laden der Shards: {spinner} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
+                .expect("Ungültige Vorlage"),
+        );
+
+        let chunks: Vec<Arc<[Token]>> = shards
+            .par_iter() // Process shards in parallel
+            .progress_with(progress_bar.clone())
+            .flat_map(|path| {
+                let data = fs::read(path).ok()?; // Read shard as bytes, skip on error
+                Some(
+                    data.split(|&byte| byte == 0xFF) // Split by separator
+                        .filter(|chunk| !chunk.is_empty()) // Skip empty chunks
+                        .map(|chunk| {
+                            let tokens = tokenizer.tokenize_bytes(chunk);
+                            Arc::from(tokens.into_boxed_slice())
+                        })
+                        .collect::<Vec<_>>(),
+                )
+            })
+            .flatten() // Combine chunks across all shards
+            .collect();
+
+        progress_bar.finish_with_message("Laden abgeschlossen");
+        Self { chunks }
     }
 }
 

@@ -762,8 +762,12 @@ dependencies = [
  "derive_more",
  "indicatif",
  "itertools",
+ "num_cpus",
  "progress_bar",
  "rayon",
+ "regex",
+ "serde",
+ "serde_json",
  "threadpool",
 ]
 

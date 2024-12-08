@@ -8,7 +8,7 @@ use std::{
 
 use itertools::Itertools;
 
-use crate::{BpeState, Count, Token, TrainConfig};
+use crate::{BpeState, Count, Token};
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct TokenHistogram {
@@ -60,7 +60,7 @@ impl TokenHistogram {
         string
     }
 
-    pub fn merges_to_add(&self, config: TrainConfig) -> impl Iterator<Item = (Token, Token)> + '_ {
+    pub fn merges_to_add(&self, eta: f64) -> impl Iterator<Item = (Token, Token)> + '_ {
         #[derive(Default)]
         struct State {
             top_count: Option<NonZeroU64>,
@@ -96,7 +96,7 @@ impl TokenHistogram {
                 },
             )
             .flatten()
-            .take_while(move |&(_, _, factor)| factor >= config.eta)
+            .take_while(move |&(_, _, factor)| factor >= eta)
             .map(|(left, right, _)| (left, right))
     }
 

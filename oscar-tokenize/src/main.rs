@@ -4,35 +4,45 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::unnecessary_wraps)]
 
+use oscar_tokenize::EtaScheduler;
+use std::path::PathBuf;
 use std::time::Instant;
 
-use oscar_tokenize::{dataset::HuggingfaceShardsDataset, BpeState, Dataset, TrainConfig};
+use itertools::{chain, Itertools};
+use oscar_tokenize::{
+    dataset::InMemoryDataset,
+    BpeState, Dataset, TrainConfig,
+};
 
 fn main() {
-    let mut bpe_state = BpeState::synced_with_file("bpe-memory-eta-0-5.vocab");
+    let mut bpe_state = BpeState::synced_with_file("/output/german-complete.vocab");
 
-    print!("=== Vokabular ===");
-    for token in bpe_state.tokens() {
-        print!("{} ", token.display_with_state(&bpe_state));
-    }
-    println!();
+    // print!("=== Vokabular ===");
+    // for token in bpe_state.tokens() {
+    //     print!("{} ", token.display_with_state(&bpe_state));
+    // }
+    // println!();
 
-    let mut dataset = HuggingfaceShardsDataset::new(
-    "/home/l.blume/.cache/huggingface/datasets/oscar-corpus___oscar-2301/de-language=de/0.0.0/156efb8ba9f439f881d8f41fd7fddd5e04604bc27505c46ddef015f2fc551a4a/oscar-2301-train-{num}-of-{max}.arrow",
-        1383,
-        bpe_state.tokenizer()
-    ).to_memory(0..24);
+    let paths = chain(
+        (0..600).map(|i| format!("/data/oscar-2301-shard-{i:05}.bin")),
+        (0..23).map(|i| format!("/data/wikipedia-shard-{i:05}.bin")),
+    ).map(PathBuf::from).collect_vec();
+
+    let mut dataset = InMemoryDataset::load_from_shards(
+        &paths.iter().collect_vec(),
+        &bpe_state.tokenizer(),
+    );
 
     let config = TrainConfig {
-        eta: 0.5,
+        eta: EtaScheduler::piecewise_linear_two(0.5, [0.75, 0.75, 0.85]),
         max_token_length: None,
-        ..Default::default()
+        target_vocab_size: 60_000,
     };
 
     let start_time = Instant::now();
 
-    while bpe_state.additional_vocab_size() < 50_000 {
-        let result = dataset.train_step(&mut bpe_state, config);
+    loop {
+        let result = dataset.train_step(&mut bpe_state, &config);
 
         println!(
             "\n{new_token_count} Tokens nach {:?} hinzufügt",
@@ -40,6 +50,10 @@ fn main() {
             new_token_count = result.new_token_count,
         );
         println!("Neue Vokabulargröße: {}", bpe_state.additional_vocab_size());
+
+        if bpe_state.additional_vocab_size() > config.target_vocab_size {
+            break;
+        }
 
         let mut new_tokenizer = bpe_state.tokenizer();
         new_tokenizer.set_new(Some(result.new_token_count.into_inner() as usize));

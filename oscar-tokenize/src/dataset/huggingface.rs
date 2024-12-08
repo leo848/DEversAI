@@ -1,14 +1,14 @@
 use std::{
-    fs::File,
-    io::BufReader,
+    fs::{File, OpenOptions},
+    io::{BufReader, BufWriter, Write},
     ops::Range,
     path::{Path, PathBuf},
     sync::Arc,
 };
 
 use arrow::{array::StringArray, ipc::reader::StreamReader};
-use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle};
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
+use indicatif::{ParallelProgressIterator, ProgressStyle};
+use rayon::iter::{IndexedParallelIterator, IntoParallelIterator, ParallelIterator};
 
 use super::{Dataset, DatasetIterator, InMemoryDataset, VecDatasetIter};
 use crate::{Token, Tokenizer};
@@ -27,12 +27,28 @@ impl HuggingfaceShardDataset {
         }
     }
 
+    #[must_use]
     pub fn to_memory(self) -> InMemoryDataset {
         let mut chunks = Vec::with_capacity(128);
         self.iter().for_each_chunk(|chunk| {
             chunks.push(Arc::from(self.tokenizer.tokenize_bytes(chunk)));
         });
         InMemoryDataset::new(chunks)
+    }
+
+    pub fn to_disk(self, path: impl AsRef<Path>) {
+        let file = OpenOptions::new()
+            .create(true)
+            .truncate(true)
+            .write(true)
+            .open(path)
+            .expect("IO-Fehler");
+        let mut file = BufWriter::new(file);
+
+        self.iter().for_each_chunk(|chunk| {
+            file.write_all(chunk).expect("IO-Fehler");
+            file.write_all(&[0xFF]).expect("IO-Fehler");
+        });
     }
 }
 
@@ -62,7 +78,7 @@ pub struct HuggingfaceShardDatasetIter {
 
 impl HuggingfaceShardDatasetIter {
     fn for_each_chunk(self, mut f: impl FnMut(&[u8])) {
-        for batch in self.reader.into_iter() {
+        for batch in self.reader {
             let batch = batch.expect("to be okay");
             let batch = batch
                 .column(1)
@@ -83,11 +99,11 @@ impl DatasetIterator for HuggingfaceShardDatasetIter {
     fn for_each_token_pair(self, mut f: impl FnMut(Token, Token)) {
         let tokenizer = self.tokenizer.clone();
         self.for_each_chunk(|string| {
-            let tokenized = tokenizer.tokenize_bytes(string);
-            for pair in tokenized.windows(2) {
+            let tokens = tokenizer.tokenize_bytes(string);
+            for pair in tokens.windows(2) {
                 f(pair[0], pair[1]);
             }
-        })
+        });
     }
 }
 
@@ -119,6 +135,20 @@ impl HuggingfaceShardsDataset {
             .map(HuggingfaceShardDataset::to_memory)
             .progress_with_style(style)
             .sum()
+    }
+
+    pub fn to_disk(mut self, range: Range<usize>, format_string: &str) {
+        assert!(format_string.contains("{num}"));
+        let style = ProgressStyle::default_bar().template("Abspeichern der Datensätze: {spinner} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})").expect("Invalide Vorlage");
+        self.range = range;
+        self.iter()
+            .0
+            .into_par_iter()
+            .enumerate()
+            .progress_with_style(style)
+            .for_each(|(index, hsd)| {
+                hsd.to_disk(format_string.replace("{num}", &format!("{index:05}")));
+            });
     }
 }
 

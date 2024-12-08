@@ -57,6 +57,7 @@ impl Tokenizer {
         self.tokenize(&tokens)
     }
 
+    #[must_use]
     pub fn tokenize(&self, tokens: &[Token]) -> Vec<Token> {
         let mut tokens = tokens.to_vec();
         for &MergeRule {
