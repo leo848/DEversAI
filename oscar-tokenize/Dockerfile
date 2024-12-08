@@ -10,6 +10,7 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 
 WORKDIR /app
 RUN git clone https://github.com/leo848/DEversAI.git .
+RUN git pull
 
 WORKDIR /app/oscar-tokenize
 RUN cargo build --release
