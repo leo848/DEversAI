@@ -174,7 +174,7 @@ impl Dataset for InMemoryDataset {
                     .template("Regeln werden angewandt: [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
         .expect("Ungültige Vorlage")
             })
-            .for_each(|chunk| *chunk = tokenizer.tokenize(chunk).into());
+            .for_each(|chunk| *chunk = tokenizer.tokenize(&mem::take(chunk)).into());
     }
 }
 
