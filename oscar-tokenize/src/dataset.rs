@@ -3,7 +3,7 @@ use std::{
     iter::Sum,
     mem,
     path::Path,
-    sync::{mpsc, Arc},
+    sync::Arc,
 };
 
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressFinish, ProgressStyle};
@@ -37,7 +37,7 @@ pub trait Dataset {
     {
         let parallelism = num_cpus::get();
 
-        let (tx, rx) = mpsc::channel::<TokenHistogram>();
+        let (tx, rx) = crossbeam_channel::bounded::<TokenHistogram>(parallelism);
         let iterators = self.iter().split_work(parallelism);
         let shared_state = Arc::new(mem::take(state));
 
