@@ -109,6 +109,11 @@ impl TokenHistogram {
     }
 
     #[must_use]
+    pub fn len_pairs(&self) -> Count {
+        Count::new(self.token_pairs.len() as u64)
+    }
+
+    #[must_use]
     pub fn get_token(&self, token: Token) -> Count {
         self.tokens.get(token.index()).copied().unwrap_or_default()
     }
@@ -129,6 +134,7 @@ impl AddAssign for TokenHistogram {
             *self.token_pairs.entry(key).or_default() +=
                 rhs.token_pairs.get(&key).copied().unwrap_or_default();
         }
+        drop(rhs);
     }
 }
 
