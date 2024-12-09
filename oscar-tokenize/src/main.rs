@@ -28,6 +28,7 @@ fn main() {
         (0..23).map(|i| format!("/data/wikipedia-shard-{i:05}.bin")),
     ).map(PathBuf::from).collect_vec();
 
+    println!("Loading dataset from {} shards.", paths.len());
     let mut dataset = InMemoryDataset::load_from_shards(
         &paths.iter().collect_vec(),
         &bpe_state.tokenizer(),
@@ -42,6 +43,7 @@ fn main() {
     let start_time = Instant::now();
 
     loop {
+        println!("Starting next train step ({}/{})", bpe_state.additional_vocab_size(), config.target_vocab_size);
         let result = dataset.train_step(&mut bpe_state, &config);
 
         println!(
@@ -57,6 +59,9 @@ fn main() {
 
         let mut new_tokenizer = bpe_state.tokenizer();
         new_tokenizer.set_new(Some(result.new_token_count.into_inner() as usize));
+        println!("Updating tokenizer, tokenizing memory.");
         dataset.update_tokenizer(new_tokenizer);
     }
+
+    println!("Vocabulary fully trained. Manual filtering required next.")
 }
