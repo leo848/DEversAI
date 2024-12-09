@@ -17,11 +17,11 @@ use oscar_tokenize::{
 fn main() {
     let mut bpe_state = BpeState::synced_with_file("/output/german-complete.vocab");
 
-    // print!("=== Vokabular ===");
-    // for token in bpe_state.tokens() {
-    //     print!("{} ", token.display_with_state(&bpe_state));
-    // }
-    // println!();
+    println!("=== Vokabular ===\n");
+    for token in bpe_state.tokens() {
+        print!("{} ", token.display_with_state(&bpe_state));
+    }
+    println!();
 
     let paths = chain(
         (0..500).map(|i| format!("/data/oscar-2301-shard-{i:05}.bin")),
