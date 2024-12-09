@@ -15,4 +15,4 @@ RUN git pull
 WORKDIR /app/oscar-tokenize
 RUN cargo build --release
 
-CMD ["/bin/bash"]
+CMD ["cargo", "run", "--release"]
