@@ -17,5 +17,5 @@ pub use bpe_state::{BpeState, MergeRule};
 pub use config::{TrainConfig, EtaScheduler};
 pub use count::Count;
 pub use dataset::{Dataset, DatasetIterator};
-pub use histogram::TokenHistogram;
+pub use histogram::{TokenHistogram, TokenHistogramShared};
 pub use token::{Token, Tokenizer};
