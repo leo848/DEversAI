@@ -133,7 +133,7 @@ impl WikipediaDatasetIter {
         let newlines_normalized = SUPERFLUOUS_HEADINGS_RE.replace_all(&bullet_replaced, "\n\n");
 
         // format!("{string}\n\n")
-        format!("# {title}\n\n{newlines_normalized}")
+        format!("\n\n# {title}\n\n{newlines_normalized}")
     }
 }
 
