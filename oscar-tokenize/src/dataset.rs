@@ -74,7 +74,6 @@ pub trait Dataset {
         let mut total_histogram = TokenHistogram::new();
         let mut done_count = 0;
         for histogram in rx {
-            println!("histogram size = {}", histogram.len_pairs());
             total_histogram += histogram;
             done_count += 1;
             progress_bar.inc(1);
