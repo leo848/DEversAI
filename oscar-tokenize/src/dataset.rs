@@ -3,10 +3,10 @@ use std::{
     iter::Sum,
     mem,
     path::Path,
-    sync::{mpsc, Arc}
+    sync::{mpsc, Arc},
 };
 
-use indicatif::{ParallelProgressIterator, ProgressBar, ProgressFinish, ProgressStyle};
+use indicatif::{ParallelProgressIterator, ProgressBar, ProgressDrawTarget, ProgressFinish, ProgressStyle};
 use itertools::Itertools;
 use rayon::{
     iter::{IntoParallelRefIterator, IntoParallelRefMutIterator},
@@ -14,7 +14,7 @@ use rayon::{
     ThreadPoolBuilder,
 };
 
-use crate::{config::TrainResult, TokenHistogramShared, Tokenizer};
+use crate::{config::TrainResult, Tokenizer};
 
 mod huggingface;
 mod wikipedia;
@@ -25,7 +25,7 @@ pub use huggingface::{
 };
 pub use wikipedia::WikipediaDataset;
 
-use crate::{BpeState, Count, Token, TrainConfig};
+use crate::{BpeState, Count, Token, TokenHistogram, TrainConfig};
 
 pub trait Dataset {
     type Iter: Send + DatasetIterator;
@@ -38,6 +38,8 @@ pub trait Dataset {
         let parallelism = num_cpus::get();
 
         let iterators = self.iter().split_work(parallelism);
+        println!("{} iterators", iterators.len());
+
         let shared_state = Arc::new(mem::take(state));
 
         let threadpool = ThreadPoolBuilder::new()
@@ -52,39 +54,40 @@ pub trait Dataset {
         .unwrap()
             }
         }).with_finish(ProgressFinish::WithMessage("Zählen abgeschlossen".into()));
+        progress_bar.set_draw_target(ProgressDrawTarget::stdout());
 
-        let histogram_shared = TokenHistogramShared::new();
         let (tx, rx) = mpsc::channel();
 
         let total_count = iterators.len();
-        let mut done_count = 0;
-        threadpool.scope(|scope| {
-            let histogram_shared = &histogram_shared;
-            for token_iterator in iterators {
-                let tx = tx.clone();
-                scope.spawn(move |_scope| {
-                    token_iterator.for_each_token_pair(|token_left, token_right| {
-                        histogram_shared.register_pair(token_left, token_right);
-                        tx.send(()).expect("Channelfehler");
-                    });
+        for token_iterator in iterators {
+            let tx = tx.clone();
+            threadpool.spawn(move || {
+                let mut histogram = TokenHistogram::new();
+                token_iterator.for_each_token_pair(|token_left, token_right| {
+                    histogram.register_pair(token_left, token_right);
+                    histogram.register(token_left);
                 });
-            }
-        });
+                tx.send(histogram).expect("Fehler beim Senden");
+            });
+        }
 
-        for _ in rx {
-            println!("histogram size = {}", histogram_shared.len_pairs());
-            progress_bar.inc(1);
+        let mut total_histogram = TokenHistogram::new();
+        let mut done_count = 0;
+        for histogram in rx {
+            println!("histogram size = {}", histogram.len_pairs());
+            total_histogram += histogram;
             done_count += 1;
-            if done_count >= total_count {
+            progress_bar.inc(1);
+            if done_count == total_count {
                 break;
             }
         }
         progress_bar.finish();
 
         *state = Arc::into_inner(shared_state).expect("Threads haben Ressourcen behalten");
-        println!("{}", histogram_shared.display_with_state(state));
+        println!("{}", total_histogram.display_with_state(state));
 
-        let merges_to_add = histogram_shared.merges_to_add(config.eta.for_t(state.additional_vocab_size() as f64 / config.target_vocab_size as f64));
+        let merges_to_add = total_histogram.merges_to_add(config.eta.for_t(state.additional_vocab_size() as f64 / config.target_vocab_size as f64));
         let mut new_token_count = Count::default();
         for (left, right) in merges_to_add {
             if config.max_token_length.is_some_and(|length| {
@@ -94,7 +97,7 @@ pub trait Dataset {
             }
             let new_token = state.add_token(left, right);
 
-            let count = histogram_shared.get_pair(left, right);
+            let count = total_histogram.get_pair(left, right);
             let [left, right, new_token] =
                 [left, right, new_token].map(|token| token.display_with_state(state));
 
