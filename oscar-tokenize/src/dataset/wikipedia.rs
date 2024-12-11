@@ -1,4 +1,3 @@
-use regex::Match;
 use std::{
     fs,
     fs::{File, OpenOptions},
@@ -10,7 +9,7 @@ use std::{
 use indicatif::{ParallelProgressIterator, ProgressStyle};
 use itertools::Itertools;
 use rayon::iter::{IndexedParallelIterator, IntoParallelIterator, ParallelIterator};
-use regex::Regex;
+use regex::{Match, Regex};
 use serde::Deserialize;
 
 use super::{Dataset, DatasetIterator};
@@ -101,34 +100,42 @@ impl WikipediaDatasetIter {
 
     fn prepare_string(string: &str, title: &str) -> String {
         const EQUALS: [&str; 7] = ["", "=", "==", "===", "====", "=====", "======"];
-        static DUPLICATE_HEADING_RE: LazyLock<Regex> = LazyLock::new(|| {
-            Regex::new(r"= =").expect("Ungültiger regulärer Ausdruck")
-        });
+        static DUPLICATE_HEADING_RE: LazyLock<Regex> =
+            LazyLock::new(|| Regex::new(r"= =").expect("Ungültiger regulärer Ausdruck"));
         static HEADING_RE: LazyLock<Regex> = LazyLock::new(|| {
-            let base_regex = r"(?m)(?:\s|^)(?P<equals{n}>{n_e})\s(?P<title{n}>[^=]+?)(?:(?:\s{n_e})|\s*$)";
+            let base_regex =
+                r"(?m)(?:\s|^)(?P<equals{n}>{n_e})\s(?P<title{n}>[^=]+?)(?:(?:\s{n_e})|\s*$)";
             let regex = (2..=6)
-                .map(|n| base_regex.replace("{n_e}", EQUALS[n]).replace("{n}", &n.to_string()))
+                .map(|n| {
+                    base_regex
+                        .replace("{n_e}", EQUALS[n])
+                        .replace("{n}", &n.to_string())
+                })
                 .join("|");
             Regex::new(&regex).expect("Ungültiger regulärer Ausdruck")
         });
         static BULLET_RE: LazyLock<Regex> =
             LazyLock::new(|| Regex::new(r"\s\*+\s\*?\s?").expect("Ungültiger regulärer Ausdruck"));
-        static SUPERFLUOUS_HEADINGS_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\n{3,}").expect("Ungültiger regulärer Ausdruck"));
+        static SUPERFLUOUS_HEADINGS_RE: LazyLock<Regex> =
+            LazyLock::new(|| Regex::new(r"\n{3,}").expect("Ungültiger regulärer Ausdruck"));
 
         const HASHES: [&str; 7] = ["", "#", "##", "###", "####", "#####", "######"];
 
         let dupe_headings_replaced = DUPLICATE_HEADING_RE.replace_all(string, "=\n=");
-        let heading_replaced = HEADING_RE.replace_all(&dupe_headings_replaced, |caps: &regex::Captures| {
-            for n in 2..=6 {
-                let equals = &caps.name(&format!("equals{n}"));
-                let title = &caps.name(&format!("title{n}"));
-                let [Some(equals), Some(title)] = [equals, title] else { continue };
-                let [equals, section_title] = [equals, title].map(Match::as_str);
-                let hashes = HASHES[equals.len()];
-                return format!("\n\n{hashes} {section_title}\n\n")
-            }
-            unreachable!();
-        });
+        let heading_replaced =
+            HEADING_RE.replace_all(&dupe_headings_replaced, |caps: &regex::Captures| {
+                for n in 2..=6 {
+                    let equals = &caps.name(&format!("equals{n}"));
+                    let title = &caps.name(&format!("title{n}"));
+                    let [Some(equals), Some(title)] = [equals, title] else {
+                        continue;
+                    };
+                    let [equals, section_title] = [equals, title].map(Match::as_str);
+                    let hashes = HASHES[equals.len()];
+                    return format!("\n\n{hashes} {section_title}\n\n");
+                }
+                unreachable!();
+            });
         let bullet_replaced = BULLET_RE.replace_all(&heading_replaced, "\n- ");
         let newlines_normalized = SUPERFLUOUS_HEADINGS_RE.replace_all(&bullet_replaced, "\n\n");
 

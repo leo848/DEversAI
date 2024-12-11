@@ -4,15 +4,10 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::unnecessary_wraps)]
 
-use oscar_tokenize::EtaScheduler;
-use std::path::PathBuf;
-use std::time::Instant;
+use std::{path::PathBuf, time::Instant};
 
 use itertools::{chain, Itertools};
-use oscar_tokenize::{
-    dataset::InMemoryDataset,
-    BpeState, Dataset, TrainConfig,
-};
+use oscar_tokenize::{dataset::InMemoryDataset, BpeState, Dataset, EtaScheduler, TrainConfig};
 
 fn main() {
     let mut bpe_state = BpeState::synced_with_file("/output/german-complete.vocab");
@@ -23,19 +18,20 @@ fn main() {
     }
     println!();
 
-    let paths = chain(
-        (0..500).map(|i| format!("/data/oscar-2301-shard-{i:05}.bin")),
+    let paths = chain!(
+        (256..512).map(|i| format!("/data/oscar-2301-shard-{i:05}.bin")),
         (0..23).map(|i| format!("/data/wikipedia-shard-{i:05}.bin")),
-    ).map(PathBuf::from).collect_vec();
+        (0..23).map(|i| format!("/data/wikipedia-shard-{i:05}.bin")),
+    )
+    .map(PathBuf::from)
+    .collect_vec();
 
     println!("Loading dataset from {} shards.", paths.len());
-    let mut dataset = InMemoryDataset::load_from_shards(
-        &paths.iter().collect_vec(),
-        &bpe_state.tokenizer(),
-    );
+    let mut dataset =
+        InMemoryDataset::load_from_shards(&paths.iter().collect_vec(), &bpe_state.tokenizer());
 
     let config = TrainConfig {
-        eta: EtaScheduler::piecewise_linear_two(0.5, [0.75, 0.75, 0.85]),
+        eta: EtaScheduler::piecewise_linear_two(0.3, [0.8, 0.8, 0.9]),
         max_token_length: None,
         target_vocab_size: 60_000,
     };
@@ -43,7 +39,11 @@ fn main() {
     let start_time = Instant::now();
 
     loop {
-        println!("Starting next train step ({}/{})", bpe_state.additional_vocab_size(), config.target_vocab_size);
+        println!(
+            "Starting next train step ({}/{})",
+            bpe_state.additional_vocab_size(),
+            config.target_vocab_size
+        );
         let result = dataset.train_step(&mut bpe_state, &config);
 
         println!(

@@ -14,7 +14,7 @@ mod histogram;
 mod token;
 
 pub use bpe_state::{BpeState, MergeRule};
-pub use config::{TrainConfig, EtaScheduler};
+pub use config::{EtaScheduler, TrainConfig};
 pub use count::Count;
 pub use dataset::{Dataset, DatasetIterator};
 pub use histogram::{TokenHistogram, TokenHistogramShared};

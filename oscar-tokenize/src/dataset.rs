@@ -1,17 +1,12 @@
-use std::{
-    fs,
-    iter::Sum,
-    mem,
-    path::Path,
-    sync::{mpsc, Arc},
-};
+use std::{fs, iter::Sum, mem, path::Path, sync::Arc};
 
-use indicatif::{ParallelProgressIterator, ProgressBar, ProgressDrawTarget, ProgressFinish, ProgressStyle};
+use indicatif::{
+    ParallelProgressIterator, ProgressBar, ProgressDrawTarget, ProgressFinish, ProgressStyle,
+};
 use itertools::Itertools;
 use rayon::{
-    iter::{IntoParallelRefIterator, IntoParallelRefMutIterator},
+    iter::{IntoParallelIterator, IntoParallelRefIterator, IntoParallelRefMutIterator},
     prelude::ParallelIterator,
-    ThreadPoolBuilder,
 };
 
 use crate::{config::TrainResult, Tokenizer};
@@ -42,11 +37,6 @@ pub trait Dataset {
 
         let shared_state = Arc::new(mem::take(state));
 
-        let threadpool = ThreadPoolBuilder::new()
-            .num_threads(parallelism)
-            .build()
-            .expect("Fehler beim Erstellen des Threadpool");
-
         let progress_bar = ProgressBar::new(iterators.len() as u64).with_style({
             {
                 ProgressStyle::default_bar()
@@ -56,37 +46,31 @@ pub trait Dataset {
         }).with_finish(ProgressFinish::WithMessage("Zählen abgeschlossen".into()));
         progress_bar.set_draw_target(ProgressDrawTarget::stdout());
 
-        let (tx, rx) = mpsc::channel();
-
-        let total_count = iterators.len();
-        for token_iterator in iterators {
-            let tx = tx.clone();
-            threadpool.spawn(move || {
+        let total_histogram = iterators
+            .into_par_iter()
+            .map(|token_iterator| {
                 let mut histogram = TokenHistogram::new();
                 token_iterator.for_each_token_pair(|token_left, token_right| {
                     histogram.register_pair(token_left, token_right);
                     histogram.register(token_left);
                 });
-                tx.send(histogram).expect("Fehler beim Senden");
+                histogram
+            })
+            .reduce(TokenHistogram::new, |mut acc, h| {
+                acc += h;
+                progress_bar.inc(1);
+                acc
             });
-        }
-
-        let mut total_histogram = TokenHistogram::new();
-        let mut done_count = 0;
-        for histogram in rx {
-            total_histogram += histogram;
-            done_count += 1;
-            progress_bar.inc(1);
-            if done_count == total_count {
-                break;
-            }
-        }
         progress_bar.finish();
 
         *state = Arc::into_inner(shared_state).expect("Threads haben Ressourcen behalten");
         println!("{}", total_histogram.display_with_state(state));
 
-        let merges_to_add = total_histogram.merges_to_add(config.eta.for_t(state.additional_vocab_size() as f64 / config.target_vocab_size as f64));
+        let merges_to_add = total_histogram.merges_to_add(
+            config
+                .eta
+                .for_t(state.additional_vocab_size() as f64 / config.target_vocab_size as f64),
+        );
         let mut new_token_count = Count::default();
         for (left, right) in merges_to_add {
             if config.max_token_length.is_some_and(|length| {

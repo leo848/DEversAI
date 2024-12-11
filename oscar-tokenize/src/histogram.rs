@@ -151,7 +151,7 @@ impl Sum for TokenHistogram {
 
 #[derive(Clone)]
 pub struct TokenHistogramShared {
-    token_pairs: DashMap<(Token, Token), Count>
+    token_pairs: DashMap<(Token, Token), Count>,
 }
 impl TokenHistogramShared {
     #[must_use]
