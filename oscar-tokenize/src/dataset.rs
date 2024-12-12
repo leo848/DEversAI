@@ -168,7 +168,8 @@ impl Dataset for InMemoryDataset {
 
 impl InMemoryDataset {
     pub fn load_from_shards(shards: &[&(impl AsRef<Path> + Sync)], tokenizer: &Tokenizer) -> Self {
-        let progress_bar = ProgressBar::new(shards.len() as u64).with_style(
+        let heuristic_len = 42_000_000;
+        let progress_bar = ProgressBar::new(heuristic_len).with_style(
             ProgressStyle::default_bar()
                 .template("Laden der Shards: {spinner} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
                 .expect("Ungültige Vorlage"),
@@ -176,7 +177,6 @@ impl InMemoryDataset {
 
         let chunks: Vec<Arc<[Token]>> = shards
             .par_iter() // Process shards in parallel
-            .progress_with(progress_bar.clone())
             .flat_map(|path| {
                 let data = fs::read(path).ok()?; // Read shard as bytes, skip on error
                 Some(
@@ -189,6 +189,7 @@ impl InMemoryDataset {
                         .collect::<Vec<_>>(),
                 )
             })
+            .progress_with(progress_bar.clone())
             .flatten() // Combine chunks across all shards
             .collect();
 
