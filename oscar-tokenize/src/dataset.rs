@@ -184,12 +184,12 @@ impl InMemoryDataset {
                         .filter(|chunk| !chunk.is_empty()) // Skip empty chunks
                         .map(|chunk| {
                             let tokens = tokenizer.tokenize_bytes(chunk);
+                            progress_bar.inc(1);
                             Arc::from(tokens.into_boxed_slice())
                         })
                         .collect::<Vec<_>>(),
                 )
             })
-            .progress_with(progress_bar.clone())
             .flatten() // Combine chunks across all shards
             .collect();
 
