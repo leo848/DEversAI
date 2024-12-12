@@ -176,21 +176,19 @@ impl InMemoryDataset {
         );
 
         let chunks: Vec<Arc<[Token]>> = shards
-            .par_iter() // Process shards in parallel
+            .par_iter()
             .flat_map(|path| {
-                let data = fs::read(path).ok()?; // Read shard as bytes, skip on error
-                Some(
-                    data.split(|&byte| byte == 0xFF) // Split by separator
-                        .filter(|chunk| !chunk.is_empty()) // Skip empty chunks
-                        .map(|chunk| {
-                            let tokens = tokenizer.tokenize_bytes(chunk);
-                            progress_bar.inc(1);
-                            Arc::from(tokens.into_boxed_slice())
-                        })
-                        .collect::<Vec<_>>(),
-                )
+                let data = fs::read(path).ok(); // Read shard as bytes, skip on error
+                let token_chunks = data.unwrap_or_default().split(|&byte| byte == 0xFF) // Split by separator
+                    .filter(|chunk| !chunk.is_empty()) // Skip empty chunks
+                    .map(|chunk| {
+                        let tokens = tokenizer.tokenize_bytes(chunk);
+                        Arc::from(tokens.into_boxed_slice())
+                    })
+                    .collect::<Vec<_>>();
+                progress_bar.inc(token_chunks.len() as u64);
+                token_chunks
             })
-            .flatten() // Combine chunks across all shards
             .collect();
 
         progress_bar.finish_with_message("Laden abgeschlossen");
