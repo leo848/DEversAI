@@ -1,4 +1,4 @@
-import { injectSpeedInsights } from "@vercel/speed-insights";
+import { injectSpeedInsights } from '@vercel/speed-insights';
 
 export const ssr = false;
 

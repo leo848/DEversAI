@@ -17,4 +17,3 @@ export const clamp =
 	([min, max]: [number, number]) =>
 	(n: number) =>
 		n <= min ? min : n >= max ? max : n;
-

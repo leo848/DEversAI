@@ -3,7 +3,7 @@
 	import Icon from '@iconify/svelte';
 </script>
 
-<nav class="group/navbar w-20 transition-all duration-300 hover:w-64 min-h-[100vh]">
+<nav class="group/navbar min-h-[100vh] w-20 transition-all duration-300 hover:w-64">
 	<div class="fancy-gradient-bg flex h-full flex-col gap-4 overflow-hidden p-2">
 		{#each pages as page, index}
 			{@const extern = !page.link.startsWith('/')}

@@ -1,22 +1,22 @@
-import { Token } from "./token";
-import { assert } from "$lib/util/typed";
-import {chunks, chunksExact} from "$lib/util/array";
+import { Token } from './token';
+import { assert } from '$lib/util/typed';
+import { chunks, chunksExact } from '$lib/util/array';
 
 export interface BiSplit {
-	left: Token,
-	right: Token,
+	left: Token;
+	right: Token;
 }
 
 export interface MergeRule extends BiSplit {
-	result: Token,
+	result: Token;
 }
 
 export class Vocabulary {
-	mergeRules: MergeRule[]
-	tokens: Token[]
-	tokenValues: Uint8Array[]
-	displayStrings: string[]
-	unmergeRules: Map<Token, BiSplit | null>
+	mergeRules: MergeRule[];
+	tokens: Token[];
+	tokenValues: Uint8Array[];
+	displayStrings: string[];
+	unmergeRules: Map<Token, BiSplit | null>;
 
 	constructor(mergeRules: [number, number][]) {
 		this.displayStrings = [];
@@ -27,21 +27,24 @@ export class Vocabulary {
 
 		let tokenIndex = 0;
 		for (; tokenIndex < 256; tokenIndex++) {
-			this.tokens.push(new Token(tokenIndex, this))
+			this.tokens.push(new Token(tokenIndex, this));
 			this.tokenValues.push(new Uint8Array([tokenIndex]));
 			this.displayStrings.push(displayToken(this.tokenValues[tokenIndex], tokenIndex));
 			this.unmergeRules.set(this.tokens[tokenIndex], null);
 		}
 		for (const [left, right] of mergeRules) {
-			assert(left < tokenIndex && right < tokenIndex, "Merge rule on unknown token");
+			assert(left < tokenIndex && right < tokenIndex, 'Merge rule on unknown token');
 
-			this.tokens.push(new Token(tokenIndex, this))
+			this.tokens.push(new Token(tokenIndex, this));
 			this.mergeRules.push({
 				left: this.tokens[left],
 				right: this.tokens[right],
-				result: this.tokens[tokenIndex],
+				result: this.tokens[tokenIndex]
 			});
-			this.unmergeRules.set(this.tokens[tokenIndex], { left: this.tokens[left], right: this.tokens[right] })
+			this.unmergeRules.set(this.tokens[tokenIndex], {
+				left: this.tokens[left],
+				right: this.tokens[right]
+			});
 			this.tokenValues.push(mergeUintArrays(this.tokenValues[left], this.tokenValues[right]));
 			this.displayStrings.push(displayToken(this.tokenValues[tokenIndex], tokenIndex));
 			tokenIndex += 1;
@@ -82,7 +85,7 @@ function displayToken(value: Uint8Array, index: number): string {
 	try {
 		return decoder.decode(value);
 	} catch {
-		return `<${index}>`
+		return `<${index}>`;
 	}
 }
 

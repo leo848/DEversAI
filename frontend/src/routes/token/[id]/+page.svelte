@@ -3,10 +3,12 @@
 	import demoVocabulary from '$lib/tokenizing/demoVocabulary';
 	import Icon from '@iconify/svelte';
 	import { scale } from 'svelte/transition';
-	import {page} from '$app/stores';
-	import {goto} from '$app/navigation';
+	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
 
-	let tokenIndex = $state(+$page.params.id ?? Math.floor(Math.random() * demoVocabulary.tokens.length));
+	let tokenIndex = $state(
+		+$page.params.id ?? Math.floor(Math.random() * demoVocabulary.tokens.length)
+	);
 	const token = $derived(demoVocabulary.tokens[tokenIndex]);
 
 	let effectFlag = false;
@@ -15,15 +17,17 @@
 		if (newTokenIndex != tokenIndex) {
 			effectFlag = true;
 			tokenIndex = newTokenIndex;
-			goto(`/token/${newTokenIndex}`, { replaceState: false }).then(() => effectFlag = false);
+			goto(`/token/${newTokenIndex}`, { replaceState: false }).then(() => (effectFlag = false));
 		}
 	}
 
 	$effect(() => {
-		if ((+$page.params.id) != tokenIndex && !effectFlag) {
-			goto(`/token/${tokenIndex}`, { replaceState: false }).then(() => { tokenIndex = +$page.params.id });
+		if (+$page.params.id != tokenIndex && !effectFlag) {
+			goto(`/token/${tokenIndex}`, { replaceState: false }).then(() => {
+				tokenIndex = +$page.params.id;
+			});
 		}
-	})
+	});
 </script>
 
 <div class="m-4 xl:mx-16">
@@ -39,7 +43,13 @@
 		>
 			<div class="grow bg-gray-100 p-4 text-2xl" in:scale>
 				{#key tokenIndex}
-				<input class="bg-gray-100 border-none text-2xl max-w-16 m-0 p-0 focus:border-none" type="number" value={token.id()} in:scale onblur={e => setTokenIndex(+e.target!.value ?? tokenIndex)} />
+					<input
+						class="m-0 max-w-16 border-none bg-gray-100 p-0 text-2xl focus:border-none"
+						type="number"
+						value={token.id()}
+						in:scale
+						onblur={(e) => setTokenIndex(+e.target!.value ?? tokenIndex)}
+					/>
 				{/key}
 			</div>
 			<div class="flex flex-row justify-stretch">
@@ -58,5 +68,10 @@
 			</div>
 		</div>
 	</div>
-	<InverseBinaryTree onClick={d => setTokenIndex(d.id)} data={token.historyTree()} width={1200} dy={100} />
+	<InverseBinaryTree
+		onClick={(d) => setTokenIndex(d.id)}
+		data={token.historyTree()}
+		width={1200}
+		dy={100}
+	/>
 </div>
