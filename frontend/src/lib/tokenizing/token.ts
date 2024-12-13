@@ -32,7 +32,7 @@ export class Token {
 	}
 
 	toStringDebug() {
-		return this.toString().replaceAll(' ', '⎵');
+		return this.toString().replaceAll(' ', '⎵').replaceAll("\n", "\\n");
 	}
 
 	historyTree(): TokenHistory {
