@@ -7,7 +7,12 @@ export default {
 	content: ['./src/**/*.{html,js,svelte,ts}'],
 
 	theme: {
-		extend: {}
+		extend: {
+			fontFamily: {
+				"sans": ["Fira Sans", "Inter", "ui-sans", "sans", "system"],
+				"mono": ["ui-monospace", "SFMono-Regular", "IosevkaTermNerdFont", "Fira Code", "monospace"]
+			}
+		}
 	},
 
 	plugins: [typography, forms, containerQueries]

@@ -1,6 +1,8 @@
 <script lang="ts">
-</script>
+	import {goto} from "$app/navigation";
+	import demoVocabulary from "$lib/tokenizing/demoVocabulary";
 
-<div class="mx-16 m-4">
-	<div class="text-4xl font-bold">Token-Visualisierung</div>
-</div>
+	const randomToken = Math.floor(Math.random() * demoVocabulary.tokens.length);
+
+	goto(`/token/${randomToken}`, { replaceState: true })
+</script>
