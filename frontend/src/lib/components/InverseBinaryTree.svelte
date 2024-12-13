@@ -90,12 +90,12 @@
 						d3.HierarchyPointNode<TokenHistory>,
 						d3.HierarchyPointLink<TokenHistory>
 					>()
-					.x((p) => scaleX(d.source))
-					.y((p) => scaleY(d.source))(d)
+					.x((p) => scaleX(d.target))
+					.y((p) => scaleY(d.target))(d)
 			)
 			.merge(link)
 			.transition()
-			.duration(750)
+			.duration(1000)
 			.attr(
 				'd',
 				d3
