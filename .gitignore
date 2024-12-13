@@ -4,6 +4,7 @@ oscar/
 wikidata/
 **/*.vocab
 **/*.dump
+**/*base64.txt
 
 # Output
 **/.output
