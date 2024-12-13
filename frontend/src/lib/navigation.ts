@@ -1,53 +1,53 @@
 export const pages = [
 	{
-		title: "Startseite",
-		link: "/",
+		title: 'Startseite',
+		link: '/',
 		icon: {
-			icon: "cuida:home-outline",
+			icon: 'cuida:home-outline'
 		}
 	},
 	{
-		title: "Tokens",
-		link: "/token",
+		title: 'Tokens',
+		link: '/token',
 		icon: {
-			icon: "tabler:binary-tree-filled",
-			vFlip: true,
+			icon: 'tabler:binary-tree-filled',
+			vFlip: true
 		}
 	},
 	{
-		title: "Embedding-Raum",
-		link: "/token/embedding-space",
+		title: 'Embedding-Raum',
+		link: '/token/embedding-space',
 		icon: {
-			icon: "carbon:chart-3d",
+			icon: 'carbon:chart-3d'
 		}
 	},
 	{
-		title: "Statistiken",
-		link: "/statistics",
+		title: 'Statistiken',
+		link: '/statistics',
 		icon: {
-			icon: "oui:stats",
+			icon: 'oui:stats'
 		}
 	},
 	{
-		title: "Inferenz",
-		link: "/chat",
+		title: 'Inferenz',
+		link: '/chat',
 		icon: {
-			icon: "ri:ai-generate",
-			hFlip: true,
+			icon: 'ri:ai-generate',
+			hFlip: true
 		}
 	},
 	{
-		title: "Langfassung",
-		link: "https://example.com",
+		title: 'Langfassung',
+		link: 'https://example.com',
 		icon: {
-			icon: "fluent:document-arrow-down-24-regular",
+			icon: 'fluent:document-arrow-down-24-regular'
 		}
 	},
 	{
-		title: "Quelltext",
-		link: "https://github.com/leo848/DEversAI",
+		title: 'Quelltext',
+		link: 'https://github.com/leo848/DEversAI',
 		icon: {
-			icon: "humbleicons:code"
+			icon: 'humbleicons:code'
 		}
 	}
-]
+];
