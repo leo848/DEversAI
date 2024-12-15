@@ -13,6 +13,8 @@ use oscar_tokenize::{
 fn main() {
     let mut bpe_state = BpeState::synced_with_file("/output/german-complete.vocab");
 
+    dbg!(bpe_state.additional_vocab_size());
+
     let blacklist: &[&[u8]] = &[
         b"Cookies",
         b"Google",
