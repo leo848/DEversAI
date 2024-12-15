@@ -44,13 +44,13 @@ fn main() {
     let tokens_removed = bpe_state
         .tokens()
         .iter()
-        .filter(|&&token| {
+        .copied()
+        .filter(|&token| {
             sixteen_bytes(token)
                 || three_words(token)
                 || in_blacklist(token)
                 || two_words_at_end(token)
         })
-        .copied()
         .sorted_by_key(|token| usize::MAX - token.index());
 
     dbg!(tokens_removed.len());
