@@ -23,7 +23,8 @@ fn main() {
         b"Website ",
     ];
 
-    let word_regex = Regex::new(r"\s").expect("Ungültige RegEx");
+    let word_regex = Regex::new(r"[\f\n\r\t\v\u0020\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]").expect("Ungültige RegEx");
+
     let word_count = |token: Token| {
         word_regex
             .split(&token.display_with_state(&bpe_state).to_string())
