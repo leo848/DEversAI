@@ -55,6 +55,8 @@ fn main() {
         .copied()
         .sorted_by_key(|token| usize::MAX - token.index());
 
+    dbg!(tokens_removed.len());
+
     for token in tokens_removed {
         bpe_state.remove_token(token);
     }
