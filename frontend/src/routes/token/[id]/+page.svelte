@@ -88,9 +88,9 @@
 					<div class="flex flex-row flex-wrap gap-4">
 						{#each token.children[key] as child}
 							<div>
-								<div class="rounded-lg border-2 border-gray-200 bg-gray-100 p-1 font-mono">
+								<a class="inline-block rounded-lg border-2 border-gray-200 bg-gray-100 p-1 font-mono" href={`/token/${child.id()}`}>
 									{child.toStringDebug()}
-								</div>
+								</a>
 							</div>
 						{/each}
 					</div>
