@@ -13,6 +13,11 @@ impl Token {
         self.0.into()
     }
 
+    #[must_use]
+    pub fn into_inner(self) -> u16 {
+        self.0
+    }
+
     #[allow(dead_code)]
     #[must_use]
     pub fn display_with_state(self, state: &'_ BpeState) -> impl Display + '_ {

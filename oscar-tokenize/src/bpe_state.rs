@@ -60,6 +60,25 @@ impl BpeState {
         new_token
     }
 
+    pub fn remove_token(&mut self, token: Token) {
+        assert!(self.vocab.get(token.index()).is_some(), "Token is not contained in this vocabulary");
+        assert!(!self.merges.iter().any(|rule| rule.left == token || rule.right == token), "Token is used in further merge rules");
+        let index = token.index();
+        self.vocab.remove(index); // O(n)
+        self.merges.remove(index - 256);
+        for merge in &mut self.merges {
+            if merge.left.index() > index {
+                merge.left = Token::new(merge.left.into_inner() - 1)
+            }
+            if merge.right.index() > index {
+                merge.right = Token::new(merge.right.into_inner() - 1)
+            }
+            if merge.result.index() > index {
+                merge.result = Token::new(merge.result.into_inner() - 1)
+            }
+        }
+    }
+
     /// # Panics
     /// Panics if the provided file is not in the following format:
     /// Each line must contain exactly three base-10 positive integers < 65536,
