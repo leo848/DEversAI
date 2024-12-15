@@ -13,7 +13,7 @@ use oscar_tokenize::{
 fn main() {
     let mut bpe_state = BpeState::synced_with_file("/output/german-complete.vocab");
 
-    dbg!(bpe_state.additional_vocab_size());
+    dbg!(bpe_state.additional_vocab_size() + 256);
 
     let blacklist: &[&[u8]] = &[
         b"Cookies",
@@ -53,7 +53,7 @@ fn main() {
         })
         .sorted_by_key(|token| usize::MAX - token.index());
 
-    dbg!(tokens_removed.len());
+    dbg!(tokens_removed.len() + 256);
 
     for token in tokens_removed {
         bpe_state.remove_token(token);
