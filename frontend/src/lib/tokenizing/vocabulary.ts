@@ -14,40 +14,27 @@ export interface MergeRule extends BiSplit {
 export class Vocabulary {
 	mergeRules: MergeRule[];
 	tokens: Token[];
-	tokenValues: Uint8Array[];
-	displayStrings: string[];
-	unmergeRules: Map<Token, BiSplit | null>;
 
 	constructor(mergeRules: [number, number][]) {
-		this.displayStrings = [];
-		this.tokenValues = [];
 		this.tokens = [];
 		this.mergeRules = [];
-		this.unmergeRules = new Map();
 
-		let tokenIndex = 0;
-		for (; tokenIndex < 256; tokenIndex++) {
-			this.tokens.push(new Token(tokenIndex, this));
-			this.tokenValues.push(new Uint8Array([tokenIndex]));
-			this.displayStrings.push(displayToken(this.tokenValues[tokenIndex], tokenIndex));
-			this.unmergeRules.set(this.tokens[tokenIndex], null);
+		while (this.tokens.length < 256) {
+			const token = this.mintByteToken();
+			token.composition = null;
 		}
-		for (const [left, right] of mergeRules) {
-			assert(left < tokenIndex && right < tokenIndex, 'Merge rule on unknown token');
+		for (const [leftIndex, rightIndex] of mergeRules) {
+			assert(leftIndex < this.tokens.length && rightIndex < this.tokens.length, 'Merge rule on unknown token');
+			
+			const [left, right] = [leftIndex, rightIndex].map(index => this.tokens[index]);
+			const token = this.mintMergedToken(left, right);
+			token.composition = { left, right };
 
-			this.tokens.push(new Token(tokenIndex, this));
 			this.mergeRules.push({
-				left: this.tokens[left],
-				right: this.tokens[right],
-				result: this.tokens[tokenIndex]
+				left,
+				right,
+				result: token
 			});
-			this.unmergeRules.set(this.tokens[tokenIndex], {
-				left: this.tokens[left],
-				right: this.tokens[right]
-			});
-			this.tokenValues.push(mergeUintArrays(this.tokenValues[left], this.tokenValues[right]));
-			this.displayStrings.push(displayToken(this.tokenValues[tokenIndex], tokenIndex));
-			tokenIndex += 1;
 		}
 	}
 
@@ -78,14 +65,25 @@ export class Vocabulary {
 		const tokenPairs = chunksExact([...base64ToUint16Array(base64)], 2);
 		return new Vocabulary(tokenPairs);
 	}
-}
 
-function displayToken(value: Uint8Array, index: number): string {
-	const decoder = new TextDecoder();
-	try {
-		return decoder.decode(value);
-	} catch {
-		return `<${index}>`;
+	mintByteToken(): Token {
+		const token = new Token(
+			this.tokens.length,
+			new Uint8Array([this.tokens.length]),
+			this
+		)
+		this.tokens.push(token);
+		return token;
+	}
+
+	mintMergedToken(left: Token, right: Token): Token {
+		const token = new Token(
+			this.tokens.length,
+			mergeUintArrays(left.value, right.value),
+			this
+		);
+		this.tokens.push(token);
+		return token;
 	}
 }
 

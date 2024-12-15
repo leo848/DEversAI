@@ -95,7 +95,8 @@
 			)
 			.merge(link)
 			.transition()
-			.duration(1000)
+			.delay(250)
+			.duration(750)
 			.attr(
 				'd',
 				d3

@@ -1,5 +1,5 @@
 import { assert } from '$lib/util/typed';
-import { Vocabulary } from './vocabulary';
+import { Vocabulary, type BiSplit } from './vocabulary';
 
 export type TokenHistory = {
 	name: string;
@@ -9,14 +9,22 @@ export type TokenHistory = {
 
 export class Token {
 	index: number;
+
+	value: Uint8Array;
+	displayString: string;
+	composition: BiSplit | null;
+
 	vocab?: Vocabulary;
 
-	constructor(index: number, vocab?: Vocabulary) {
+	constructor(index: number, value: Uint8Array, vocab?: Vocabulary) {
 		if (vocab) {
 			assert(!vocab.tokens[index], `Token already exists: <${index}>`);
 		}
 		this.index = index;
+		this.value = value;
 		this.vocab = vocab;
+		this.displayString = displayToken(this.value, this.index)
+		this.composition = null;
 	}
 
 	id() {
@@ -24,11 +32,7 @@ export class Token {
 	}
 
 	toString() {
-		if (this.vocab) {
-			return this.vocab.displayStrings[this.index];
-		} else {
-			return `<${this.index}>`;
-		}
+		return this.displayString;
 	}
 
 	toStringDebug() {
@@ -37,7 +41,7 @@ export class Token {
 
 	historyTree(): TokenHistory {
 		assert(this.vocab, 'No vocabulary for token');
-		const result = this.vocab.unmergeRules.get(this);
+		const result = this.composition;
 		const children =
 			result == null ? undefined : [result.left.historyTree(), result.right.historyTree()];
 		return {
@@ -47,3 +51,13 @@ export class Token {
 		};
 	}
 }
+
+function displayToken(value: Uint8Array, index: number): string {
+	const decoder = new TextDecoder();
+	try {
+		return decoder.decode(value);
+	} catch {
+		return `<${index}>`;
+	}
+}
+

@@ -1,15 +1,15 @@
 <script lang="ts">
 	import InverseBinaryTree from '$lib/components/InverseBinaryTree.svelte';
-	import demoVocabulary from '$lib/tokenizing/demoVocabulary';
+	import vocabulary from '$lib/tokenizing/preVocabulary';
 	import Icon from '@iconify/svelte';
 	import { scale } from 'svelte/transition';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 
 	let tokenIndex = $state(
-		+$page.params.id ?? Math.floor(Math.random() * demoVocabulary.tokens.length)
+		+$page.params.id ?? Math.floor(Math.random() * vocabulary.tokens.length)
 	);
-	const token = $derived(demoVocabulary.tokens[tokenIndex]);
+	const token = $derived(vocabulary.tokens[tokenIndex]);
 
 	let effectFlag = false;
 
