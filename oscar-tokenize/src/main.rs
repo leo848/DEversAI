@@ -60,8 +60,9 @@ fn main() {
     dbg!(tokens_removed.len() + 256);
 
     for token in tokens_removed {
-        bpe_state.remove_token(token);
+        bpe_state.remove_token_unsynced(token);
     }
+    bpe_state.sync();
 
     for token in bpe_state.tokens() {
         println!("{}", token.display_with_state(&bpe_state));

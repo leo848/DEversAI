@@ -61,7 +61,7 @@ impl BpeState {
         new_token
     }
 
-    pub fn remove_token(&mut self, token: Token) {
+    pub fn remove_token_unsynced(&mut self, token: Token) {
         assert!(
             self.vocab.get(token.index()).is_some(),
             "Token is not contained in this vocabulary"
@@ -87,6 +87,9 @@ impl BpeState {
                 merge.result = Token::new(merge.result.into_inner() - 1)
             }
         }
+    }
+
+    pub fn sync(&mut self) {
         self.file.set_len(0).expect("Could not reset file");
         self.file.seek(SeekFrom::Start(0)).expect("Could not seek file");
 
@@ -100,6 +103,7 @@ impl BpeState {
             )
             .expect("IO-Fehler");
         }
+
     }
 
     /// # Panics
