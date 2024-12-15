@@ -1,6 +1,7 @@
+use std::io::SeekFrom;
 use std::{
     fs::{self, File, OpenOptions},
-    io::Write,
+    io::{Seek, Write},
     path::Path,
     str::FromStr,
 };
@@ -85,6 +86,19 @@ impl BpeState {
             if merge.result.index() > index {
                 merge.result = Token::new(merge.result.into_inner() - 1)
             }
+        }
+        self.file.set_len(0).expect("Could not reset file");
+        self.file.seek(SeekFrom::Start(0)).expect("Could not seek file");
+
+        for MergeRule { left, right, result: new_token } in &self.merges {
+            writeln!(
+                self.file,
+                "{} {} {}",
+                left.index(),
+                right.index(),
+                new_token.index()
+            )
+            .expect("IO-Fehler");
         }
     }
 
