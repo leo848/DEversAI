@@ -9,8 +9,8 @@ export default {
 	theme: {
 		extend: {
 			fontFamily: {
-				"sans": ["Fira Sans", "Inter", "ui-sans", "sans", "system"],
-				"mono": ["ui-monospace", "SFMono-Regular", "IosevkaTermNerdFont", "Fira Code", "monospace"]
+				sans: ['Fira Sans', 'Inter', 'ui-sans', 'sans', 'system'],
+				mono: ['ui-monospace', 'SFMono-Regular', 'IosevkaTermNerdFont', 'Fira Code', 'monospace']
 			}
 		}
 	},

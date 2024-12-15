@@ -2,7 +2,7 @@ import { Token } from './token';
 import { assert } from '$lib/util/typed';
 import { chunks, chunksExact } from '$lib/util/array';
 
-export interface BiSplit<T=Token> {
+export interface BiSplit<T = Token> {
 	left: T;
 	right: T;
 }
@@ -24,14 +24,16 @@ export class Vocabulary {
 			token.composition = null;
 		}
 		for (const [leftIndex, rightIndex] of mergeRules) {
-			assert(leftIndex < this.tokens.length && rightIndex < this.tokens.length, 'Merge rule on unknown token');
-			
-			const [left, right] = [leftIndex, rightIndex].map(index => this.tokens[index]);
+			assert(
+				leftIndex < this.tokens.length && rightIndex < this.tokens.length,
+				'Merge rule on unknown token'
+			);
+
+			const [left, right] = [leftIndex, rightIndex].map((index) => this.tokens[index]);
 			const token = this.mintMergedToken(left, right);
 			token.composition = { left, right };
 			left.children.left.push(token);
 			right.children.right.push(token);
-
 
 			this.mergeRules.push({
 				left,
@@ -70,21 +72,13 @@ export class Vocabulary {
 	}
 
 	mintByteToken(): Token {
-		const token = new Token(
-			this.tokens.length,
-			new Uint8Array([this.tokens.length]),
-			this
-		)
+		const token = new Token(this.tokens.length, new Uint8Array([this.tokens.length]), this);
 		this.tokens.push(token);
 		return token;
 	}
 
 	mintMergedToken(left: Token, right: Token): Token {
-		const token = new Token(
-			this.tokens.length,
-			mergeUintArrays(left.value, right.value),
-			this
-		);
+		const token = new Token(this.tokens.length, mergeUintArrays(left.value, right.value), this);
 		this.tokens.push(token);
 		return token;
 	}

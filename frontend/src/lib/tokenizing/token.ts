@@ -24,9 +24,9 @@ export class Token {
 		this.index = index;
 		this.value = value;
 		this.vocab = vocab;
-		this.displayString = displayToken(this.value, this.index)
+		this.displayString = displayToken(this.value, this.index);
 		this.composition = null;
-		this.children = { left: [], right: [] }
+		this.children = { left: [], right: [] };
 	}
 
 	id() {
@@ -38,7 +38,7 @@ export class Token {
 	}
 
 	toStringDebug() {
-		return this.toString().replaceAll(' ', '⎵').replaceAll("\n", "\\n");
+		return this.toString().replaceAll(' ', '⎵').replaceAll('\n', '\\n');
 	}
 
 	historyTree(): TokenHistory {
@@ -62,4 +62,3 @@ function displayToken(value: Uint8Array, index: number): string {
 		return `<${index}>`;
 	}
 }
-

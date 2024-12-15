@@ -6,9 +6,7 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 
-	let tokenIndex = $state(
-		+$page.params.id ?? Math.floor(Math.random() * vocabulary.tokens.length)
-	);
+	let tokenIndex = $state(+$page.params.id ?? Math.floor(Math.random() * vocabulary.tokens.length));
 	const token = $derived(vocabulary.tokens[tokenIndex]);
 
 	let effectFlag = false;
@@ -30,7 +28,7 @@
 	});
 </script>
 
-<div class="m-4 xl:mx-16 flex flex-col gap-8">
+<div class="m-4 flex flex-col gap-8 xl:mx-16">
 	<div class="text-4xl font-bold">Token-Visualisierung</div>
 	<div class="flex flex-row justify-between">
 		{#key tokenIndex}
@@ -55,14 +53,14 @@
 			<div class="flex flex-row justify-stretch">
 				<button
 					class="flex grow flex-row justify-center bg-gray-200 transition-all hover:bg-gray-300 active:bg-gray-400 disabled:text-gray-500"
-	 				disabled={tokenIndex == 0}
+					disabled={tokenIndex == 0}
 					onclick={() => setTokenIndex(tokenIndex - 1)}
 				>
 					<Icon icon="bxs:left-arrow" width="2rem" />
 				</button>
 				<button
 					class="flex grow flex-row justify-center bg-gray-200 transition-all hover:bg-gray-300 active:bg-gray-400 disabled:text-gray-500"
-	 				disabled={tokenIndex == vocabulary.tokens.length - 1}
+					disabled={tokenIndex == vocabulary.tokens.length - 1}
 					onclick={() => setTokenIndex(tokenIndex + 1)}
 				>
 					<Icon icon="bxs:right-arrow" width="2rem" />
@@ -70,7 +68,7 @@
 			</div>
 		</div>
 	</div>
-	<div class="border border-2 border-gray-200 p-4 rounded-xl">
+	<div class="rounded-xl border border-2 border-gray-200 p-4">
 		<div class="text-2xl">Stammbaum</div>
 		<InverseBinaryTree
 			onClick={(d) => setTokenIndex(d.id)}
@@ -79,16 +77,20 @@
 			dy={100}
 		/>
 	</div>
-	<div class="border border-2 border-gray-200 p-4 rounded-xl flex flex-col gap-4">
+	<div class="flex flex-col gap-4 rounded-xl border border-2 border-gray-200 p-4">
 		<div class="text-2xl">Kinder</div>
 		<div class="grid grid-cols-2 gap-8">
-			{#each (["left", "right"] as const) as key}
+			{#each ['left', 'right'] as const as key}
 				<div class="flex flex-col gap-2">
-					<div class="text-xl">{({left:"Links",right:"Rechts"}[key])} ({token.children[key].length})</div>
+					<div class="text-xl">
+						{({ left: 'Links', right: 'Rechts' })[key]} ({token.children[key].length})
+					</div>
 					<div class="flex flex-row flex-wrap gap-4">
 						{#each token.children[key] as child}
 							<div>
-								<div class="rounded-lg border-2 border-gray-200 bg-gray-100 p-1 font-mono">{child.toStringDebug()}</div>
+								<div class="rounded-lg border-2 border-gray-200 bg-gray-100 p-1 font-mono">
+									{child.toStringDebug()}
+								</div>
 							</div>
 						{/each}
 					</div>
