@@ -18,6 +18,11 @@ impl Token {
         self.0
     }
 
+    #[must_use]
+    pub fn to_string_raw(self, state: &'_ BpeState) -> impl Display + '_ {
+        String::from_utf8_lossy(state.at_token(self))
+    }
+
     #[allow(dead_code)]
     #[must_use]
     pub fn display_with_state(self, state: &'_ BpeState) -> impl Display + '_ {

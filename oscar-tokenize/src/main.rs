@@ -25,7 +25,7 @@ fn main() {
 
     let word_count = |token: Token| {
         token
-            .display_with_state(&bpe_state)
+            .to_string_raw(&bpe_state)
             .to_string()
             .split_whitespace()
             .filter(|m| m.len() != 0)
