@@ -2,9 +2,9 @@ import { Token } from './token';
 import { assert } from '$lib/util/typed';
 import { chunks, chunksExact } from '$lib/util/array';
 
-export interface BiSplit {
-	left: Token;
-	right: Token;
+export interface BiSplit<T=Token> {
+	left: T;
+	right: T;
 }
 
 export interface MergeRule extends BiSplit {
@@ -29,6 +29,9 @@ export class Vocabulary {
 			const [left, right] = [leftIndex, rightIndex].map(index => this.tokens[index]);
 			const token = this.mintMergedToken(left, right);
 			token.composition = { left, right };
+			left.children.left.push(token);
+			right.children.right.push(token);
+
 
 			this.mergeRules.push({
 				left,

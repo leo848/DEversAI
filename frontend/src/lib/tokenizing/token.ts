@@ -13,6 +13,7 @@ export class Token {
 	value: Uint8Array;
 	displayString: string;
 	composition: BiSplit | null;
+	children: BiSplit<Token[]>;
 
 	vocab?: Vocabulary;
 
@@ -25,6 +26,7 @@ export class Token {
 		this.vocab = vocab;
 		this.displayString = displayToken(this.value, this.index)
 		this.composition = null;
+		this.children = { left: [], right: [] }
 	}
 
 	id() {

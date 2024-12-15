@@ -79,7 +79,21 @@
 			dy={100}
 		/>
 	</div>
-	<div class="border border-2 border-gray-200 p-4 rounded-xl">
+	<div class="border border-2 border-gray-200 p-4 rounded-xl flex flex-col gap-4">
 		<div class="text-2xl">Kinder</div>
+		<div class="grid grid-cols-2 gap-8">
+			{#each (["left", "right"] as const) as key}
+				<div class="flex flex-col gap-2">
+					<div class="text-xl">{({left:"Links",right:"Rechts"}[key])} ({token.children[key].length})</div>
+					<div class="flex flex-row flex-wrap gap-4">
+						{#each token.children[key] as child}
+							<div>
+								<div class="rounded-lg border-2 border-gray-200 bg-gray-100 p-1 font-mono">{child.toStringDebug()}</div>
+							</div>
+						{/each}
+					</div>
+				</div>
+			{/each}
+		</div>
 	</div>
 </div>
