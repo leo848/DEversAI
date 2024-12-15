@@ -14,7 +14,7 @@ use regex::Regex;
 fn main() {
     let mut bpe_state = BpeState::synced_with_file("/output/german-complete.vocab");
 
-    dbg!(bpe_state.additional_vocab_size() + 256);
+    dbg!(bpe_state.additional_vocab_size());
 
     let space_regex = Regex::new(r"\s").expect("Could not build regex");
 
@@ -57,7 +57,7 @@ fn main() {
         })
         .sorted_by_key(|token| usize::MAX - token.index());
 
-    dbg!(tokens_removed.len() + 256);
+    dbg!(tokens_removed.len());
 
     for token in tokens_removed {
         bpe_state.remove_token_unsynced(token);
