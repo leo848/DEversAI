@@ -10,8 +10,6 @@ use itertools::{chain, Itertools};
 use oscar_tokenize::{
     dataset::InMemoryDataset, BpeState, Dataset, EtaScheduler, Token, TrainConfig,
 };
-use regex::Regex;
-
 fn main() {
     let mut bpe_state = BpeState::synced_with_file("/output/german-complete.vocab");
 
@@ -23,11 +21,8 @@ fn main() {
         b"Website ",
     ];
 
-    let word_regex = Regex::new(r"[\f\n\r\t\v\u0020\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]").expect("Ungültige RegEx");
-
     let word_count = |token: Token| {
-        word_regex
-            .split(&token.display_with_state(&bpe_state).to_string())
+        token.display_with_state(&bpe_state).to_string().split_whitespace()
             .filter(|m| m.len() != 0)
             .count()
     };
