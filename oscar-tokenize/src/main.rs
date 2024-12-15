@@ -60,7 +60,7 @@ fn main() {
     }
 
     for token in bpe_state.tokens() {
-        println!("{}", token.display_with_state(&bpe_state));
+        // println!("{}", token.display_with_state(&bpe_state));
     }
     dbg!(bpe_state.additional_vocab_size());
 }
