@@ -24,7 +24,10 @@ fn main() {
     ];
 
     let word_count = |token: Token| {
-        token.display_with_state(&bpe_state).to_string().split_whitespace()
+        token
+            .display_with_state(&bpe_state)
+            .to_string()
+            .split_whitespace()
             .filter(|m| m.len() != 0)
             .count()
     };
@@ -46,10 +49,10 @@ fn main() {
         .iter()
         .copied()
         .filter(|&token| {
-            sixteen_bytes(token)
-                // || three_words(token)
-                // || in_blacklist(token)
-                // || two_words_at_end(token)
+            // sixteen_bytes(token)
+            three_words(token)
+            // || in_blacklist(token)
+            // || two_words_at_end(token)
         })
         .sorted_by_key(|token| usize::MAX - token.index());
 
