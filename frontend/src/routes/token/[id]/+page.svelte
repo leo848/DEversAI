@@ -1,6 +1,6 @@
 <script lang="ts">
 	import InverseBinaryTree from '$lib/components/InverseBinaryTree.svelte';
-	import vocabulary from '$lib/tokenizing/preVocabulary';
+	import vocabulary from '$lib/tokenizing/german50000';
 	import Icon from '@iconify/svelte';
 	import { scale } from 'svelte/transition';
 	import { page } from '$app/stores';
@@ -55,12 +55,14 @@
 			<div class="flex flex-row justify-stretch">
 				<button
 					class="flex grow flex-row justify-center bg-gray-200 transition-all hover:bg-gray-300 active:bg-gray-400"
+	 				disabled={tokenIndex == 0}
 					onclick={() => setTokenIndex(tokenIndex - 1)}
 				>
 					<Icon icon="bxs:left-arrow" width="2rem" />
 				</button>
 				<button
 					class="flex grow flex-row justify-center bg-gray-200 transition-all hover:bg-gray-300 active:bg-gray-400"
+	 				disabled={tokenIndex == vocabulary.tokens.length - 1}
 					onclick={() => setTokenIndex(tokenIndex + 1)}
 				>
 					<Icon icon="bxs:right-arrow" width="2rem" />
