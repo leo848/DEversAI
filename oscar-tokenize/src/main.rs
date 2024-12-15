@@ -10,10 +10,13 @@ use itertools::{chain, Itertools};
 use oscar_tokenize::{
     dataset::InMemoryDataset, BpeState, Dataset, EtaScheduler, Token, TrainConfig,
 };
+use regex::Regex;
 fn main() {
     let mut bpe_state = BpeState::synced_with_file("/output/german-complete.vocab");
 
     dbg!(bpe_state.additional_vocab_size() + 256);
+
+    let space_regex = Regex::new(r"\s").expect("Could not build regex");
 
     let blacklist: &[&[u8]] = &[
         b"Cookies",
@@ -24,10 +27,7 @@ fn main() {
     ];
 
     let word_count = |token: Token| {
-        token
-            .to_string_raw(&bpe_state)
-            .to_string()
-            .split_whitespace()
+        space_regex.split(&token.to_string_raw(&bpe_state).to_string())
             .filter(|m| m.len() != 0)
             .count()
     };
