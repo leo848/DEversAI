@@ -47,9 +47,9 @@ fn main() {
         .copied()
         .filter(|&token| {
             sixteen_bytes(token)
-                || three_words(token)
-                || in_blacklist(token)
-                || two_words_at_end(token)
+                // || three_words(token)
+                // || in_blacklist(token)
+                // || two_words_at_end(token)
         })
         .sorted_by_key(|token| usize::MAX - token.index());
 
