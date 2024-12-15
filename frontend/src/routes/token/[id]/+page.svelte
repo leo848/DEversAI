@@ -30,8 +30,8 @@
 	});
 </script>
 
-<div class="m-4 xl:mx-16">
-	<div class="my-8 text-4xl font-bold">Token-Visualisierung</div>
+<div class="m-4 xl:mx-16 flex flex-col gap-8">
+	<div class="text-4xl font-bold">Token-Visualisierung</div>
 	<div class="flex flex-row justify-between">
 		{#key tokenIndex}
 			<div class="rounded-xl border-4 border-gray-200 bg-gray-100 p-4 font-mono text-6xl" in:scale>
@@ -70,10 +70,16 @@
 			</div>
 		</div>
 	</div>
-	<InverseBinaryTree
-		onClick={(d) => setTokenIndex(d.id)}
-		data={token.historyTree()}
-		width={1200}
-		dy={100}
-	/>
+	<div class="border border-2 border-gray-200 p-4 rounded-xl">
+		<div class="text-2xl">Stammbaum</div>
+		<InverseBinaryTree
+			onClick={(d) => setTokenIndex(d.id)}
+			data={token.historyTree()}
+			width={1200}
+			dy={100}
+		/>
+	</div>
+	<div class="border border-2 border-gray-200 p-4 rounded-xl">
+		<div class="text-2xl">Kinder</div>
+	</div>
 </div>
