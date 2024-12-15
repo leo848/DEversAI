@@ -179,7 +179,9 @@ impl InMemoryDataset {
             .par_iter()
             .flat_map(|path| {
                 let data = fs::read(path).ok(); // Read shard as bytes, skip on error
-                let token_chunks = data.unwrap_or_default().split(|&byte| byte == 0xFF) // Split by separator
+                let token_chunks = data
+                    .unwrap_or_default()
+                    .split(|&byte| byte == 0xFF) // Split by separator
                     .filter(|chunk| !chunk.is_empty()) // Skip empty chunks
                     .map(|chunk| {
                         let tokens = tokenizer.tokenize_bytes(chunk);

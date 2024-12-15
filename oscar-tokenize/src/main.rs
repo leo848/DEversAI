@@ -4,29 +4,53 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::unnecessary_wraps)]
 
-use oscar_tokenize::Token;
 use std::{path::PathBuf, time::Instant};
 
 use itertools::{chain, Itertools};
-use oscar_tokenize::{dataset::InMemoryDataset, BpeState, Dataset, EtaScheduler, TrainConfig};
+use oscar_tokenize::{
+    dataset::InMemoryDataset, BpeState, Dataset, EtaScheduler, Token, TrainConfig,
+};
+use regex::Regex;
 
 fn main() {
     let mut bpe_state = BpeState::synced_with_file("/output/german-complete.vocab");
 
-    let blacklist: &[&[u8]] = &[b"Cookies", b"Google", b"Facebook", "Datenschutzerklärung".as_bytes(), b"Website "];
+    let blacklist: &[&[u8]] = &[
+        b"Cookies",
+        b"Google",
+        b"Facebook",
+        "Datenschutzerklärung".as_bytes(),
+        b"Website ",
+    ];
 
-    let word_count = |token| bpe_state.at_token(token).split(|&byte| byte == b' ' || byte == b'\n').count();
+    let word_regex = Regex::new(r"\s").expect("Ungültige RegEx");
+    let word_count = |token: Token| {
+        word_regex
+            .split(&token.display_with_state(&bpe_state).to_string())
+            .filter(|m| m.len() != 0)
+            .count()
+    };
 
     let sixteen_bytes = |token| bpe_state.at_token(token).len() >= 16;
     let three_words = |token| word_count(token) >= 3;
-    let in_blacklist = |token| blacklist.iter().any(|&term| bpe_state.at_token(token).windows(term.len()).any(|window| window == term));
+    let in_blacklist = |token| {
+        blacklist.iter().any(|&term| {
+            bpe_state
+                .at_token(token)
+                .windows(term.len())
+                .any(|window| window == term)
+        })
+    };
     let two_words_at_end = |token: Token| token.index() >= 40530 && word_count(token) >= 2;
 
     let tokens_removed = bpe_state
         .tokens()
         .iter()
         .filter(|&&token| {
-            sixteen_bytes(token) || three_words(token) || in_blacklist(token) || two_words_at_end(token)
+            sixteen_bytes(token)
+                || three_words(token)
+                || in_blacklist(token)
+                || two_words_at_end(token)
         })
         .copied()
         .sorted_by_key(|token| usize::MAX - token.index());

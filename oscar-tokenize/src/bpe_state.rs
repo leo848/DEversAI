@@ -61,8 +61,17 @@ impl BpeState {
     }
 
     pub fn remove_token(&mut self, token: Token) {
-        assert!(self.vocab.get(token.index()).is_some(), "Token is not contained in this vocabulary");
-        assert!(!self.merges.iter().any(|rule| rule.left == token || rule.right == token), "Token is used in further merge rules");
+        assert!(
+            self.vocab.get(token.index()).is_some(),
+            "Token is not contained in this vocabulary"
+        );
+        assert!(
+            !self
+                .merges
+                .iter()
+                .any(|rule| rule.left == token || rule.right == token),
+            "Token is used in further merge rules"
+        );
         let index = token.index();
         self.vocab.remove(index); // O(n)
         self.merges.remove(index - 256);
