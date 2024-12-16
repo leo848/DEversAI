@@ -6,26 +6,14 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 
-	let tokenIndex = $state(+$page.params.id ?? Math.floor(Math.random() * vocabulary.tokens.length));
+	const tokenIndex = $derived(+$page.params.id);
 	const token = $derived(vocabulary.tokens[tokenIndex]);
-
-	let effectFlag = false;
 
 	function setTokenIndex(newTokenIndex: number) {
 		if (newTokenIndex != tokenIndex) {
-			effectFlag = true;
-			tokenIndex = newTokenIndex;
-			goto(`/token/${newTokenIndex}`, { replaceState: false }).then(() => (effectFlag = false));
+			goto(`/token/${newTokenIndex}`, { replaceState: false });
 		}
 	}
-
-	$effect(() => {
-		if (+$page.params.id != tokenIndex && !effectFlag) {
-			goto(`/token/${tokenIndex}`, { replaceState: false }).then(() => {
-				tokenIndex = +$page.params.id;
-			});
-		}
-	});
 </script>
 
 <div class="m-4 flex flex-col gap-8 xl:mx-16">
@@ -83,12 +71,15 @@
 			{#each ['left', 'right'] as const as key}
 				<div class="flex flex-col gap-2">
 					<div class="text-xl">
-						{({ left: 'Links', right: 'Rechts' })[key]} ({token.children[key].length})
+						{(() => ({ left: 'Links', right: 'Rechts' }))()[key]} ({token.children[key].length})
 					</div>
 					<div class="flex flex-row flex-wrap gap-4">
 						{#each token.children[key] as child}
 							<div>
-								<a class="inline-block rounded-lg border-2 border-gray-200 bg-gray-100 p-1 font-mono" href={`/token/${child.id()}`}>
+								<a
+									class="inline-block rounded-lg border-2 border-gray-200 bg-gray-100 p-1 font-mono"
+									href={`/token/${child.id()}`}
+								>
 									{child.toStringDebug()}
 								</a>
 							</div>
