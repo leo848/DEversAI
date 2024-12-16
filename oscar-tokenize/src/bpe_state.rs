@@ -1,7 +1,6 @@
-use std::io::SeekFrom;
 use std::{
     fs::{self, File, OpenOptions},
-    io::{Seek, Write},
+    io::{Seek, SeekFrom, Write},
     path::Path,
     str::FromStr,
 };
@@ -91,9 +90,16 @@ impl BpeState {
 
     pub fn sync(&mut self) {
         self.file.set_len(0).expect("Could not reset file");
-        self.file.seek(SeekFrom::Start(0)).expect("Could not seek file");
+        self.file
+            .seek(SeekFrom::Start(0))
+            .expect("Could not seek file");
 
-        for MergeRule { left, right, result: new_token } in &self.merges {
+        for MergeRule {
+            left,
+            right,
+            result: new_token,
+        } in &self.merges
+        {
             writeln!(
                 self.file,
                 "{} {} {}",
@@ -103,7 +109,6 @@ impl BpeState {
             )
             .expect("IO-Fehler");
         }
-
     }
 
     /// # Panics

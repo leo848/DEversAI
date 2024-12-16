@@ -4,14 +4,58 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::unnecessary_wraps)]
 
-use std::{path::PathBuf, time::Instant};
+use std::{
+    fs::{self, OpenOptions},
+    io::{BufWriter, Write},
+    path::PathBuf,
+    time::Instant,
+};
 
+use indicatif::{ParallelProgressIterator, ProgressStyle};
 use itertools::{chain, Itertools};
 use oscar_tokenize::{
     dataset::InMemoryDataset, BpeState, Dataset, EtaScheduler, Token, TrainConfig,
 };
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use regex::Regex;
-fn main() {
+
+pub fn main() {
+    let bpe_state = BpeState::synced_with_file("/vocab/german-complete.vocab");
+
+    let paths = chain!(
+        (0..600).map(|i| format!("oscar-2301-shard-{i:05}.bin")),
+        (0..23).map(|i| format!("wikipedia-shard-{i:05}.bin")),
+    )
+    .map(PathBuf::from)
+    .collect_vec();
+
+    paths
+        .into_par_iter()
+        .progress_with_style({
+                ProgressStyle::default_bar()
+                    .template("Tokenizing der Korpora: [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
+                    .expect("Template-Fehler")
+        })
+        .for_each(|path| {
+
+        let input_path = format!("/input/{}", path.display());
+        let output_path = format!("/output/{}", path.display());
+
+            let file = fs::read(input_path).expect("Failed to read file");
+            let tokens = bpe_state.tokenizer().tokenize_bytes(&file);
+
+            let output_file = OpenOptions::new().write(true).append(false).truncate(true).open(output_path).expect("Failed to open output file");
+            let mut output_writer = BufWriter::new(output_file);
+
+            for token in tokens {
+                output_writer.write_all(&token.into_inner().to_be_bytes()).expect("Could not write to file");
+            }
+            output_writer.flush().expect("Could not flush to file");
+        });
+}
+
+#[allow(dead_code)]
+fn reduce_vocab_size() {
     let mut bpe_state = BpeState::synced_with_file("/output/german-complete.vocab");
 
     dbg!(bpe_state.additional_vocab_size());
