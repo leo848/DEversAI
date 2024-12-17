@@ -44,7 +44,7 @@ pub fn main() {
             let file = fs::read(input_path).expect("Failed to read file");
             let tokens = bpe_state.tokenizer().tokenize_bytes(&file);
 
-            let output_file = OpenOptions::new().write(true).append(false).truncate(true).open(output_path).expect("Failed to open output file");
+            let output_file = OpenOptions::new().write(true).create(true).append(false).truncate(true).open(output_path).expect("Failed to open output file");
             let mut output_writer = BufWriter::new(output_file);
 
             for token in tokens {
