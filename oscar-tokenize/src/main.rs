@@ -23,8 +23,8 @@ pub fn main() {
     let bpe_state = BpeState::synced_with_file("/vocab/german-complete.vocab");
 
     let paths = chain!(
-        (0..600).map(|i| format!("oscar-2301-shard-{i:05}.bin")),
         (0..23).map(|i| format!("wikipedia-shard-{i:05}.bin")),
+        (0..600).map(|i| format!("oscar-2301-shard-{i:05}.bin")),
     )
     .map(PathBuf::from)
     .collect_vec();
