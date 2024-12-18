@@ -5,6 +5,7 @@
 	import { scale } from 'svelte/transition';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import Token from '$lib/components/Token.svelte';
 
 	const tokenIndex = $derived(+$page.params.id);
 	const token = $derived(vocabulary.tokens[tokenIndex]);
@@ -20,9 +21,7 @@
 	<div class="text-4xl font-bold">Token-Visualisierung</div>
 	<div class="flex flex-row justify-between">
 		{#key tokenIndex}
-			<div class="rounded-xl border-4 border-gray-200 bg-gray-100 p-4 font-mono text-6xl" in:scale>
-				{token.toStringDebug()}
-			</div>
+			<Token {token} size="xl" />
 		{/key}
 		<div
 			class="flex flex-col content-stretch overflow-hidden rounded-xl border-4 border-gray-200 tabular-nums"
@@ -75,14 +74,7 @@
 					</div>
 					<div class="flex flex-row flex-wrap gap-4">
 						{#each token.children[key] as child}
-							<div>
-								<a
-									class="inline-block rounded-lg border-2 border-gray-200 bg-gray-100 p-1 font-mono"
-									href={`/token/${child.id()}`}
-								>
-									{child.toStringDebug()}
-								</a>
-							</div>
+							<Token token={child} />
 						{/each}
 					</div>
 				</div>
