@@ -1,5 +1,4 @@
 <script lang="ts">
-
 </script>
 
 <div class="m-4 flex flex-col gap-8 xl:mx-16">

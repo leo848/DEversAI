@@ -6,6 +6,7 @@ wikidata/
 **/*.dump
 **/*.gz
 **/*base64.txt
+!**/*.base64.txt
 
 # Output
 **/.output
