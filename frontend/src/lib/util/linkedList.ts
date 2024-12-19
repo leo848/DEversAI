@@ -16,12 +16,17 @@ export class LinkedListNode<T> {
 	remove() {
 		if (this.prev != null) {
 			this.prev.next = this.next;
+		} else {
+			this.#list.popHead();
 		}
+
 		if (this.next != null) {
-			this.next.prev = this.next;
+			this.next.prev = this.prev;
 		} else {
 			this.#list.popTail();
 		}
+		this.prev = null;
+		this.next = null;
 	}
 }
 
@@ -36,15 +41,21 @@ export class LinkedList<T> {
 		this.#tail = null
 	}
 
-	static fromIterable<T>(iter: Iterable<T>) {
-		const list = new LinkedList();
-		for (const item in iter) {
+	static fromIterable<T>(iter: Iterable<T>): LinkedList<T> {
+		const list = new LinkedList<T>();
+		for (const item of iter) {
 			list.append(item);
 		}
 		return list;
 	}
 
-	append(value: T) {
+	forEach(f: (value: T) => void) {
+		for (let listNode = this.head(); listNode != null; listNode = listNode.next) {
+			f(listNode.value);
+		}
+	}
+
+	prepend(value: T) {
 		const newNode = new LinkedListNode(value, this);
 		if (this.#size == 0) {
 			this.#head = newNode;
@@ -57,12 +68,12 @@ export class LinkedList<T> {
 		this.#size += 1;
 	}
 
-	prepend(value: T) {
+	append(value: T) {
+		const newNode = new LinkedListNode(value, this);
 		if (this.#size == 0) {
-			this.append(value);
-		}
-		else {
-			const newNode = new LinkedListNode(value, this);
+			this.#head = newNode;
+			this.#tail = newNode;
+		} else {
 			this.#tail!.next = newNode;
 			newNode.prev = this.#tail;
 			this.#tail = newNode;
@@ -78,7 +89,31 @@ export class LinkedList<T> {
 		return this.#tail;
 	}
 
+	popHead() {
+		this.#head = this.#head?.next ?? null;
+		if (this.#head != null) {
+			this.#head!.prev = null;
+		}
+	}
+
 	popTail() {
 		this.#tail = this.#tail?.prev ?? null;
+		if (this.#tail != null) {
+			this.#tail!.next = null;
+		}
+	}
+
+	size() {
+		return this.#size;
+	}
+
+	toArray(): T[] {
+		const array = [];
+		let currentNode = this.head();
+		while (currentNode != null) {
+			array.push(currentNode.value);
+			currentNode = currentNode.next;
+		}
+		return array;
 	}
 }

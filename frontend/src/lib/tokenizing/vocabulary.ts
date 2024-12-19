@@ -1,6 +1,7 @@
 import { Token } from './token';
 import { assert } from '$lib/util/typed';
 import { chunks, chunksExact } from '$lib/util/array';
+import {LinkedList} from '$lib/util/linkedList';
 
 export interface BiSplit<T = Token> {
 	left: T;
@@ -81,6 +82,47 @@ export class Vocabulary {
 		const token = new Token(this.tokens.length, mergeUintArrays(left.value, right.value), this);
 		this.tokens.push(token);
 		return token;
+	}
+
+	tokenize(input: string) {
+		const bytes = new TextEncoder().encode(input);
+		const tokenList: LinkedList<number> = LinkedList.fromIterable(bytes);
+
+		const reverseMergeRules: Record<string, number> = {};
+		for (const rule of this.mergeRules) {
+			reverseMergeRules[`${rule.left.id()} ${rule.right.id()}`] = rule.result.id();
+		}
+
+		let firstApplicableRule = Infinity;
+		while (true) {
+			firstApplicableRule = Infinity;
+			for (let listNode = tokenList.head(); listNode != null; listNode = listNode.next) {
+				if (listNode.next != null) {
+					firstApplicableRule = Math.min(firstApplicableRule, reverseMergeRules[`${listNode.value} ${listNode.next!.value}`] ?? Infinity);
+				}
+			}
+			if (firstApplicableRule == Infinity) break;
+
+			const rule = this.mergeRules[firstApplicableRule - 256];
+
+			if (tokenList.size() < 2) { break }
+
+			for (let listNode = tokenList.head(); listNode != null; listNode = listNode.next) {
+				if (listNode.next == null) { break };
+				if (listNode.value == rule.left.id() && listNode.next!.value == rule.right.id()) {
+					listNode.value = rule.result.id();
+					listNode.next!.remove();
+				}
+			}
+
+			let debugString = "";
+			tokenList.forEach(t => debugString += " " + t);
+			console.log(rule.left.id(), rule.right.id(), rule.result.id());
+			console.log(debugString);
+		}
+
+		const tokenIds = tokenList.toArray();
+		return tokenIds.map(id => this.tokens[id]);
 	}
 }
 
