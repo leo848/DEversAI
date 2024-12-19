@@ -18,13 +18,11 @@
 
 	<div class="flex flex-row flex-wrap gap-0 gap-y-4">
 		{#each tokens as token, index}
+			{@const color = token.isByte()
+				? 'gray'
+				: (['pastelBlue', 'pastelPink', 'pastelYellow', 'pastelGreen'] as const)[index % 4]}
 			<div>
-				<Token
-					{token}
-					rawString
-					noPad
-					color={(['pastelBlue', 'pastelPink', 'pastelYellow', 'pastelGreen'] as const)[index % 4]}
-				/>
+				<Token {token} rawString noPad {color} />
 			</div>
 		{/each}
 	</div>

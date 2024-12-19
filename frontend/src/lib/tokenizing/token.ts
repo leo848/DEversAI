@@ -52,6 +52,10 @@ export class Token {
 			children
 		};
 	}
+
+	isByte() {
+		return this.index < 256;
+	}
 }
 
 function displayToken(value: Uint8Array, index: number): string {
