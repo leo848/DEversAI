@@ -6,6 +6,7 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import Token from '$lib/components/Token.svelte';
+	import BorderSection from '$lib/components/BorderSection.svelte';
 
 	const tokenIndex = $derived(+$page.params.id);
 	const token = $derived(vocabulary.tokens[tokenIndex]);
@@ -55,17 +56,15 @@
 			</div>
 		</div>
 	</div>
-	<div class="rounded-xl border border-2 border-gray-200 p-4">
-		<div class="text-2xl">Stammbaum</div>
+	<BorderSection title="Stammbaum">
 		<InverseBinaryTree
 			onClick={(d) => setTokenIndex(d.id)}
 			data={token.historyTree()}
 			width={1200}
 			dy={100}
 		/>
-	</div>
-	<div class="flex flex-col gap-4 rounded-xl border border-2 border-gray-200 p-4">
-		<div class="text-2xl">Kinder</div>
+	</BorderSection>
+	<BorderSection title="Kinder">
 		<div class="grid grid-cols-2 gap-8">
 			{#each ['left', 'right'] as const as key}
 				<div class="flex flex-col gap-2">
@@ -80,5 +79,5 @@
 				</div>
 			{/each}
 		</div>
-	</div>
+	</BorderSection>
 </div>
