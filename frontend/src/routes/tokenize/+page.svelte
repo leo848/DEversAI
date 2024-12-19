@@ -8,6 +8,7 @@
 		'Gib oben den Text ein, unten im Ausgabefeld erscheint dann die Token-Repräsentation.'
 	);
 
+	let byteCount = $derived(new TextEncoder().encode(string).length);
 	let tokens = $derived(vocabulary.tokenize(string));
 
 	let hoveredTokenIndex: null | number = $state(null);
@@ -40,7 +41,24 @@
 				</textarea>
 			</BorderSection>
 		</div>
-		<div class="col-span-4 row-span-2"></div>
+		<div class="col-span-4 row-span-2">
+			<BorderSection title="Statistiken">
+				{#if string.length > 0}
+					<ul>
+						<li>{byteCount} Bytes</li>
+						<li>{tokens.length} Tokens</li>
+						<li>
+							{(byteCount / tokens.length).toFixed(2)} Bytes pro Token (Kompression von {(
+								100 -
+								(tokens.length / byteCount) * 2 * 100
+							).toFixed(1)}%)
+						</li>
+					</ul>
+				{:else}
+					<div class="text-disabled">Gib einen Text ein, um Statistiken anzeigen zu können.</div>
+				{/if}
+			</BorderSection>
+		</div>
 
 		<div class="col-span-8">
 			<BorderSection title="Tokens" innerClass="flex flex-col gap-2">
