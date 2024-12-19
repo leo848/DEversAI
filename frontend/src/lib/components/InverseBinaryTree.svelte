@@ -21,6 +21,8 @@
 	let linkGroup: d3.Selection<SVGGElement, unknown, null, undefined>;
 	let nodeGroup: d3.Selection<SVGGElement, unknown, null, undefined>;
 
+	type Data = d3.HierarchyNode<TokenHistory>;
+
 	// Function to handle clicks on nodes
 	function onNodeClick(node: TokenHistory) {
 		onClick(node);
@@ -68,9 +70,8 @@
 		});
 
 		const height = dy * (root.height + 2);
-		const scaleX = (d: d3.HierarchyPointNode<TokenHistory>) =>
-			remap([x0, x1], [20, width - 20])(d.x);
-		const scaleY = (d: d3.HierarchyPointNode<TokenHistory>) => -d.y + height - dy;
+		const scaleX = (d: Data) => remap([x0, x1], [20, width - 20])(d.x!);
+		const scaleY = (d: Data) => -d.y! + height - dy;
 
 		svg.attr('viewBox', [0, 0, width, height]);
 
@@ -80,7 +81,7 @@
 		// Update Links
 		const link = linkGroup
 			.selectAll('path')
-			.data(links, (d) => `${d.source.data.id}-${d.target.data.id}`);
+			.data(links, (d) => `${(d as any).source.data.id}-${(d as any).target.data.id}`);
 		link
 			.enter()
 			.append('path')
@@ -90,27 +91,24 @@
 						d3.HierarchyPointNode<TokenHistory>,
 						d3.HierarchyPointLink<TokenHistory>
 					>()
-					.x((p) => scaleX(d.target))
-					.y((p) => scaleY(d.target))(d)
+					.x((_) => scaleX(d.target))
+					.y((_) => scaleY(d.target))(d as any)
 			)
-			.merge(link)
+			.merge(link as any)
 			.transition()
 			.delay(250)
 			.duration(750)
 			.attr(
 				'd',
 				d3
-					.linkHorizontal<
-						d3.HierarchyPointNode<TokenHistory>,
-						d3.HierarchyPointLink<TokenHistory>
-					>()
-					.x((p) => scaleX(p))
-					.y((p) => scaleY(p))
+					.linkHorizontal()
+					.x(scaleX as any)
+					.y(scaleY as any) as any
 			);
 		link.exit().remove();
 
 		// Update Nodes
-		const node = nodeGroup.selectAll('g').data(nodes, (d) => d.data.id);
+		const node = nodeGroup.selectAll('g').data(nodes, (d) => (d as any).data.id);
 
 		// Enter selection: Add click, hover effects
 		const nodeEnter = node
@@ -122,13 +120,13 @@
 			.on('mouseover', function () {
 				d3.select(this)
 					.select('rect')
-					.attr('fill', (d) => (d.children ? '#ca4' : '#fc8')); // Highlight on hover
-				d3.select(this).style('cursor', (d) => (d.children ? 'pointer' : 'auto')); // Add pointer cursor
+					.attr('fill', (d) => ((d as any).children ? '#ca4' : '#fc8')); // Highlight on hover
+				d3.select(this).style('cursor', (d) => ((d as any).children ? 'pointer' : 'auto')); // Add pointer cursor
 			})
 			.on('mouseout', function (d) {
 				d3.select(this)
 					.select('rect')
-					.attr('fill', (d) => (d.children ? '#fc6' : '#fc8')); // Reset color on mouse out
+					.attr('fill', (d) => ((d as any).children ? '#fc6' : '#fc8')); // Reset color on mouse out
 			});
 
 		nodeEnter
@@ -152,7 +150,7 @@
 
 		// Merge and Update selection
 		node
-			.merge(nodeEnter)
+			.merge(nodeEnter as any)
 			.transition()
 			.duration(750)
 			.attr('transform', (d) => `translate(${scaleX(d)}, ${scaleY(d)})`)
