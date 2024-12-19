@@ -117,8 +117,6 @@ export class Vocabulary {
 
 			let debugString = "";
 			tokenList.forEach(t => debugString += " " + t);
-			console.log(rule.left.id(), rule.right.id(), rule.result.id());
-			console.log(debugString);
 		}
 
 		const tokenIds = tokenList.toArray();
