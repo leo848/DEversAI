@@ -3,7 +3,7 @@
 	import Token from '$lib/components/Token.svelte';
 	import vocabulary from '$lib/tokenizing/german50000';
 
-	let string = $state('Gib hier den Text ein...');
+	let string = $state('Gib oben den Text ein, unten im Ausgabefeld erscheint dann die Token-Repräsentation.');
 
 	let tokens = $derived(vocabulary.tokenize(string));
 </script>
