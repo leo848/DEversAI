@@ -17,7 +17,15 @@
 		size?: 'md' | 'xl';
 		showIndex?: boolean;
 		noPad?: boolean;
-		color?: 'gray' | 'blue' | 'orange' | 'purple' | 'pastelBlue' | 'pastelPink' | 'pastelGreen' | 'pastelYellow';
+		color?:
+			| 'gray'
+			| 'blue'
+			| 'orange'
+			| 'purple'
+			| 'pastelBlue'
+			| 'pastelPink'
+			| 'pastelGreen'
+			| 'pastelYellow';
 		onclick?: (token: Token) => void;
 	} = $props();
 
@@ -40,7 +48,7 @@
 			pastelBlue: 'bg-[#a8d5e2]',
 			pastelGreen: 'bg-[#b2e2b4]',
 			pastelPink: 'bg-[#f8bfd5]',
-			pastelYellow: 'bg-[#fbe7a1]',
+			pastelYellow: 'bg-[#fbe7a1]'
 		}[color],
 		borderColor: {
 			gray: 'border-gray-200',
@@ -50,7 +58,7 @@
 			pastelBlue: 'border-[#88b5c2]',
 			pastelGreen: 'border-[#92c294]',
 			pastelPink: 'border-[#c89fb5]',
-			pastelYellow: 'border-[#cbb781]',
+			pastelYellow: 'border-[#cbb781]'
 		}[color]
 	});
 	const classList = $derived(

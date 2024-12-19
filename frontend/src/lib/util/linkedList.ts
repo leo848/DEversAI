@@ -33,12 +33,12 @@ export class LinkedListNode<T> {
 export class LinkedList<T> {
 	#head: LinkedListNode<T> | null = null;
 	#tail: LinkedListNode<T> | null = null;
-	#size: number
+	#size: number;
 
 	constructor() {
-		this.#size = 0
-		this.#head = null
-		this.#tail = null
+		this.#size = 0;
+		this.#head = null;
+		this.#tail = null;
 	}
 
 	static fromIterable<T>(iter: Iterable<T>): LinkedList<T> {
