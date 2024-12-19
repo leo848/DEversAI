@@ -16,9 +16,9 @@
 	} = $props();
 </script>
 
-<div class="rounded-xl border border-2 border-gray-200 p-4" class:flex class:flex-col={flex}>
+<div class={`rounded-xl border border-2 border-gray-200 p-4 flex flex-col transition-all ${open ? "gap-4" : "gap-0"}`}>
 	<button
-		class="flex flex-row items-center gap-2 text-2xl font-bold"
+		class="block flex flex-row items-center gap-2 text-2xl font-bold"
 		onclick={() => (open = !open)}
 	>
 		<div>
