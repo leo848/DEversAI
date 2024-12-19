@@ -6,13 +6,13 @@
 	let {
 		title,
 		children,
-		flex = false,
+		innerClass = '',
 		open = $bindable(true)
 	}: {
 		title: string;
 		children: Snippet;
-		flex?: boolean;
 		open?: boolean;
+		innerClass?: string;
 	} = $props();
 </script>
 
@@ -36,7 +36,7 @@
 		</div>
 	</button>
 	{#if open}
-		<div transition:slide>
+		<div transition:slide class={innerClass}>
 			{@render children()}
 		</div>
 	{/if}

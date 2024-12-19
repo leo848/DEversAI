@@ -1,11 +1,30 @@
 <script lang="ts">
 	import BorderSection from '$lib/components/BorderSection.svelte';
-	import Token from '$lib/components/Token.svelte';
+	import TokenComponent from '$lib/components/Token.svelte';
 	import vocabulary from '$lib/tokenizing/german50000';
+	import type { Token } from '$lib/tokenizing/token';
 
-	let string = $state('Gib oben den Text ein, unten im Ausgabefeld erscheint dann die Token-Repräsentation.');
+	let string = $state(
+		'Gib oben den Text ein, unten im Ausgabefeld erscheint dann die Token-Repräsentation.'
+	);
 
 	let tokens = $derived(vocabulary.tokenize(string));
+
+	let hoveredTokenIndex: null | number = $state(null);
+
+	function tokenColor(token: Token, index: number) {
+		return token.isByte()
+			? 'gray'
+			: (['pastelBlue', 'pastelPink', 'pastelYellow', 'pastelGreen'] as const)[index % 4];
+	}
+
+	const colorDict = {
+		gray: '#666666',
+		pastelBlue: '#2874a6',
+		pastelGreen: '#2e8b57',
+		pastelPink: '#c71585',
+		pastelYellow: '#cc9900'
+	};
 </script>
 
 <div class="m-4 flex flex-col gap-8 xl:mx-16">
@@ -24,16 +43,44 @@
 		<div class="col-span-4 row-span-2"></div>
 
 		<div class="col-span-8">
-			<BorderSection title="Tokens">
-				<div class=" flex flex-row flex-wrap gap-0 gap-y-4">
+			<BorderSection title="Tokens" innerClass="flex flex-col gap-2">
+				<div class="flex flex-row flex-wrap gap-0 gap-y-4">
 					{#each tokens as token, index}
-						{@const color = token.isByte()
-							? 'gray'
-							: (['pastelBlue', 'pastelPink', 'pastelYellow', 'pastelGreen'] as const)[index % 4]}
-						<div>
-							<Token {token} rawString noPad {color} />
+						{@const color = tokenColor(token, index)}
+						<div
+							onmousemove={() => (hoveredTokenIndex = index)}
+							onmouseout={() => (hoveredTokenIndex = null)}
+							onblur={() => (hoveredTokenIndex = null)}
+							role="none"
+						>
+							<TokenComponent {token} rawString noPad {color} bold={hoveredTokenIndex == index} />
 						</div>
 					{/each}
+				</div>
+			</BorderSection>
+		</div>
+
+		<div class="col-span-8">
+			<BorderSection title="Token-IDs" open={false}>
+				<div class="flex flex-row flex-wrap gap-0 gap-y-4 font-mono">
+					[
+					{#each tokens as token, index}
+						<div
+							style:color={colorDict[tokenColor(token, index)]}
+							class:font-bold={hoveredTokenIndex == index}
+							class="transition-all"
+							onmousemove={() => (hoveredTokenIndex = index)}
+							onmouseout={() => (hoveredTokenIndex = null)}
+							onblur={() => (hoveredTokenIndex = null)}
+							role="none"
+						>
+							{token.id()}
+						</div>
+						{#if index != tokens.length - 1}
+							<div>,&nbsp;</div>
+						{/if}
+					{/each}
+					]
 				</div>
 			</BorderSection>
 		</div>

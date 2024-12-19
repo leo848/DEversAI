@@ -8,12 +8,14 @@
 		rawString = false,
 		size = 'md',
 		showIndex = false,
+		bold = 'hover',
 		noPad = false,
 		color = 'gray',
 		onclick = gotoTokenPage
 	}: {
 		token: Token;
 		rawString?: boolean;
+		bold?: 'hover' | boolean;
 		size?: 'md' | 'xl';
 		showIndex?: boolean;
 		noPad?: boolean;
@@ -59,10 +61,11 @@
 			pastelGreen: 'border-[#92c294]',
 			pastelPink: 'border-[#c89fb5]',
 			pastelYellow: 'border-[#cbb781]'
-		}[color]
+		}[color],
+		bold: { hover: 'hover:font-bold', true: 'font-bold', false: 'font-normal' }['' + bold]
 	});
 	const classList = $derived(
-		`inline-block ${style.rounding} ${style.border} ${style.borderColor} ${style.bgColor} ${style.padding} font-mono ${style.textSize} hover:font-bold transition-all`
+		`inline-block ${style.rounding} ${style.border} ${style.borderColor} ${style.bgColor} ${style.padding} font-mono ${style.textSize} ${style.bold} transition-all`
 	);
 </script>
 
