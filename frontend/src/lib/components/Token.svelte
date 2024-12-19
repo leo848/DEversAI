@@ -8,12 +8,16 @@
 		rawString = false,
 		size = 'md',
 		showIndex = false,
+		noPad = false,
+		color = 'gray',
 		onclick = gotoTokenPage
 	}: {
 		token: Token;
 		rawString?: boolean;
 		size?: 'md' | 'xl';
 		showIndex?: boolean;
+		noPad?: boolean;
+		color?: 'gray' | 'blue' | 'orange' | 'purple' | 'pastelBlue' | 'pastelPink' | 'pastelGreen' | 'pastelYellow';
 		onclick?: (token: Token) => void;
 	} = $props();
 
@@ -27,15 +31,35 @@
 		border: { md: 'border-2', xl: 'border-4' }[size],
 		textSize: { md: '', xl: 'text-6xl' }[size],
 		rounding: { md: 'rounded-lg', xl: 'rounded-xl' }[size],
-		padding: { md: 'p-1', xl: 'p-4' }[size]
+		padding: noPad ? '' : { md: 'p-1', xl: 'p-4' }[size],
+		bgColor: {
+			gray: 'bg-gray-100',
+			blue: 'bg-blue-200',
+			orange: 'bg-orange-200',
+			purple: 'bg-purple-200',
+			pastelBlue: 'bg-[#a8d5e2]',
+			pastelGreen: 'bg-[#b2e2b4]',
+			pastelPink: 'bg-[#f8bfd5]',
+			pastelYellow: 'bg-[#fbe7a1]',
+		}[color],
+		borderColor: {
+			gray: 'border-gray-200',
+			blue: 'border-blue-300',
+			orange: 'border-orange-300',
+			purple: 'border-purple-300',
+			pastelBlue: 'border-[#88b5c2]',
+			pastelGreen: 'border-[#92c294]',
+			pastelPink: 'border-[#c89fb5]',
+			pastelYellow: 'border-[#cbb781]',
+		}[color]
 	});
 	const classList = $derived(
-		`inline-block ${style.rounding} ${style.border} border-gray-200 bg-gray-100 ${style.padding} font-mono ${style.textSize}`
+		`inline-block ${style.rounding} ${style.border} ${style.borderColor} ${style.bgColor} ${style.padding} font-mono ${style.textSize} hover:font-bold transition-all`
 	);
 </script>
 
 <div>
 	<button class={classList} in:scale onclick={() => onclick(token)}>
-		{stringRepr}
+		<pre>{stringRepr}</pre>
 	</button>
 </div>
