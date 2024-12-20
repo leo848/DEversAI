@@ -8,7 +8,7 @@
 		'Gib oben den Text ein, unten im Ausgabefeld erscheint dann die Token-Repräsentation.'
 	);
 
-	let lastAppliedMergeRule = $state(vocabulary.mergeRules.length);
+	let lastAppliedMergeRule = $state(vocabulary.mergeRules.length + 256);
 
 	let byteCount = $derived(new TextEncoder().encode(string).length);
 	let tokens = $derived(vocabulary.tokenize(string, { lastAppliedMergeRule }));
@@ -46,15 +46,37 @@
 		<div class="col-span-4 row-span-2 flex flex-col gap-8">
 			<BorderSection title="Statistiken">
 				{#if string.length > 0}
-					<ul>
-						<li>{byteCount} Bytes</li>
-						<li>{tokens.length} Tokens</li>
-						<li>
-							{(byteCount / tokens.length).toFixed(2)} Bytes pro Token (Kompression von {(
-								100 -
-								(tokens.length / byteCount) * 2 * 100
-							).toFixed(1)}%)
-						</li>
+					<ul class="grid grid-cols-3 gap-4">
+						<BorderSection innerClass="flex flex-col align-center items-center">
+							<div class="text-2xl">{byteCount}</div>
+							<div>Bytes</div>
+						</BorderSection>
+						<BorderSection innerClass="flex flex-col align-center items-center">
+							<div class="text-2xl">{string.split(/\s/).length}</div>
+							<div>Wörter</div>
+						</BorderSection>
+						<BorderSection innerClass="flex flex-col align-center items-center">
+							<div class="text-2xl">{tokens.length}</div>
+							<div>Tokens</div>
+						</BorderSection>
+						<BorderSection innerClass="flex flex-col align-center items-center">
+							<div class="text-2xl">
+								{(byteCount / tokens.length).toFixed(2)}
+							</div>
+							<div>Bytes / Token</div>
+						</BorderSection>
+						<BorderSection innerClass="flex flex-col align-center items-center">
+							<div class="text-2xl">
+								{(tokens.length / string.split(/\s/).length).toFixed(2)}
+							</div>
+							<div>Tokens / Wort</div>
+						</BorderSection>
+						<BorderSection innerClass="flex flex-col align-center items-center">
+							<div class="text-2xl">
+								{(100 - (tokens.length / byteCount) * 2 * 100).toFixed(1)}%
+							</div>
+							<div>Kompressionsrate</div>
+						</BorderSection>
 					</ul>
 				{:else}
 					<div class="text-disabled">Gib einen Text ein, um Statistiken anzeigen zu können.</div>
@@ -67,13 +89,13 @@
 					type="range"
 					bind:value={lastAppliedMergeRule}
 					min={255}
-					max={vocabulary.mergeRules.length}
+					max={vocabulary.mergeRules.length + 256}
 				/>
 				<input
 					type="number"
 					bind:value={lastAppliedMergeRule}
 					min={255}
-					max={vocabulary.mergeRules.length}
+					max={vocabulary.mergeRules.length + 256}
 				/>
 			</BorderSection>
 		</div>
