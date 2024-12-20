@@ -80,23 +80,25 @@
 
 		<div class="col-span-8">
 			<BorderSection title="Token-IDs" open={false}>
-				<div class="flex flex-row flex-wrap gap-0 gap-y-4 font-mono">
+				<div class="font-mono">
 					[
 					{#each tokens as token, index}
-						<div
-							style:color={colorDict[tokenColor(token, index)]}
-							class:font-bold={hoveredTokenIndex == index}
-							class="transition-all"
-							onmousemove={() => (hoveredTokenIndex = index)}
-							onmouseout={() => (hoveredTokenIndex = null)}
-							onblur={() => (hoveredTokenIndex = null)}
-							role="none"
-						>
-							{token.id()}
-						</div>
-						{#if index != tokens.length - 1}
-							<div>,&nbsp;</div>
-						{/if}
+						<span>
+							{#if index != 0}
+								<span>,</span>
+							{/if}
+							<span
+								style:color={colorDict[tokenColor(token, index)]}
+								class:font-bold={hoveredTokenIndex == index}
+								class="transition-all"
+								onmousemove={() => (hoveredTokenIndex = index)}
+								onmouseout={() => (hoveredTokenIndex = null)}
+								onblur={() => (hoveredTokenIndex = null)}
+								role="none"
+							   >
+							   {token.id()}
+							</span>
+						</span>
 					{/each}
 					]
 				</div>
