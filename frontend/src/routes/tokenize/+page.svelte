@@ -43,7 +43,7 @@
 				</textarea>
 			</BorderSection>
 		</div>
-		<div class="col-span-4 row-span-2 flex flex-col gap-8">
+		<div class="col-span-4 row-span-3 flex flex-col gap-8">
 			<BorderSection title="Statistiken">
 				{#if string.length > 0}
 					<ul class="grid grid-cols-3 gap-4">
@@ -84,7 +84,14 @@
 			</BorderSection>
 
 			<BorderSection title="Einstellungen">
-				<div>Letztes zusammengefügtes Token</div>
+				<div>
+				Letztes zusammengefügtes Token
+				{#if lastAppliedMergeRule != vocabulary.tokens.length}
+					<span>
+						<TokenComponent token={vocabulary.tokens[lastAppliedMergeRule]} />
+					</span>
+				{/if}
+				</div>
 				<input
 					type="range"
 					bind:value={lastAppliedMergeRule}
