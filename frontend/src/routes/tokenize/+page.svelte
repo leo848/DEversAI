@@ -85,12 +85,12 @@
 
 			<BorderSection title="Einstellungen">
 				<div>
-				Letztes zusammengefügtes Token
-				{#if lastAppliedMergeRule != vocabulary.tokens.length}
-					<span>
-						<TokenComponent token={vocabulary.tokens[lastAppliedMergeRule]} />
-					</span>
-				{/if}
+					Letztes zusammengefügtes Token
+					{#if lastAppliedMergeRule != vocabulary.tokens.length}
+						<span>
+							<TokenComponent token={vocabulary.tokens[lastAppliedMergeRule]} />
+						</span>
+					{/if}
 				</div>
 				<input
 					type="range"

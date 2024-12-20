@@ -8,7 +8,7 @@ export const pages = [
 	},
 	{
 		title: 'Tokens',
-		link: '/token',
+		link: '/tokens',
 		icon: {
 			icon: 'tabler:binary-tree-filled',
 			vFlip: true

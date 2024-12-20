@@ -44,7 +44,6 @@
 <style>
 	.fancy-gradient-bg {
 		background: linear-gradient(to bottom, #ffcc44 0%, #aa3300 100%);
-		background-size: 4rem;
 		background-repeat: false;
 	}
 </style>
