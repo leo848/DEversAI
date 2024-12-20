@@ -1,5 +1,4 @@
 <script lang="ts">
-	import BorderSection from '$lib/components/BorderSection.svelte';
 	import Icon from '@iconify/svelte';
 
 	const subPages = [

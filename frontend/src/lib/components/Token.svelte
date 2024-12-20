@@ -70,7 +70,15 @@
 </script>
 
 <div>
-	<button class={classList} in:scale onclick={() => onclick(token)}>
+	<a
+		href={`/token/${token.id()}`}
+		class={classList}
+		in:scale
+		onclick={(e) => {
+			e.preventDefault();
+			onclick(token);
+		}}
+	>
 		<pre>{stringRepr}</pre>
-	</button>
+	</a>
 </div>
