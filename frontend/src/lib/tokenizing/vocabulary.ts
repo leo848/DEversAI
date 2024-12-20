@@ -84,7 +84,9 @@ export class Vocabulary {
 		return token;
 	}
 
-	tokenize(input: string) {
+	tokenize(input: string, options?: { lastAppliedMergeRule?: number }) {
+		const lastAppliedMergeRule = options?.lastAppliedMergeRule ?? Infinity;
+
 		const bytes = new TextEncoder().encode(input);
 		const tokenList: LinkedList<number> = LinkedList.fromIterable(bytes);
 
@@ -105,6 +107,7 @@ export class Vocabulary {
 				}
 			}
 			if (firstApplicableRule == Infinity) break;
+			if (firstApplicableRule > lastAppliedMergeRule) break;
 
 			const rule = this.mergeRules[firstApplicableRule - 256];
 

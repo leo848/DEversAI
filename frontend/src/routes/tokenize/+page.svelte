@@ -8,8 +8,10 @@
 		'Gib oben den Text ein, unten im Ausgabefeld erscheint dann die Token-Repräsentation.'
 	);
 
+	let lastAppliedMergeRule = $state(vocabulary.mergeRules.length);
+
 	let byteCount = $derived(new TextEncoder().encode(string).length);
-	let tokens = $derived(vocabulary.tokenize(string));
+	let tokens = $derived(vocabulary.tokenize(string, { lastAppliedMergeRule }));
 
 	let hoveredTokenIndex: null | number = $state(null);
 
@@ -41,7 +43,7 @@
 				</textarea>
 			</BorderSection>
 		</div>
-		<div class="col-span-4 row-span-2">
+		<div class="col-span-4 row-span-2 flex flex-col gap-8">
 			<BorderSection title="Statistiken">
 				{#if string.length > 0}
 					<ul>
@@ -57,6 +59,22 @@
 				{:else}
 					<div class="text-disabled">Gib einen Text ein, um Statistiken anzeigen zu können.</div>
 				{/if}
+			</BorderSection>
+
+			<BorderSection title="Einstellungen">
+				<div>Letztes zusammengefügtes Token</div>
+				<input
+					type="range"
+					bind:value={lastAppliedMergeRule}
+					min={255}
+					max={vocabulary.mergeRules.length}
+				/>
+				<input
+					type="number"
+					bind:value={lastAppliedMergeRule}
+					min={255}
+					max={vocabulary.mergeRules.length}
+				/>
 			</BorderSection>
 		</div>
 
@@ -95,8 +113,8 @@
 								onmouseout={() => (hoveredTokenIndex = null)}
 								onblur={() => (hoveredTokenIndex = null)}
 								role="none"
-							   >
-							   {token.id()}
+							>
+								{token.id()}
 							</span>
 						</span>
 					{/each}
