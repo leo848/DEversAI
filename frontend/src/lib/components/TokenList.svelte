@@ -19,9 +19,21 @@
 	} = $props();
 
 	let search = $state('');
+	let searchRegex = $derived(
+		(() => {
+			try {
+				return new RegExp(search);
+			} catch {
+				return new RegExp('');
+			}
+		})()
+	);
 
 	let tokensExist = $derived(tokens == null ? vocabulary.tokens : tokens);
-	let resultingTokens = $derived(tokensExist);
+	let resultingTokens = $derived(tokensExist.filter((token) => searchRegex.test(token.toString())));
+	let shownTokens = $derived(
+		resultingTokens.slice((pageNumber - 1) * tokensPerPage, pageNumber * tokensPerPage)
+	);
 
 	const pageNumber = $derived(Number($page.url.searchParams.get('p') ?? 2));
 	let pageAmount = $derived(Math.ceil(resultingTokens.length / tokensPerPage));
@@ -33,9 +45,12 @@
 			const end = [pageAmount, pageAmount - 1, pageAmount - 2];
 			const array = [...start, ...context, ...end].filter((elem) => elem > 0 && elem <= pageAmount);
 			array.sort((a, b) => a - b);
-			return [...new Set(array)].map((index) => ({
+			const unique = [...new Set(array)].map((index) => ({
 				number: index
 			}));
+			if (unique.length !== 1) {
+				return unique;
+			} else return [];
 		})()
 	);
 </script>
@@ -61,7 +76,7 @@
 	</div>
 	<div>
 		<div class="flex flex-row flex-wrap gap-2">
-			{#each resultingTokens.slice((pageNumber - 1) * tokensPerPage, pageNumber * tokensPerPage) as token}
+			{#each shownTokens as token}
 				<TokenComponent {token} />
 			{/each}
 		</div>
