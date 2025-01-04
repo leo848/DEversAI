@@ -6,6 +6,7 @@
 	const smallLetters = [...'abcdefghijklmnopqrstuvwxyzäöüß'];
 	const capitalLetters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ'];
 	const digits = [...'0123456789'];
+	const commonSymbols = [...'.,;:!?§$€%&()[]{}-+*/#\'"']
 
 	const colorToken = (number: number) => {
 		const numberNormalized =
@@ -19,7 +20,8 @@
 		{ title: 'Kleinbuchstaben', columns: smallLetters, rows: smallLetters },
 		{ title: 'Großbuchstaben', columns: capitalLetters, rows: capitalLetters },
 		{ title: 'Ziffern', columns: digits, rows: digits },
-		{ title: 'Groß- -> Kleinbuchstabe', columns: capitalLetters, rows: smallLetters }
+		{ title: 'Symbole', columns: commonSymbols, rows: commonSymbols },
+		{ title: 'Groß- → Kleinbuchstabe', columns: capitalLetters, rows: smallLetters }
 	] satisfies { title: string; columns: string[]; rows: string[] }[];
 </script>
 
@@ -70,3 +72,9 @@
 		{/each}
 	</div>
 </div>
+
+<style>
+	td {
+		border: 0.5px solid #00000033
+	}
+</style>
