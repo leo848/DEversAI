@@ -6,7 +6,8 @@
 	const smallLetters = [...'abcdefghijklmnopqrstuvwxyzäöüß'];
 	const capitalLetters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ'];
 	const digits = [...'0123456789'];
-	const commonSymbols = [...'.,;:!?§$€%&()[]{}-+*/#\'"']
+	const commonSymbols = [...'.,;:!?§$€%&()[]{}-+*/#\'"'];
+	const twentyMergedTokens = vocabulary.tokens.slice(256, 256 + 20).map(t => t.toString());
 
 	const colorToken = (number: number) => {
 		const numberNormalized =
@@ -21,7 +22,8 @@
 		{ title: 'Großbuchstaben', columns: capitalLetters, rows: capitalLetters },
 		{ title: 'Ziffern', columns: digits, rows: digits },
 		{ title: 'Symbole', columns: commonSymbols, rows: commonSymbols },
-		{ title: 'Groß- → Kleinbuchstabe', columns: capitalLetters, rows: smallLetters }
+		{ title: 'Groß- → Kleinbuchstabe', columns: capitalLetters, rows: smallLetters },
+		{ title: '20 erste gemergete Tokens', columns: twentyMergedTokens, rows: twentyMergedTokens },
 	] satisfies { title: string; columns: string[]; rows: string[] }[];
 </script>
 
