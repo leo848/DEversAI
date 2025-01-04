@@ -8,6 +8,6 @@
 
 <div class="m-4 flex flex-col gap-8 xl:mx-16">
 	<div class="text-4xl font-bold">Token-Liste</div>
-	<TokenList {vocabulary} {pageNumber} href={n => `/tokens/list?p=${n}`} />
+	<TokenList {vocabulary} {pageNumber} href={(n) => `/tokens/list?p=${n}`} />
 	<div class="h-20"></div>
 </div>

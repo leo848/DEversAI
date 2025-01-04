@@ -15,10 +15,12 @@ export interface MergeRule extends BiSplit {
 export class Vocabulary {
 	mergeRules: MergeRule[];
 	tokens: Token[];
+	displaySet: Map<string, Token>;
 
 	constructor(mergeRules: [number, number][]) {
 		this.tokens = [];
 		this.mergeRules = [];
+		this.displaySet = new Map();
 
 		while (this.tokens.length < 256) {
 			const token = this.mintByteToken();
@@ -75,12 +77,14 @@ export class Vocabulary {
 	mintByteToken(): Token {
 		const token = new Token(this.tokens.length, new Uint8Array([this.tokens.length]), this);
 		this.tokens.push(token);
+		this.displaySet.set(token.toString(), token);
 		return token;
 	}
 
 	mintMergedToken(left: Token, right: Token): Token {
 		const token = new Token(this.tokens.length, mergeUintArrays(left.value, right.value), this);
 		this.tokens.push(token);
+		this.displaySet.set(token.toString(), token);
 		return token;
 	}
 

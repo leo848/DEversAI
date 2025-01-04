@@ -2,7 +2,7 @@
 	import type { Vocabulary } from '$lib/tokenizing/vocabulary';
 	import { Token } from '$lib/tokenizing/token';
 	import TokenComponent from '$lib/components/Token.svelte';
-	import {flip} from 'svelte/animate';
+	import { flip } from 'svelte/animate';
 
 	const {
 		vocabulary,
@@ -18,7 +18,7 @@
 		tokens?: null | Token[];
 		searchable?: boolean;
 		sortable?: boolean;
-		href?: (page: number) => (string | null);
+		href?: (page: number) => string | null;
 		tokensPerPage?: number;
 	} = $props();
 
@@ -69,29 +69,30 @@
 		</div>
 	{/if}
 	{#snippet paginationRow()}
-	<div class="flex flex-row justify-center gap-2">
-		{#each pagination as pageLink, index (pageLink.number)}
-			{#if index != 0 && pagination[index].number - pagination[index - 1].number != 1}
-				{#if pagination[index].number - pagination[index - 1].number == 2}
-				<a
-					class="w-10 h-10 flex flex-row items-center justify-center rounded-lg border-2 border-gray-200 p-2 text-center text-xl transition-all hover:bg-gray-200"
-					href={href(pageLink.number - 1)}
-					class:bg-gray-200={pageLink.number - 1 == pageNumber}>{pageLink.number - 1}</a
-				>
-				{:else}
-				<div
-					class="w-10 h-10 flex flex-row items-center justify-center rounded-lg border-2 border-gray-200 p-2 text-center text-xl transition-all"
-					>...</div
-				>
+		<div class="flex flex-row justify-center gap-2">
+			{#each pagination as pageLink, index (pageLink.number)}
+				{#if index != 0 && pagination[index].number - pagination[index - 1].number != 1}
+					{#if pagination[index].number - pagination[index - 1].number == 2}
+						<a
+							class="flex h-10 w-10 flex-row items-center justify-center rounded-lg border-2 border-gray-200 p-2 text-center text-xl transition-all hover:bg-gray-200"
+							href={href(pageLink.number - 1)}
+							class:bg-gray-200={pageLink.number - 1 == pageNumber}>{pageLink.number - 1}</a
+						>
+					{:else}
+						<div
+							class="flex h-10 w-10 flex-row items-center justify-center rounded-lg border-2 border-gray-200 p-2 text-center text-xl transition-all"
+						>
+							...
+						</div>
+					{/if}
 				{/if}
-			{/if}
-			<a
-				class="w-10 h-10 flex flex-row items-center justify-center rounded-lg border-2 border-gray-200 p-2 text-center text-xl transition-all hover:bg-gray-200"
-				href={href(pageLink.number)}
-				class:bg-gray-200={pageLink.number == pageNumber}>{pageLink.number}</a
-			>
-		{/each}
-	</div>
+				<a
+					class="flex h-10 w-10 flex-row items-center justify-center rounded-lg border-2 border-gray-200 p-2 text-center text-xl transition-all hover:bg-gray-200"
+					href={href(pageLink.number)}
+					class:bg-gray-200={pageLink.number == pageNumber}>{pageLink.number}</a
+				>
+			{/each}
+		</div>
 	{/snippet}
 	{@render paginationRow()}
 	<div>

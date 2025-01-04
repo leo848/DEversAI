@@ -17,7 +17,7 @@
 </script>
 
 <div
-	class={`flex flex-col rounded-xl border border-2 border-gray-200 p-4 transition-all ${open ? 'gap-4' : 'gap-0'}`}
+	class={`flex w-full flex-col rounded-xl border border-2 border-gray-200 p-4 transition-all ${open ? 'gap-4' : 'gap-0'}`}
 >
 	{#if title != null}
 		<button
