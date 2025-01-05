@@ -1,13 +1,7 @@
 <script lang="ts">
-	import BorderSection from '$lib/components/BorderSection.svelte';
 	import vocabulary from '$lib/tokenizing/german50000';
+	import type { Token } from '$lib/tokenizing/token';
 	import { Gradient } from '$lib/util/color';
-
-	const smallLetters = [...'abcdefghijklmnopqrstuvwxyzäöüß'];
-	const capitalLetters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ'];
-	const digits = [...'0123456789'];
-	const commonSymbols = [...'.,;:!?§$€%&()[]{}-+*/#\'"'];
-	const twentyMergedTokens = vocabulary.tokens.slice(256, 256 + 20).map(t => t.toString());
 
 	const colorToken = (number: number) => {
 		const numberNormalized =
@@ -17,66 +11,107 @@
 		return color;
 	};
 
-	const entries = [
-		{ title: 'Kleinbuchstaben', columns: smallLetters, rows: smallLetters },
-		{ title: 'Großbuchstaben', columns: capitalLetters, rows: capitalLetters },
-		{ title: 'Ziffern', columns: digits, rows: digits },
-		{ title: 'Symbole', columns: commonSymbols, rows: commonSymbols },
-		{ title: 'Groß- → Kleinbuchstabe', columns: capitalLetters, rows: smallLetters },
-		{ title: '20 erste gemergete Tokens', columns: twentyMergedTokens, rows: twentyMergedTokens },
-	] satisfies { title: string; columns: string[]; rows: string[] }[];
+	const charToToken = (char: string) => {
+		return vocabulary.displaySet.get(char)!;
+	};
+
+	const options = {
+		small: {
+			title: 'Kleinbuchstaben',
+			symbols: 'a b c',
+			tokens: [...'abcdefghijklmnopqrstuvwxyzäöüß'].map(charToToken)
+		},
+		capital: {
+			title: 'Großbuchstaben',
+			symbols: 'A B C',
+			tokens: [...'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ'].map(charToToken)
+		},
+		digits: {
+			title: 'Ziffern',
+			symbols: '1 2 3',
+			tokens: [...'0123456789'].map(charToToken)
+		},
+		symbols: {
+			title: 'Symbole',
+			symbols: '. ! ?',
+			tokens: [...'.,;:!?§$€%&()[]{}-+*/#\'"'].map(charToToken)
+		},
+		title: {
+			title: 'Erste zusammengefügte Tokens',
+			symbols: 'en er',
+			tokens: vocabulary.tokens.slice(256, 256 + 20)
+		}
+	} as const satisfies Record<string, { title: string; symbols: string; tokens: Token[] }>;
+
+	let entry: [keyof typeof options, keyof typeof options] = ['small', 'small'];
 </script>
 
 <div class="m-4 flex flex-col gap-8 xl:mx-16">
 	<div class="text-4xl font-bold">Matrizen</div>
 
-	<div class="grid grid-cols-12 gap-4">
-		{#each entries as entry}
-			<div class="col-span-12 lg:col-span-6">
-				<BorderSection title={entry.title}>
-					<table class="font-mono text-sm">
-						<tbody>
-							{#each { length: entry.columns.length + 1 } as _, i}
-								<tr>
-									{#each { length: entry.rows.length + 1 } as _, j}
-										{#if i == 0 && j == 0}
-											<td class="p-1"> \ </td>
-										{:else if i == 0}
-											<td class="p-1">
-												<span class="inline-block h-8">{entry.rows[j - 1]}</span>
-											</td>
-										{:else if j == 0}
-											<td class="p-1">
-												<span class="inline-block w-8">{entry.columns[i - 1]}</span>
-											</td>
-										{:else}
-											{@const tokenString = `${entry.columns[i - 1]}${entry.rows[j - 1]}`}
-											{@const token = vocabulary.displaySet.get(tokenString)}
-											{#if token != undefined}
-												{@const color = colorToken(token.id())}
-												<td
-													style:background-color={color.toString()}
-													style:color={color.readable().toString()}
-												>
-													<a href={`/token/${token.id()}`}>{tokenString}</a>
-												</td>
-											{:else}
-												<td> </td>
-											{/if}
-										{/if}
-									{/each}
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				</BorderSection>
+	<div class="grid grid-cols-2">
+		{#each { length: 2 } as _, i}
+			{@const title = ['Zeilen', 'Spalten'][i]}
+			<div>
+				<div class="col-span-2 text-2xl font-bold xl:col-span-1">{title}</div>
+				<div class="flex flex-row gap-4 text-2xl">
+					{#each Object.keys(options) as (keyof typeof options)[] as optionKey}
+						<button
+							class="bg-primary-2 h-20 w-20 rounded-xl border border-2 p-2 transition-all"
+	   class:bg-fire-300={entry[1 - i] == optionKey}
+							onclick={() => {
+								entry[1 - i] = optionKey;
+							}}>{options[optionKey].symbols}</button
+						>
+					{/each}
+				</div>
 			</div>
 		{/each}
+	</div>
+
+	<div class="grid grid-cols-12 gap-4">
+		<div class="col-span-12 lg:col-span-6">
+			<table class="font-mono text-sm">
+				<tbody>
+					{#each { length: options[entry[1]].tokens.length + 1 } as _, i}
+						<tr>
+							{#each { length: options[entry[0]].tokens.length + 1 } as _, j}
+								{#if i == 0 && j == 0}
+									<td class="p-1"> \ </td>
+								{:else if i == 0}
+									<td class="p-1">
+										<span class="inline-block h-8">{options[entry[0]].tokens[j - 1].toStringDebug()}</span>
+									</td>
+								{:else if j == 0}
+									<td class="p-1">
+										<span class="inline-block w-8">{options[entry[1]].tokens[i - 1].toStringDebug()}</span>
+									</td>
+								{:else}
+									{@const tokenString = `${options[entry[1]].tokens[i - 1]}${options[entry[0]].tokens[j - 1]}`}
+									{@const token = vocabulary.displaySet.get(tokenString)}
+									{#if token != undefined}
+										{@const color = colorToken(token.id())}
+										<td
+											style:background-color={color.toString()}
+											style:color={color.readable().toString()}
+										>
+											<a href={`/token/${token.id()}`}>{token.toStringDebug()}</a>
+										</td>
+									{:else}
+										<td> </td>
+									{/if}
+								{/if}
+							{/each}
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
 	</div>
 </div>
 
 <style>
 	td {
-		border: 0.5px solid #00000033
+		border: 0.5px solid #00000033;
 	}
 </style>
