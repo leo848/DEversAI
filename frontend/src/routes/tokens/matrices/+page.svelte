@@ -57,8 +57,8 @@
 				<div class="flex flex-row gap-4 text-2xl">
 					{#each Object.keys(options) as (keyof typeof options)[] as optionKey}
 						<button
-							class="bg-primary-2 h-20 w-20 rounded-xl border border-2 p-2 transition-all"
-	   class:bg-fire-300={entry[1 - i] == optionKey}
+							class="bg-primary-2 h-20 w-20 rounded-xl border border-2 p-2 transition-all hover:bg-fire-300"
+							class:bg-fire-300={entry[1 - i] == optionKey}
 							onclick={() => {
 								entry[1 - i] = optionKey;
 							}}>{options[optionKey].symbols}</button
@@ -80,11 +80,15 @@
 									<td class="p-1"> \ </td>
 								{:else if i == 0}
 									<td class="p-1">
-										<span class="inline-block h-8">{options[entry[0]].tokens[j - 1].toStringDebug()}</span>
+										<span class="inline-block h-8"
+											>{options[entry[0]].tokens[j - 1].toStringDebug()}</span
+										>
 									</td>
 								{:else if j == 0}
 									<td class="p-1">
-										<span class="inline-block w-8">{options[entry[1]].tokens[i - 1].toStringDebug()}</span>
+										<span class="inline-block w-8"
+											>{options[entry[1]].tokens[i - 1].toStringDebug()}</span
+										>
 									</td>
 								{:else}
 									{@const tokenString = `${options[entry[1]].tokens[i - 1]}${options[entry[0]].tokens[j - 1]}`}
