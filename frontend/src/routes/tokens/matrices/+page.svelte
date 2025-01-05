@@ -40,10 +40,24 @@
 			title: 'Erste zusammengefügte Tokens',
 			symbols: 'en er',
 			tokens: vocabulary.tokens.slice(256, 256 + 20)
+		},
+		digitPairs: {
+			title: 'Zweiziffrige Zahlen',
+			symbols: '00 01',
+			tokens: new Array(10)
+				.fill(-1)
+				.map((_, i) => i.toString())
+				.flatMap((i) =>
+					new Array(10)
+						.fill(-1)
+						.map((_, i) => i.toString())
+						.map((j) => i + j)
+				)
+				.map(charToToken)
 		}
 	} as const satisfies Record<string, { title: string; symbols: string; tokens: Token[] }>;
 
-	let entry: [keyof typeof options, keyof typeof options] = ['small', 'small'];
+	let entry: [keyof typeof options, keyof typeof options] = $state(['small', 'digitPairs']);
 </script>
 
 <div class="m-4 flex flex-col gap-8 xl:mx-16">
