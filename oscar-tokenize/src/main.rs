@@ -45,7 +45,8 @@ pub fn main() {
             let reader = BufReader::new(File::open(path).expect("Failed to open file"));
 
             let mut histogram = TokenHistogram::new();
-            for (hi, lo) in reader.bytes().map(Result::unwrap).tuple_windows() {
+            for mut chunk in &reader.bytes().map(Result::unwrap).chunks(2) {
+                let (hi, lo) = chunk.next_tuple().expect("No tuple");
                 let token = Token::new((hi as u16) << 8 + lo as u16);
                 histogram.register(token);
             }
