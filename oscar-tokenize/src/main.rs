@@ -42,12 +42,12 @@ pub fn main() {
     let direct_histogram = paths
         .into_par_iter()
         .map(|path| {
-            let reader = BufReader::new(File::open(path).expect("Failed to open file"));
+            let mut reader = BufReader::new(File::open(path).expect("Failed to open file"));
 
             let mut histogram = TokenHistogram::new();
-            for mut chunk in &reader.bytes().map(Result::unwrap).chunks(2) {
-                let (hi, lo) = chunk.next_tuple().expect("No tuple");
-                let token = Token::new((hi as u16) << 8 + lo as u16);
+            let mut buffer = [0u8; 2];
+            while let Ok(_) = reader.read_exact(&mut buffer) {
+                let token = Token::new(u16::from_be_bytes(buffer));
                 histogram.register(token);
             }
             println!("{}", histogram.display_tokens_with_state(&bpe_state));
