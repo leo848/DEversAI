@@ -31,6 +31,10 @@ impl TokenHistogram {
         self.tokens[token.index()] += 1;
     }
 
+    pub fn register_n(&mut self, token: Token, n: u64) {
+        self.tokens[token.index()] += n;
+    }
+
     pub fn register_pair(&mut self, left: Token, right: Token) {
         *self.token_pairs.entry((left, right)).or_default() += 1;
     }

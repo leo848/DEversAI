@@ -61,8 +61,8 @@ pub fn main() {
         let Some((left, right)) = bpe_state.split_token(token) else {
             continue;
         };
-        transitive_histogram.register(left);
-        transitive_histogram.register(right);
+        transitive_histogram.register_n(left, transitive_histogram.get_token(token).into_inner());
+        transitive_histogram.register_n(right, transitive_histogram.get_token(token).into_inner());
     }
 
     for &token in bpe_state.tokens().iter() {
