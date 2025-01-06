@@ -64,6 +64,7 @@ pub fn main() {
     }
 
     for &token in bpe_state.tokens().iter() {
+        println!("{} {}", token.display_with_state(&bpe_state), direct_histogram.get_token(token));
         writeln!(
             direct_histogram_file,
             "{}",
