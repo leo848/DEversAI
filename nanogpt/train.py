@@ -117,7 +117,7 @@ ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=
 
 # poor man's data loader
 data_dir = "/data/"
-calls_per_file = 100
+calls_per_file = 64
 
 last_file = None
 calls_remaining = 0
