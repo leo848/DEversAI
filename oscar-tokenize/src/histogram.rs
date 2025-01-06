@@ -61,6 +61,23 @@ impl TokenHistogram {
         string
     }
 
+    #[allow(dead_code)]
+    #[must_use]
+    pub fn display_tokens_with_state(&self, state: &BpeState) -> impl Display {
+        let mut string = String::new();
+        let top10_tokens = self
+            .tokens
+            .iter()
+            .enumerate()
+            .sorted_by_key(|&(_, v)| v.by_key_desc())
+            .take(10);
+        for (token, count) in top10_tokens {
+            let token = Token::new(token as u16).display_with_state(state);
+            string += &format!("{token:>20}:    {count}    │    ");
+        }
+        string
+    }
+
     pub fn merges_to_add(&self, eta: f64) -> impl Iterator<Item = (Token, Token)> + '_ {
         #[derive(Default)]
         struct State {

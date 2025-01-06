@@ -44,16 +44,13 @@ pub fn main() {
         .map(|path| {
             let reader = BufReader::new(File::open(path).expect("Failed to open file"));
 
-            let mut counter = 0;
             let mut histogram = TokenHistogram::new();
             for mut chunk in &reader.bytes().map(Result::unwrap).chunks(2) {
                 let (hi, lo) = chunk.next_tuple().expect("No tuple");
                 let token = Token::new((hi as u16) << 8 + lo as u16);
                 histogram.register(token);
-                counter += 1;
             }
-            println!("Registered tokens: {}", counter);
-            println!("{}", histogram.display_with_state(&bpe_state));
+            println!("{}", histogram.display_tokens_with_state(&bpe_state));
             histogram
         })
         .progress()
