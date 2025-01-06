@@ -19,6 +19,7 @@ $ torchrun --nproc_per_node=8 --nnodes=2 --node_rank=1 --master_addr=123.456.123
 import os
 import time
 import math
+import glob
 import pickle
 import random
 from contextlib import nullcontext
@@ -128,7 +129,10 @@ def get_batch(split):
     # We recreate np.memmap every batch to avoid a memory leak, as per
     # https://stackoverflow.com/questions/45132940/numpy-memmap-memory-usage-want-to-iterate-once/61472122#61472122
     if calls_remaining <= 0 or last_file == None:
-        file = random.choice(os.listdir(os.path.join(data_dir, split)))
+        if random.random() < 0.3:
+            file = random.choice(glob.glob(os.path.join(data_dir, split) + "/wikipedia*"))
+        else:
+            file = random.choice(glob.glob(os.path.join(data_dir, split) + "/oscar*"))
     else:
         file = last_file
         calls_remaining -= 1
