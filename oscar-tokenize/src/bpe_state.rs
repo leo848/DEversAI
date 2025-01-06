@@ -162,6 +162,11 @@ impl BpeState {
     }
 
     #[must_use]
+    pub fn vocab_size(&self) -> usize {
+        self.tokens().len()
+    }
+
+    #[must_use]
     pub fn additional_vocab_size(&self) -> usize {
         self.merges.len()
     }
@@ -184,6 +189,21 @@ impl BpeState {
     #[must_use]
     pub fn tokens(&self) -> Vec<Token> {
         (0u16..self.vocab.len() as u16).map(Token::new).collect()
+    }
+
+    #[must_use]
+    pub fn split_token(&self, token: Token) -> Option<(Token, Token)> {
+        if token.into_inner() < 256 {
+            None
+        } else {
+            let MergeRule {
+                left,
+                right,
+                result,
+            } = self.merges[token.index() - 256];
+            assert!(result == token);
+            Some((left, right))
+        }
     }
 }
 

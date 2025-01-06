@@ -5,8 +5,9 @@
 #![allow(clippy::unnecessary_wraps)]
 
 use std::{
-    fs::{self, OpenOptions},
-    io::{BufWriter, Write},
+    env::args,
+    fs::{self, File, OpenOptions},
+    io::{BufRead, BufReader, BufWriter, Read, Write},
     path::PathBuf,
     time::Instant,
 };
@@ -14,12 +15,71 @@ use std::{
 use indicatif::{ParallelProgressIterator, ProgressStyle};
 use itertools::{chain, Itertools};
 use oscar_tokenize::{
-    dataset::InMemoryDataset, BpeState, Dataset, EtaScheduler, Token, TrainConfig,
+    dataset::InMemoryDataset, BpeState, Dataset, EtaScheduler, Token, TokenHistogram, TrainConfig,
 };
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use regex::Regex;
 
 pub fn main() {
+    let bpe_state = BpeState::synced_with_file("/vocab/german-complete.vocab");
+
+    let paths = args().skip(1).map(PathBuf::from).collect_vec();
+
+    let [mut direct_histogram_file, mut transitive_histogram_file] = [
+        "/output/direct_histogram.txt",
+        "/output/transitive_histogram.txt",
+    ]
+    .map(|path| {
+        let file = OpenOptions::new()
+            .write(true)
+            .truncate(true)
+            .open(&path)
+            .expect("Failed to open file");
+        BufWriter::new(file)
+    });
+
+    let direct_histogram = paths
+        .into_par_iter()
+        .map(|path| {
+            let reader = BufReader::new(File::open(path).expect("Failed to open file"));
+
+            let mut histogram = TokenHistogram::new();
+            for (hi, lo) in reader.bytes().flatten().tuple_windows() {
+                let token = Token::new((hi as u16) << 8 + lo as u16);
+                histogram.register(token);
+            }
+            histogram
+        })
+        .progress()
+        .sum::<TokenHistogram>();
+
+    let mut transitive_histogram = direct_histogram.clone();
+    for &token in bpe_state.tokens().iter().rev() {
+        let Some((left, right)) = bpe_state.split_token(token) else {
+            continue;
+        };
+        transitive_histogram.register(left);
+        transitive_histogram.register(right);
+    }
+
+    for &token in bpe_state.tokens().iter() {
+        writeln!(
+            direct_histogram_file,
+            "{}",
+            direct_histogram.get_token(token)
+        )
+        .expect("IO error");
+        writeln!(
+            transitive_histogram_file,
+            "{}",
+            transitive_histogram.get_token(token)
+        )
+        .expect("IO error");
+    }
+}
+
+#[allow(dead_code)]
+fn tokenize_corpora() {
     let bpe_state = BpeState::synced_with_file("/vocab/german-complete.vocab");
 
     let paths = chain!(
@@ -169,3 +229,6 @@ fn train_vocabulary(bpe_state: &mut BpeState) {
 
     println!("Vocabulary fully trained. Manual filtering required next.")
 }
+
+#[allow(dead_code)]
+fn count_tokens() {}
