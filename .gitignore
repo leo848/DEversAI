@@ -27,3 +27,15 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+.idea
+nanogpt/.ipynb_checkpoints/
+.vscode
+nanogpt/__pycache__/
+*.bin
+*.pkl
+*.pt
+*.pyc
+input.txt
+nanogpt/env/
+nanogpt/venv/
