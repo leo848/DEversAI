@@ -31,6 +31,7 @@ pub fn main() {
     ]
     .map(|path| {
         let file = OpenOptions::new()
+            .create(true)
             .write(true)
             .truncate(true)
             .open(&path)
