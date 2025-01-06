@@ -49,6 +49,7 @@ pub fn main() {
                 let token = Token::new((hi as u16) << 8 + lo as u16);
                 histogram.register(token);
             }
+            println!("{}", histogram.display_with_state(&bpe_state));
             histogram
         })
         .progress()
