@@ -67,16 +67,18 @@ pub fn main() {
         writeln!(
             direct_histogram_file,
             "{}",
-            direct_histogram.get_token(token)
+            direct_histogram.get_token(token).into_inner()
         )
         .expect("IO error");
         writeln!(
             transitive_histogram_file,
             "{}",
-            transitive_histogram.get_token(token)
+            transitive_histogram.get_token(token).into_inner()
         )
         .expect("IO error");
     }
+    direct_histogram_file.flush().expect("IO-Fehler");
+    transitive_histogram_file.flush().expect("IO-Fehler");
 }
 
 #[allow(dead_code)]
