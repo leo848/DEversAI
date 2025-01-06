@@ -2,6 +2,7 @@
 Sample from a trained model
 """
 import os
+from more_itertools import windowed
 import pickle
 from contextlib import nullcontext
 import torch
@@ -11,9 +12,9 @@ from model import GPTConfig, GPT
 # -----------------------------------------------------------------------------
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
 out_dir = 'output' # ignored if init_from is not 'resume'
-start = "\n" # or "<|endoftext|>" or etc. Can also specify a file, use as: "FILE:prompt.txt"
+start = "\n\nRezept: Apfelkuchen wie bei Oma\n\nZutaten:\n" # or "<|endoftext|>" or etc. Can also specify a file, use as: "FILE:prompt.txt"
 num_samples = 10 # number of samples to draw
-max_new_tokens = 250 # number of tokens generated in each sample
+max_new_tokens = 350 # number of tokens generated in each sample
 temperature = 0.8 # 1.0 = no change, < 1.0 = less random, > 1.0 = more random, in predictions
 top_k = 200 # retain only the top_k most likely tokens, clamp others to have 0 probability
 seed = random.randint(0, int(1e10))
@@ -36,7 +37,7 @@ ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=
 if init_from == 'resume':
     # init from a model saved in a specific directory
     ckpt_path = os.path.join(out_dir, 'ckpt.pt')
-    checkpoint = torch.load(ckpt_path, map_location=device)
+    checkpoint = torch.load(ckpt_path, map_location=device, weights_only=True)
     gptconf = GPTConfig(**checkpoint['model_args'])
     model = GPT(gptconf)
     state_dict = checkpoint['model']
@@ -65,14 +66,38 @@ print(f"Using {vocab_file} vocab")
 with open(vocab_file) as f:
     merge_rules = list(map(lambda s: list(map(int, s.strip().split(" "))), list(f)))
 token_to_byte = []
+token_pairs_set = {}
 for i in range(256):
     token_to_byte.append(bytes([i]))
 for [left, right, result] in merge_rules:
     token_to_byte.append(token_to_byte[left] + token_to_byte[right])
+    token_pairs_set[((left, right))] = result
 
 def encode(string):
-    base_tokens = [ord(c) for c in string]
-    return base_tokens
+    tokens = list(bytes(string.encode("utf-8")))
+    while True:
+        next_mergeable_pair = None
+        for pair in windowed(tokens, n=2):
+            if pair in token_pairs_set and (next_mergeable_pair is None or token_pairs_set[next_mergeable_pair] > token_pairs_set[pair]):
+                next_mergeable_pair = pair
+        if next_mergeable_pair is None:
+            break
+        new_tokens = []
+        merged = False
+        for (left, right) in windowed(tokens, n=2):
+            if merged:
+                merged = False
+                continue
+            if (left, right) == next_mergeable_pair:
+                new_tokens.append(token_pairs_set[(left, right)])
+                merged = True
+            else:
+                new_tokens.append(left)
+        if not merged:
+            new_tokens.append(tokens[-1])
+        tokens = new_tokens
+    print(tokens)
+    return tokens
 
 def decode(tokens):
     token_bytes = bytes()
@@ -80,7 +105,7 @@ def decode(tokens):
         if token == 0xFF:
             break
         token_bytes += token_to_byte[token]
-    return token_bytes.decode(encoding="utf-8")
+    return token_bytes.decode(encoding="utf-8", errors="replace")
 
 # encode the beginning of the prompt
 if start.startswith('FILE:'):
