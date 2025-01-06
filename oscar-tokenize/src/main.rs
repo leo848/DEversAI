@@ -50,7 +50,6 @@ pub fn main() {
                 let token = Token::new(u16::from_be_bytes(buffer));
                 histogram.register(token);
             }
-            println!("{}", histogram.display_tokens_with_state(&bpe_state));
             histogram
         })
         .progress()
@@ -68,15 +67,13 @@ pub fn main() {
     for &token in bpe_state.tokens().iter() {
         writeln!(
             direct_histogram_file,
-            "{} {}",
-            token.into_inner(),
+            "{}",
             direct_histogram.get_token(token).into_inner()
         )
         .expect("IO error");
         writeln!(
             transitive_histogram_file,
-            "{} {}",
-            token.into_inner(),
+            "{}",
             transitive_histogram.get_token(token).into_inner()
         )
         .expect("IO error");
