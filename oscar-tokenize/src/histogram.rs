@@ -52,7 +52,7 @@ impl TokenHistogram {
             .take(10);
         for ((token, count), ((pair_l, pair_r), pair_count)) in top10_tokens.zip(top10_pairs) {
             let token = Token::new(token as u16).display_with_state(state);
-            string += &format!("{token:>20}:    {count}\n");
+            string += &format!("{token:>20}:    {count}    │    ");
 
             let [pair_l, pair_r] = [pair_l, pair_r].map(|token| token.display_with_state(state));
             let token_pair = format!("{pair_l} -> {pair_r}");
@@ -73,7 +73,11 @@ impl TokenHistogram {
             .take(10);
         for (token, count) in top10_tokens {
             let token = Token::new(token as u16).display_with_state(state);
-            string += &format!("{token:>20}:    {count}    │    ");
+            string += &format!("{token:>20}:    {count}\n");
+
+            let [pair_l, pair_r] = [pair_l, pair_r].map(|token| token.display_with_state(state));
+            let token_pair = format!("{pair_l} -> {pair_r}");
+            string += &format!("{token_pair:>20}:    {pair_count}\n");
         }
         string
     }
