@@ -46,7 +46,7 @@ pub fn main() {
 
             let mut histogram = TokenHistogram::new();
             for mut chunk in &reader.bytes().map(Result::unwrap).chunks(2) {
-                let (hi, lo) = chunk.next_tuple().expect("No tuple");
+                let (lo, hi) = chunk.next_tuple().expect("No tuple");
                 let token = Token::new((hi as u16) << 8 + lo as u16);
                 histogram.register(token);
             }
