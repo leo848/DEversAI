@@ -38,6 +38,7 @@ from model import GPTConfig, GPT
 out_dir = '/output'
 eval_interval = 1000
 log_interval = 1
+checkpoint_interval = 2500
 eval_iters = 200
 eval_only = False # if True, script exits right after the first eval
 always_save_checkpoint = True # if True, always save a checkpoint after each eval
@@ -276,12 +277,9 @@ while True:
     # evaluate the loss on train/val sets and write checkpoints
     if iter_num % eval_interval == 0 and master_process:
         losses = estimate_loss()
-        writer.add_scalar("Loss/train", losses["train"], iter_num)
         writer.add_scalar("Loss/val", losses["val"], iter_num)
-        writer.add_scalar("LR", lr, iter_num)
-        writer.add_scalar("MFU", running_mfu * 100, iter_num)
         print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
-        if losses['val'] < best_val_loss or always_save_checkpoint:
+        if (losses['val'] < best_val_loss or always_save_checkpoint) and iter_num % checkpoint_interval == 0:
             best_val_loss = losses['val']
             if iter_num > 0:
                 checkpoint = {
@@ -335,6 +333,8 @@ while True:
             mfu = raw_model.estimate_mfu(batch_size * gradient_accumulation_steps, dt)
             running_mfu = mfu if running_mfu == -1.0 else 0.9*running_mfu + 0.1*mfu
         writer.add_scalar("Loss/train", lossf, iter_num)
+        writer.add_scalar("LR", lr, iter_num)
+        writer.add_scalar("MFU", running_mfu * 100, iter_num)
         print(f"iter {iter_num}: loss {lossf:.4f}, time {dt*1000:.2f}ms, mfu {running_mfu*100:.2f}%")
     iter_num += 1
     local_iter_num += 1
