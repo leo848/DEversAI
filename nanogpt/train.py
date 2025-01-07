@@ -343,5 +343,8 @@ while True:
     if iter_num > max_iters:
         break
 
+if master_process:
+    writer.flush()
+
 if ddp:
     destroy_process_group()
