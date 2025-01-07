@@ -2,6 +2,7 @@
 Sample from a trained model
 """
 import os
+from ast import literal_eval
 from more_itertools import windowed
 import pickle
 from contextlib import nullcontext
@@ -110,7 +111,8 @@ def decode(tokens):
 # encode the beginning of the prompt
 prompt_input = start
 while prompt_input:
-    prompt_input = "\n" + input("\x1B[32m>>> \x1B[0m")
+    raw_input = input("\x1B[32m>>> \x1B[0m")
+    prompt_input = "\n" + literal_eval(f'"{raw_input}"')
     start_ids = encode(prompt_input)
     x = (torch.tensor(start_ids, dtype=torch.long, device=device)[None, ...])
 
