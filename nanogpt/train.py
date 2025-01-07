@@ -122,6 +122,7 @@ last_file = None
 calls_remaining = 0
 def get_batch(split):
     global calls_remaining
+    global last_file
     assert split in {"train", "val"}
     # We recreate np.memmap every batch to avoid a memory leak, as per
     # https://stackoverflow.com/questions/45132940/numpy-memmap-memory-usage-want-to-iterate-once/61472122#61472122
