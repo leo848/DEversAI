@@ -57,7 +57,7 @@
 		}
 	} as const satisfies Record<string, { title: string; symbols: string; tokens: Token[] }>;
 
-	let entry: [keyof typeof options, keyof typeof options] = $state(['small', 'digitPairs']);
+	let entry: [keyof typeof options, keyof typeof options] = $state(['small', 'small']);
 </script>
 
 <div class="m-4 flex flex-col gap-8 xl:mx-16">
