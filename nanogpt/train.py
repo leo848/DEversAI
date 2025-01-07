@@ -119,7 +119,6 @@ calls_per_file = 64
 
 last_file = None
 calls_remaining = 0
-
 def get_batch(split):
     global calls_remaining
     assert split in {"train", "val"}
@@ -144,7 +143,8 @@ def get_batch(split):
         x, y = x.to(device), y.to(device)
     return x, y
 
-writer = SummaryWriter()
+if master_process:
+    writer = SummaryWriter()
 
 # init these up here, can override if init_from='resume' (i.e. from a checkpoint)
 iter_num = 0
@@ -260,19 +260,14 @@ def get_lr(it):
     coeff = 0.5 * (1.0 + math.cos(math.pi * decay_ratio)) # coeff ranges 0..1
     return min_lr + coeff * (learning_rate - min_lr)
 
-# logging
-if wandb_log and master_process:
-    import wandb
-    wandb.init(project=wandb_project, name=wandb_run_name, config=config)
-
 # training loop
 X, Y = get_batch('train') # fetch the very first batch
 t0 = time.time()
 local_iter_num = 0 # number of iterations in the lifetime of this process
 raw_model = model.module if ddp else model # unwrap DDP container if needed
 running_mfu = -1.0
-while True:
 
+while True:
     # determine and set the learning rate for this iteration
     lr = get_lr(iter_num) if decay_lr else learning_rate
     for param_group in optimizer.param_groups:
