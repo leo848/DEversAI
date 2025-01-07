@@ -36,7 +36,7 @@ ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=
 # model
 if init_from == 'resume':
     # init from a model saved in a specific directory
-    ckpt_path = os.path.join(out_dir, 'ckpt.pt')
+    ckpt_path = os.path.join(out_dir, 'karpathy-gpt2-orig.pt')
     checkpoint = torch.load(ckpt_path, map_location=device, weights_only=True)
     gptconf = GPTConfig(**checkpoint['model_args'])
     model = GPT(gptconf)
@@ -108,16 +108,15 @@ def decode(tokens):
     return token_bytes.decode(encoding="utf-8", errors="replace")
 
 # encode the beginning of the prompt
-if start.startswith('FILE:'):
-    with open(start[5:], 'r', encoding='utf-8') as f:
-        start = f.read()
-start_ids = encode(start)
-x = (torch.tensor(start_ids, dtype=torch.long, device=device)[None, ...])
+prompt_input = start
+while prompt_input:
+    prompt_input = "\n" + input("\x1B[32m>>> \x1B[0m")
+    start_ids = encode(prompt_input)
+    x = (torch.tensor(start_ids, dtype=torch.long, device=device)[None, ...])
 
-# run generation
-with torch.no_grad():
-    with ctx:
-        for k in range(num_samples):
-            y = model.generate(x, max_new_tokens, temperature=temperature, top_k=top_k)
-            print(decode(y[0].tolist()))
-            print(f'--------------- ({k})')
+    # run generation
+    with torch.no_grad():
+        with ctx:
+            # for k in range(num_samples)
+                y = model.generate(x, max_new_tokens, temperature=temperature, top_k=top_k)
+                print(decode(y[0].tolist()))
