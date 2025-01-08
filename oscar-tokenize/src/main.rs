@@ -40,6 +40,7 @@ pub fn main() {
     let tokens = bpe_state.tokens();
     let token_examples = tokens
         .into_par_iter()
+        .progress()
         .filter(|token| token.index() >= 256)
         .map(|token| {
             let mut examples = Vec::with_capacity(EXAMPLE_COUNT);
