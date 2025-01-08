@@ -120,6 +120,7 @@ pub fn main() {
                 "{str_before}\x1B[1;31m{}\x1B[0m{str_after}",
                 token.display_with_state(&bpe_state)
             );
+            break;
         }
     }
 }
