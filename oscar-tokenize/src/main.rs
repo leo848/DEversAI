@@ -9,7 +9,7 @@ use std::{
     env::args,
     fmt::write,
     fs::{self, File, OpenOptions},
-    io::{BufRead, BufReader, BufWriter, Read, Seek, SeekFrom, Write},
+    io::{self, BufRead, BufReader, BufWriter, Read, Seek, SeekFrom, Stdout, Write},
     iter::once,
     path::PathBuf,
     process::exit,
@@ -33,29 +33,28 @@ pub fn main() {
 
     let bpe_state = BpeState::synced_with_file("/vocab/german-complete.vocab");
 
-    let mut token_examples = HashMap::<Token, Vec<Box<[Token]>>>::new();
-
     let tokens = bpe_state.tokens();
-    for token in tokens {
-        if token.index() < 256 {
-            continue;
-        }
-        let path = &paths[fastrand::usize(..paths.len())];
-        let file = File::open(path).expect("File should exist");
-        let size_bytes = file.metadata().expect("File should have metadata").len();
-        let mut reader = BufReader::new(file);
+    let token_examples = tokens.into_par_iter().filter(|token| token.index() >= 256).map(|token| {
+        let mut examples = Vec::with_capacity(EXAMPLE_COUNT);
+        while examples.len() < EXAMPLE_COUNT {
+            let path = &paths[fastrand::usize(..paths.len())];
+            let file = File::open(path).expect("File should exist");
+            let size_bytes = file.metadata().expect("File should have metadata").len();
+            let mut reader = BufReader::new(file);
 
-        let seek_bytes = fastrand::u64(0..size_bytes / 2) & !1; // ensure divisibility by two
-        reader
-            .seek(SeekFrom::Start(seek_bytes))
-            .expect("Failed to seek");
+            let seek_bytes = fastrand::u64(0..size_bytes / 2) & !1; // ensure divisibility by two
+            reader
+                .seek(SeekFrom::Start(seek_bytes))
+                .expect("Failed to seek");
 
-        let mut buffer = [0u8; 2];
-        while let Ok(_) = reader.read_exact(&mut buffer) {
-            let found_token = Token::new(u16::from_be_bytes(buffer));
-            if found_token != token {
-                continue;
+            let mut buffer = [0u8; 2];
+            while let Ok(_) = reader.read_exact(&mut buffer) {
+                let found_token = Token::new(u16::from_be_bytes(buffer));
+                if found_token == token {
+                    break;
+                }
             }
+
             let mut bytes_after = [0u8; TOKENS_CONTEXT * 2];
             reader
                 .read_exact(&mut bytes_after)
@@ -116,13 +115,16 @@ pub fn main() {
             let str_before = split_before(ctx_before);
             let str_after = split_after(ctx_after);
 
-            println!(
-                "{str_before}\x1B[1;31m{}\x1B[0m{str_after}",
-                token.display_with_state(&bpe_state)
-            );
-            break;
+            if str_before.len() < 5 || str_after.len() < 5 { continue }
+
+            examples
+                .push((str_before, str_after));
         }
-    }
+        (token.index().to_string(), examples)
+    }).collect::<HashMap<_, _>>();
+
+    serde_json::to_writer(io::stdout().lock(), &token_examples).expect("Serialization failed");
+
 }
 
 #[allow(dead_code)]
