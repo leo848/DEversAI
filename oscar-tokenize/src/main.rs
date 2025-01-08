@@ -47,6 +47,8 @@ pub fn main() {
             let mut examples = Vec::with_capacity(EXAMPLE_COUNT);
             let mut counter = 0;
             while examples.len() < EXAMPLE_COUNT || counter < MAX_TRIES {
+                counter += 1;
+
                 let path = &paths[fastrand::usize(..paths.len())];
                 let file = File::open(path).expect("File should exist");
                 let size_bytes = file.metadata().expect("File should have metadata").len();
@@ -138,7 +140,6 @@ pub fn main() {
 
                 examples.push((str_before, str_after));
             }
-            counter += 1;
             (token.index().to_string(), examples)
         })
         .collect::<HashMap<_, _>>();
