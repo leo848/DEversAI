@@ -52,11 +52,16 @@ pub fn main() {
                 .expect("Failed to seek");
 
             let mut buffer = [0u8; 2];
+            let mut found_token = false;
             while let Ok(_) = reader.read_exact(&mut buffer) {
-                let found_token = Token::new(u16::from_be_bytes(buffer));
-                if found_token == token {
+                let present_token = Token::new(u16::from_be_bytes(buffer));
+                if present_token == token {
+                    found_token = true;
                     break;
                 }
+            }
+            if !found_token {
+                continue;
             }
 
             let mut bytes_after = [0u8; TOKENS_CONTEXT * 2];
