@@ -38,102 +38,108 @@ pub fn main() {
     let bpe_state = BpeState::synced_with_file("/vocab/german-complete.vocab");
 
     let tokens = bpe_state.tokens();
-    let token_examples = tokens.into_par_iter().filter(|token| token.index() >= 256).map(|token| {
-        let mut examples = Vec::with_capacity(EXAMPLE_COUNT);
-        while examples.len() < EXAMPLE_COUNT {
-            let path = &paths[fastrand::usize(..paths.len())];
-            let file = File::open(path).expect("File should exist");
-            let size_bytes = file.metadata().expect("File should have metadata").len();
-            let mut reader = BufReader::new(file);
+    let token_examples = tokens
+        .into_par_iter()
+        .filter(|token| token.index() >= 256)
+        .map(|token| {
+            let mut examples = Vec::with_capacity(EXAMPLE_COUNT);
+            while examples.len() < EXAMPLE_COUNT {
+                let path = &paths[fastrand::usize(..paths.len())];
+                let file = File::open(path).expect("File should exist");
+                let size_bytes = file.metadata().expect("File should have metadata").len();
+                let mut reader = BufReader::new(file);
 
-            let seek_bytes = fastrand::u64(TOKENS_CONTEXT as u64 * 10..size_bytes / 2) & !1; // ensure divisibility by two
-            reader
-                .seek(SeekFrom::Start(seek_bytes))
-                .expect("Failed to seek");
+                let seek_bytes = fastrand::u64(TOKENS_CONTEXT as u64 * 10..size_bytes / 2) & !1; // ensure divisibility by two
+                reader
+                    .seek(SeekFrom::Start(seek_bytes))
+                    .expect("Failed to seek");
 
-            let mut buffer = [0u8; 2];
-            let mut found_token = false;
-            while let Ok(_) = reader.read_exact(&mut buffer) {
-                let present_token = Token::new(u16::from_be_bytes(buffer));
-                if present_token == token {
-                    found_token = true;
-                    break;
-                }
-            }
-            if !found_token {
-                continue;
-            }
-
-            let mut bytes_after = [0u8; TOKENS_CONTEXT * 2];
-            reader
-                .read_exact(&mut bytes_after)
-                .expect("Failed to read right context");
-            let mut bytes_before = [0u8; TOKENS_CONTEXT * 2];
-            reader
-                .seek_relative(-(TOKENS_CONTEXT as i64) * 4 - 2)
-                .expect("Failed to seek");
-            reader
-                .read_exact(&mut bytes_before)
-                .expect("Failed to read left context");
-
-            let bytes_to_tokens = move |bytes: [u8; TOKENS_CONTEXT * 2]| {
-                bytes
-                    .into_iter()
-                    .chunks(2)
-                    .into_iter()
-                    .map(|chunk| {
-                        let chunk = chunk.collect_vec();
-                        Token::new(u16::from_be_bytes([chunk[0], chunk[1]]))
-                    })
-                    .collect_vec()
-            };
-
-            let [ctx_before, ctx_after] = [bytes_before, bytes_after]
-                .map(|bytes| bytes_to_tokens(bytes))
-                .map(|tokens| {
-                    tokens
-                        .iter()
-                        .flat_map(|&token| bpe_state.at_token(token))
-                        .copied()
-                        .collect_vec()
-                })
-                .map(|bytes| String::from_utf8_lossy(&bytes).into_owned());
-
-            let patterns = &[("\n", false), (". ", true), ("#", false), ("�", false)];
-            let split_many = |before: bool| {
-                move |mut string: String| {
-                    for &(pattern, keep) in patterns {
-                        if before {
-                            string = string
-                                .rsplit_once(pattern)
-                                .map(|(_, right)| right.to_owned())
-                                .unwrap_or(string);
-                        } else {
-                            string = string
-                                .split_once(pattern)
-                                .map(|(left, _)| left.to_owned() + if keep { pattern } else { "" })
-                                .unwrap_or(string);
-                        }
+                let mut buffer = [0u8; 2];
+                let mut found_token = false;
+                while let Ok(_) = reader.read_exact(&mut buffer) {
+                    let present_token = Token::new(u16::from_be_bytes(buffer));
+                    if present_token == token {
+                        found_token = true;
+                        break;
                     }
-                    string.to_owned()
                 }
-            };
-            let split_before = split_many(true);
-            let split_after = split_many(false);
+                if !found_token {
+                    continue;
+                }
 
-            let str_before = split_before(ctx_before);
-            let str_after = split_after(ctx_after);
+                let mut bytes_after = [0u8; TOKENS_CONTEXT * 2];
+                reader
+                    .read_exact(&mut bytes_after)
+                    .expect("Failed to read right context");
+                let mut bytes_before = [0u8; TOKENS_CONTEXT * 2];
+                reader
+                    .seek_relative(-(TOKENS_CONTEXT as i64) * 4 - 2)
+                    .expect("Failed to seek");
+                reader
+                    .read_exact(&mut bytes_before)
+                    .expect("Failed to read left context");
 
-            if str_before.len() < 5 || str_after.len() < 5 { continue }
+                let bytes_to_tokens = move |bytes: [u8; TOKENS_CONTEXT * 2]| {
+                    bytes
+                        .into_iter()
+                        .chunks(2)
+                        .into_iter()
+                        .map(|chunk| {
+                            let chunk = chunk.collect_vec();
+                            Token::new(u16::from_be_bytes([chunk[0], chunk[1]]))
+                        })
+                        .collect_vec()
+                };
 
-            examples
-                .push((str_before, str_after));
-        }
-        (token.index().to_string(), examples)
-    }).collect::<HashMap<_, _>>();
+                let [ctx_before, ctx_after] = [bytes_before, bytes_after]
+                    .map(|bytes| bytes_to_tokens(bytes))
+                    .map(|tokens| {
+                        tokens
+                            .iter()
+                            .flat_map(|&token| bpe_state.at_token(token))
+                            .copied()
+                            .collect_vec()
+                    })
+                    .map(|bytes| String::from_utf8_lossy(&bytes).into_owned());
+
+                let patterns = &[("\n", false), (". ", true), ("#", false), ("�", false)];
+                let split_many = |before: bool| {
+                    move |mut string: String| {
+                        for &(pattern, keep) in patterns {
+                            if before {
+                                string = string
+                                    .rsplit_once(pattern)
+                                    .map(|(_, right)| right.to_owned())
+                                    .unwrap_or(string);
+                            } else {
+                                string = string
+                                    .split_once(pattern)
+                                    .map(|(left, _)| {
+                                        left.to_owned() + if keep { pattern } else { "" }
+                                    })
+                                    .unwrap_or(string);
+                            }
+                        }
+                        string.to_owned()
+                    }
+                };
+                let split_before = split_many(true);
+                let split_after = split_many(false);
+
+                let str_before = split_before(ctx_before);
+                let str_after = split_after(ctx_after);
+
+                if str_before.len() < 5 || str_after.len() < 5 {
+                    continue;
+                }
+
+                examples.push((str_before, str_after));
+            }
+            (token.index().to_string(), examples)
+        })
+        .collect::<HashMap<_, _>>();
 
     serde_json::to_writer(io::stdout().lock(), &token_examples).expect("Serialization failed");
-
 }
 
 #[allow(dead_code)]
