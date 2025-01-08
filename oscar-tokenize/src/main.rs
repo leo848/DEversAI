@@ -37,7 +37,7 @@ pub fn main() {
 
     let tokens = bpe_state.tokens();
     for token in tokens {
-        if token.index() < 256 {
+        if token.index() < 256 || token.index() > 300 {
             continue;
         }
         let path = &paths[fastrand::usize(..paths.len())];
@@ -120,7 +120,6 @@ pub fn main() {
                 "{str_before}\x1B[1;31m{}\x1B[0m{str_after}",
                 token.display_with_state(&bpe_state)
             );
-            exit(1)
         }
     }
 }
