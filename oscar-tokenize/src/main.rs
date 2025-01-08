@@ -61,7 +61,7 @@ pub fn main() {
                 .expect("Failed to read right context");
             let mut tokens_preceding = [0u8; TOKENS_CONTEXT * 2];
             reader
-                .seek_relative(-(TOKENS_CONTEXT as i64) * 4 + 2)
+                .seek_relative(-(TOKENS_CONTEXT as i64) * 4 - 2)
                 .expect("Failed to seek");
             reader
                 .read_exact(&mut tokens_preceding)
