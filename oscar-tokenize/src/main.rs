@@ -38,7 +38,7 @@ pub fn main() {
     let bpe_state = BpeState::synced_with_file("/vocab/german-complete.vocab");
 
     let tokens = bpe_state.tokens();
-    let token_examples = tokens.into_iter().filter(|token| token.index() >= 256).map(|token| {
+    let token_examples = tokens.into_par_iter().filter(|token| token.index() >= 256).map(|token| {
         let mut examples = Vec::with_capacity(EXAMPLE_COUNT);
         while examples.len() < EXAMPLE_COUNT {
             let path = &paths[fastrand::usize(..paths.len())];
