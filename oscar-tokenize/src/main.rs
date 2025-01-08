@@ -102,11 +102,8 @@ pub fn main() {
                         } else {
                             string = string
                                 .split_once(delim)
-                                .map(|(left, _)| left.to_owned())
+                                .map(|(left, _)| left.to_owned() + delim)
                                 .unwrap_or(string);
-                            if !delim.trim().is_empty() {
-                                string += delim;
-                            }
                         }
                     }
                     string.to_owned()
