@@ -118,7 +118,7 @@ pub fn main() {
             let str_after = split_after(ctx_after, patterns);
 
             println!(
-                "{str_before}\x1B[1m{}\x1B[0m{str_after}",
+                "{str_before}\x1B[1;31m{}\x1B[0m{str_after}",
                 token.display_with_state(&bpe_state)
             );
             exit(1)
