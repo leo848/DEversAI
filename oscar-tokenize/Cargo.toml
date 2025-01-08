@@ -12,6 +12,7 @@ arrow = "53.3.0"
 crossbeam-channel = "0.5.13"
 dashmap = "6.1.0"
 derive_more = { version = "1.0.0", features = ["add", "add_assign", "sum", "constructor"] }
+fastrand = "2.3.0"
 indicatif = { version = "0.17.9", features = ["rayon"] }
 itertools = "0.13.0"
 num_cpus = "1.16.0"

@@ -5,10 +5,13 @@
 #![allow(clippy::unnecessary_wraps)]
 
 use std::{
+    collections::HashMap,
     env::args,
     fs::{self, File, OpenOptions},
-    io::{BufRead, BufReader, BufWriter, Read, Write},
+    io::{BufRead, BufReader, BufWriter, Read, Seek, SeekFrom, Write},
+    iter::once,
     path::PathBuf,
+    process::exit,
     time::Instant,
 };
 
@@ -20,7 +23,80 @@ use oscar_tokenize::{
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use regex::Regex;
 
+#[allow(dead_code)]
 pub fn main() {
+    const EXAMPLE_COUNT: usize = 1;
+    const TOKENS_CONTEXT: usize = 100;
+
+    let paths = args().skip(1).map(PathBuf::from).collect_vec();
+
+    let bpe_state = BpeState::synced_with_file("/vocab/german-complete.vocab");
+
+    let mut token_examples = HashMap::<Token, Vec<Box<[Token]>>>::new();
+
+    let tokens = bpe_state.tokens();
+    for token in tokens {
+        if token.index() < 256 {
+            continue;
+        }
+        let path = &paths[fastrand::usize(..paths.len())];
+        let file = File::open(path).expect("File should exist");
+        let size_bytes = file.metadata().expect("File should have metadata").len();
+        let mut reader = BufReader::new(file);
+
+        let seek_bytes = fastrand::u64(0..size_bytes / 2) & !1; // ensure divisibility by two
+        reader
+            .seek(SeekFrom::Start(seek_bytes))
+            .expect("Failed to seek");
+
+        let mut buffer = [0u8; 2];
+        while let Ok(_) = reader.read_exact(&mut buffer) {
+            let found_token = Token::new(u16::from_be_bytes(buffer));
+            if found_token != token {
+                continue;
+            }
+            let mut tokens_following = [0u8; TOKENS_CONTEXT * 2];
+            reader
+                .read_exact(&mut tokens_following)
+                .expect("Failed to read right context");
+            let mut tokens_preceding = [0u8; TOKENS_CONTEXT * 2];
+            reader
+                .seek_relative(-(TOKENS_CONTEXT as i64) * 4 + 2)
+                .expect("Failed to seek");
+            reader
+                .read_exact(&mut tokens_preceding)
+                .expect("Failed to read right context");
+
+            let bytes_to_tokens = move |bytes: [u8; TOKENS_CONTEXT * 2]| {
+                bytes
+                    .into_iter()
+                    .chunks(2)
+                    .into_iter()
+                    .map(|chunk| {
+                        let chunk = chunk.collect_vec();
+                        Token::new(u16::from_be_bytes([chunk[0], chunk[1]]))
+                    })
+                    .collect_vec()
+            };
+
+            let context = chain!(
+                bytes_to_tokens(tokens_preceding),
+                once(token),
+                bytes_to_tokens(tokens_following),
+            );
+            let utf8 = context
+                .flat_map(|token| bpe_state.at_token(token))
+                .copied()
+                .collect_vec();
+            let string = String::from_utf8_lossy(&utf8);
+            println!("{} {string}", token.display_with_state(&bpe_state));
+            exit(1)
+        }
+    }
+}
+
+#[allow(dead_code)]
+fn count_tokens() {
     let bpe_state = BpeState::synced_with_file("/vocab/german-complete.vocab");
 
     let paths = args().skip(1).map(PathBuf::from).collect_vec();
@@ -233,6 +309,3 @@ fn train_vocabulary(bpe_state: &mut BpeState) {
 
     println!("Vocabulary fully trained. Manual filtering required next.")
 }
-
-#[allow(dead_code)]
-fn count_tokens() {}
