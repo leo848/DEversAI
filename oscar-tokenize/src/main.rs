@@ -37,7 +37,7 @@ pub fn main() {
 
     let tokens = bpe_state.tokens();
     for token in tokens {
-        if token.index() < 256 || token.index() > 300 {
+        if token.index() < 256 {
             continue;
         }
         let path = &paths[fastrand::usize(..paths.len())];
