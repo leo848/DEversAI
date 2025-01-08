@@ -91,18 +91,19 @@ pub fn main() {
                 })
                 .map(|bytes| String::from_utf8_lossy(&bytes).into_owned());
 
+            let patterns = &[("\n", false), (". ", true), ("#", false), ("�", false)];
             let split_many = |before: bool| {
-                move |mut string: String, delims: &[&str]| {
-                    for delim in delims {
+                move |mut string: String| {
+                    for &(pattern, keep) in patterns {
                         if before {
                             string = string
-                                .rsplit_once(delim)
+                                .rsplit_once(pattern)
                                 .map(|(_, right)| right.to_owned())
                                 .unwrap_or(string);
                         } else {
                             string = string
-                                .split_once(delim)
-                                .map(|(left, _)| left.to_owned() + delim)
+                                .split_once(pattern)
+                                .map(|(left, _)| left.to_owned() + if keep { pattern } else { "" })
                                 .unwrap_or(string);
                         }
                     }
@@ -112,10 +113,8 @@ pub fn main() {
             let split_before = split_many(true);
             let split_after = split_many(false);
 
-            let patterns = &["\n", ". ", "#"];
-
-            let str_before = split_before(ctx_before, patterns);
-            let str_after = split_after(ctx_after, patterns);
+            let str_before = split_before(ctx_before);
+            let str_after = split_after(ctx_after);
 
             println!(
                 "{str_before}\x1B[1;31m{}\x1B[0m{str_after}",
