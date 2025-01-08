@@ -7,12 +7,9 @@
 use std::{
     collections::HashMap,
     env::args,
-    fmt::write,
     fs::{self, File, OpenOptions},
-    io::{self, BufRead, BufReader, BufWriter, IsTerminal, Read, Seek, SeekFrom, Stdout, Write},
-    iter::once,
+    io::{self, BufReader, BufWriter, IsTerminal, Read, Seek, SeekFrom, Write},
     path::PathBuf,
-    process::exit,
     time::Instant,
 };
 
