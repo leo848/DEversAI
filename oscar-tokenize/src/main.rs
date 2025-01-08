@@ -9,7 +9,7 @@ use std::{
     env::args,
     fmt::write,
     fs::{self, File, OpenOptions},
-    io::{self, BufRead, BufReader, BufWriter, Read, Seek, SeekFrom, Stdout, Write},
+    io::{self, BufRead, BufReader, BufWriter, IsTerminal, Read, Seek, SeekFrom, Stdout, Write},
     iter::once,
     path::PathBuf,
     process::exit,
@@ -30,6 +30,10 @@ pub fn main() {
     const TOKENS_CONTEXT: usize = 100;
 
     let paths = args().skip(1).map(PathBuf::from).collect_vec();
+
+    if io::stdout().is_terminal() {
+        eprintln!("you might want to redirect this to a file instead");
+    }
 
     let bpe_state = BpeState::synced_with_file("/vocab/german-complete.vocab");
 
