@@ -9,8 +9,13 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
 
 WORKDIR /app
-COPY . /app
 
+ARG CACHE_DATE=set_cache_here
+
+RUN git clone https://github.com/leo848/DEversAI.git .
+RUN git pull
+
+WORKDIR /app/oscar-tokenize
 RUN cargo build --release
 
 CMD ["/bin/bash"]
