@@ -23,9 +23,9 @@ use regex::Regex;
 
 #[allow(dead_code)]
 pub fn main() {
-    const EXAMPLE_COUNT: usize = 1;
+    const EXAMPLE_COUNT: usize = 100;
     const TOKENS_CONTEXT: usize = 100;
-    const MAX_TRIES: usize = EXAMPLE_COUNT * 10;
+    const MAX_TRIES: usize = EXAMPLE_COUNT + 10;
 
     let paths = args().skip(1).map(PathBuf::from).collect_vec();
 
