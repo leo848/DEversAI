@@ -46,7 +46,7 @@ pub fn main() {
             let size_bytes = file.metadata().expect("File should have metadata").len();
             let mut reader = BufReader::new(file);
 
-            let seek_bytes = fastrand::u64(0..size_bytes / 2) & !1; // ensure divisibility by two
+            let seek_bytes = fastrand::u64(TOKENS_CONTEXT as u64 * 10..size_bytes / 2) & !1; // ensure divisibility by two
             reader
                 .seek(SeekFrom::Start(seek_bytes))
                 .expect("Failed to seek");
@@ -74,7 +74,7 @@ pub fn main() {
                 .expect("Failed to seek");
             reader
                 .read_exact(&mut bytes_before)
-                .expect("Failed to read right context");
+                .expect("Failed to read left context");
 
             let bytes_to_tokens = move |bytes: [u8; TOKENS_CONTEXT * 2]| {
                 bytes
