@@ -7,6 +7,7 @@
 use std::{
     collections::HashMap,
     env::args,
+    fmt::write,
     fs::{self, File, OpenOptions},
     io::{BufRead, BufReader, BufWriter, Read, Seek, SeekFrom, Write},
     iter::once,
@@ -55,16 +56,16 @@ pub fn main() {
             if found_token != token {
                 continue;
             }
-            let mut tokens_following = [0u8; TOKENS_CONTEXT * 2];
+            let mut bytes_after = [0u8; TOKENS_CONTEXT * 2];
             reader
-                .read_exact(&mut tokens_following)
+                .read_exact(&mut bytes_after)
                 .expect("Failed to read right context");
-            let mut tokens_preceding = [0u8; TOKENS_CONTEXT * 2];
+            let mut bytes_before = [0u8; TOKENS_CONTEXT * 2];
             reader
                 .seek_relative(-(TOKENS_CONTEXT as i64) * 4 - 2)
                 .expect("Failed to seek");
             reader
-                .read_exact(&mut tokens_preceding)
+                .read_exact(&mut bytes_before)
                 .expect("Failed to read right context");
 
             let bytes_to_tokens = move |bytes: [u8; TOKENS_CONTEXT * 2]| {
@@ -79,17 +80,47 @@ pub fn main() {
                     .collect_vec()
             };
 
-            let context = chain!(
-                bytes_to_tokens(tokens_preceding),
-                once(token),
-                bytes_to_tokens(tokens_following),
+            let [ctx_before, ctx_after] = [bytes_before, bytes_after]
+                .map(|bytes| bytes_to_tokens(bytes))
+                .map(|tokens| {
+                    tokens
+                        .iter()
+                        .flat_map(|&token| bpe_state.at_token(token))
+                        .copied()
+                        .collect_vec()
+                })
+                .map(|bytes| String::from_utf8_lossy(&bytes).into_owned());
+
+            let split_many = |before: bool| {
+                move |mut string: &str, delims: &[&str]| {
+                    for delim in delims {
+                        if before {
+                            string = string
+                                .rsplit_once(delim)
+                                .map(|(_, right)| right)
+                                .unwrap_or(string);
+                        } else {
+                            string = string
+                                .split_once(delim)
+                                .map(|(left, _)| left)
+                                .unwrap_or(string);
+                        }
+                    }
+                    string.to_owned()
+                }
+            };
+            let split_before = split_many(true);
+            let split_after = split_many(false);
+
+            let patterns = &["\n", ". ", "#"];
+
+            let str_before = split_before(&ctx_before, patterns);
+            let str_after = split_after(&ctx_after, patterns);
+
+            println!(
+                "{str_before}\x1B[1m{}\x1B[0m{str_after}",
+                token.display_with_state(&bpe_state)
             );
-            let utf8 = context
-                .flat_map(|token| bpe_state.at_token(token))
-                .copied()
-                .collect_vec();
-            let string = String::from_utf8_lossy(&utf8);
-            println!("{} {string}", token.display_with_state(&bpe_state));
             exit(1)
         }
     }
