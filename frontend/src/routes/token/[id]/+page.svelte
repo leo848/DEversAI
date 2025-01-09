@@ -86,7 +86,7 @@
 			{/each}
 		</div>
 	</BorderSection>
-	<BorderSection title="Beispiele" open={false} innerClass="overflow-scroll h-64">
+	<BorderSection title="Beispiele" open={false} innerClass="overflow-scroll h-[32rem]">
 		<div class="grid grid-cols-1 gap-4 overflow-hidden">
 			{#await tokenData}
 				Loading examples...
