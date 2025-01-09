@@ -7,9 +7,14 @@
 	import { goto } from '$app/navigation';
 	import Token from '$lib/components/Token.svelte';
 	import BorderSection from '$lib/components/BorderSection.svelte';
+	import {Client} from '$lib/backend/client';
 
 	const tokenIndex = $derived(+$page.params.id);
 	const token = $derived(vocabulary.tokens[tokenIndex]);
+
+	const client = new Client();
+
+	const tokenData = $derived(client.getTokenInfo(token));
 
 	function setTokenIndex(newTokenIndex: number) {
 		if (newTokenIndex != tokenIndex) {
@@ -78,6 +83,19 @@
 					</div>
 				</div>
 			{/each}
+		</div>
+	</BorderSection>
+	<BorderSection title="Beispiele">
+		<div class="grid grid-cols-2 gap-8">
+			{#await tokenData}
+				Loading examples...
+			{:then data}
+				{#each data.examples as example}
+					<div>{example}</div>
+				{/each}
+			{:catch error}
+				<div>{error}</div>
+			{/await}
 		</div>
 	</BorderSection>
 </div>
