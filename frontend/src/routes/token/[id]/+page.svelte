@@ -7,7 +7,8 @@
 	import { goto } from '$app/navigation';
 	import Token from '$lib/components/Token.svelte';
 	import BorderSection from '$lib/components/BorderSection.svelte';
-	import {Client} from '$lib/backend/client';
+	import { Client } from '$lib/backend/client';
+	import { shuffleArray } from '$lib/util/array';
 
 	const tokenIndex = $derived(+$page.params.id);
 	const token = $derived(vocabulary.tokens[tokenIndex]);
@@ -85,13 +86,17 @@
 			{/each}
 		</div>
 	</BorderSection>
-	<BorderSection title="Beispiele">
-		<div class="grid grid-cols-2 gap-8">
+	<BorderSection title="Beispiele" open={false} innerClass="overflow-scroll h-64">
+		<div class="grid grid-cols-1 gap-4 overflow-hidden">
 			{#await tokenData}
 				Loading examples...
 			{:then data}
-				{#each data.examples as example}
-					<div>{example}</div>
+				{#each shuffleArray(data.examples) as [exampleL, exampleR]}
+					<div>
+						<span>{exampleL}</span><span class="font-bold">{token.toString()}</span><span
+							>{exampleR}</span
+						>
+					</div>
 				{/each}
 			{:catch error}
 				<div>{error}</div>

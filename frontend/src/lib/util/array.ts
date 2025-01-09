@@ -13,3 +13,12 @@ export function chunksExact<N extends number, T>(arr: T[], n: N): Tuple<N, T>[] 
 		.filter((chunk) => chunk.length == n)
 		.map((t) => t as Tuple<N, T>);
 }
+
+export function shuffleArray<T>(arr: T[]): T[] {
+	const array = [...arr];
+	for (let i = array.length - 1; i >= 1; i--) {
+		const j = Math.floor(Math.random() * i);
+		[array[i], array[j]] = [array[j], array[i]];
+	}
+	return array;
+}
