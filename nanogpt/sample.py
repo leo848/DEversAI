@@ -2,6 +2,7 @@
 Sample from a trained model
 """
 import os
+import sys
 from ast import literal_eval
 from more_itertools import windowed
 import pickle
@@ -15,7 +16,7 @@ init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g.
 out_dir = 'output' # ignored if init_from is not 'resume'
 start = "\n\nRezept: Griechischer Salat\n\nZutaten:\n" # or "<|endoftext|>" or etc. Can also specify a file, use as: "FILE:prompt.txt"
 num_samples = 10 # number of samples to draw
-max_new_tokens = 350 # number of tokens generated in each sample
+max_new_tokens = 250 # number of tokens generated in each sample
 temperature = 0.8 # 1.0 = no change, < 1.0 = less random, > 1.0 = more random, in predictions
 top_k = 200 # retain only the top_k most likely tokens, clamp others to have 0 probability
 seed = random.randint(0, int(1e10))
@@ -100,25 +101,36 @@ def encode(string):
     print(tokens)
     return tokens
 
-def decode(tokens):
+def decode(tokens, return_bytes=False):
     token_bytes = bytes()
     for token in tokens:
         if token == 0xFF:
             break
         token_bytes += token_to_byte[token]
-    return token_bytes.decode(encoding="utf-8", errors="replace")
+    if return_bytes:
+        return token_bytes
+    else:
+        return token_bytes.decode(encoding="utf-8", errors="replace")
 
 # encode the beginning of the prompt
 prompt_input = start
 while prompt_input:
-    raw_input = input("\x1B[32m>>> \x1B[0m")
+    raw_input = input("\n\x1B[32m>>> \x1B[0m")
     prompt_input = "\n" + literal_eval(f'"{raw_input}"')
     start_ids = encode(prompt_input)
     x = (torch.tensor(start_ids, dtype=torch.long, device=device)[None, ...])
 
     # run generation
-    with torch.no_grad():
-        with ctx:
+    with torch.no_grad(), ctx:
             # for k in range(num_samples)
-                y = model.generate(x, max_new_tokens, temperature=temperature, top_k=top_k)
-                print(decode(y[0].tolist()))
+                gen = model.generate_generator(x, max_new_tokens, temperature=temperature, top_k=top_k)
+                print()
+                print(prompt_input, end="")
+                try:
+                    for token in gen:
+                        token_bytes = decode(token.tolist()[0], return_bytes=True)
+                        sys.stdout.buffer.write(token_bytes)
+                        sys.stdout.flush()
+                except KeyboardInterrupt:
+                    continue
+                print()
