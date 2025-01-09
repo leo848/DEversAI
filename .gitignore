@@ -36,6 +36,7 @@ nanogpt/__pycache__/
 *.pkl
 *.pt
 *.pyc
+*.json
 input.txt
 nanogpt/env/
 nanogpt/venv/
