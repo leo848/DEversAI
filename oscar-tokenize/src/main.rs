@@ -5,7 +5,7 @@
 #![allow(clippy::unnecessary_wraps)]
 
 use std::{
-    collections::HashMap,
+    collections::{BTreeMap, BTreeSet},
     env::args,
     fs::{self, File, OpenOptions},
     io::{self, BufReader, BufWriter, IsTerminal, Read, Seek, SeekFrom, Write},
@@ -41,7 +41,7 @@ pub fn main() {
         .progress()
         .filter(|token| token.index() >= 256)
         .map(|token| {
-            let mut examples = Vec::with_capacity(EXAMPLE_COUNT);
+            let mut examples = BTreeSet::new();
             let mut counter = 0;
             while examples.len() < EXAMPLE_COUNT && counter < MAX_TRIES {
                 counter += 1;
@@ -135,11 +135,11 @@ pub fn main() {
                     continue;
                 }
 
-                examples.push((str_before, str_after));
+                examples.insert((str_before, str_after));
             }
             (token.index().to_string(), examples)
         })
-        .collect::<HashMap<_, _>>();
+        .collect::<BTreeMap<_, _>>();
 
     serde_json::to_writer(io::stdout().lock(), &token_examples).expect("Serialization failed");
 }
