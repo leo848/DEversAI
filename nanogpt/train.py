@@ -43,6 +43,7 @@ eval_iters = 200
 eval_only = False # if True, script exits right after the first eval
 always_save_checkpoint = True # if True, always save a checkpoint after each eval
 init_from = 'resume' # 'scratch' or 'resume' or 'gpt2*'
+init_from_resume_checkpoint = 80_000
 # data
 dataset = 'custom'
 gradient_accumulation_steps = 5 * 8 # used to simulate larger batch sizes
@@ -146,7 +147,7 @@ def get_batch(split):
     return x, y
 
 if master_process:
-    writer = SummaryWriter(log_dir="logs/Jan07_07-45-51_f87c465685dc", purge_step=90001)
+    writer = SummaryWriter(log_dir="logs/Jan07_07-45-51_f87c465685dc", purge_step=init_from_resume_checkpoint)
 
 # init these up here, can override if init_from='resume' (i.e. from a checkpoint)
 iter_num = 0
@@ -176,7 +177,7 @@ if init_from == 'scratch':
 elif init_from == 'resume':
     print(f"Resuming training from {out_dir}")
     # resume training from a checkpoint.
-    ckpt_path = os.path.join(out_dir, 'ckpt_90000.pt')
+    ckpt_path = os.path.join(out_dir, f'ckpt_{init_from_resume_checkpoint}.pt')
     checkpoint = torch.load(ckpt_path, map_location=device)
     checkpoint_model_args = checkpoint['model_args']
     # force these config attributes to be equal otherwise we can't even resume training
