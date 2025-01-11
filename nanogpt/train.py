@@ -36,13 +36,13 @@ from model import GPTConfig, GPT
 # default config values designed to train a gpt2 (124M) on OpenWebText
 # I/O
 out_dir = '/output'
-eval_interval = 1000
+eval_interval = 500
 log_interval = 1
 checkpoint_interval = 2500
 eval_iters = 200
 eval_only = False # if True, script exits right after the first eval
 always_save_checkpoint = True # if True, always save a checkpoint after each eval
-init_from = 'resume' # 'scratch' or 'resume' or 'gpt2*'
+init_from = 'scratch' # 'scratch' or 'resume' or 'gpt2*'
 init_from_resume_checkpoint = 80_000
 # data
 dataset = 'custom'
@@ -64,7 +64,7 @@ beta2 = 0.95
 grad_clip = 1.0 # clip gradients at this value, or disable if == 0.0
 # learning rate decay settings
 decay_lr = True # whether to decay the learning rate
-warmup_iters = 2000 # how many steps to warm up for
+warmup_iters = 4000 # how many steps to warm up for
 lr_decay_iters = 300_000 # should be ~= max_iters per Chinchilla
 min_lr = 1e-5 # minimum learning rate, should be ~= learning_rate/10 per Chinchilla
 # DDP settings
@@ -105,7 +105,7 @@ print(f"tokens per iteration will be: {tokens_per_iter:,}")
 
 if master_process:
     os.makedirs(out_dir, exist_ok=True)
-torch.manual_seed(1341 + seed_offset)
+torch.manual_seed(1337 * 420 + seed_offset)
 torch.backends.cuda.matmul.allow_tf32 = True # allow tf32 on matmul
 torch.backends.cudnn.allow_tf32 = True # allow tf32 on cudnn
 device_type = 'cuda' if 'cuda' in device else 'cpu' # for later use in torch.autocast
@@ -147,7 +147,11 @@ def get_batch(split):
     return x, y
 
 if master_process:
-    writer = SummaryWriter(log_dir="logs/Jan07_07-45-51_f87c465685dc", purge_step=init_from_resume_checkpoint)
+    if init_from == "resume":
+        kwargs = {"log_dir": "logs/Jan07_07-45-51_f87c465685dc", "purge_step": init_from_resume_checkpoint }
+    else:
+        kwargs = {}
+    writer = SummaryWriter(**kwargs)
 
 # init these up here, can override if init_from='resume' (i.e. from a checkpoint)
 iter_num = 0
