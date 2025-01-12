@@ -33,8 +33,8 @@ def root_route():
     return { "status": "OK" }
 
 @app.get("/v0/token/{token_id}/info")
-def get_token_examples(token_id: int, token_examples: Annotated[dict, Depends(load_token_infos)]):
-    examples = token_examples.get(str(token_id))
+def get_token_examples(token_id: int):
+    examples = token_infos["value"].get(str(token_id))
     if examples is None:
         raise HTTPException(status_code=400, detail="Invalid token_id")
-    return { "id": token_id, "examples": token_examples[str(token_id)] }
+    return { "id": token_id, "examples": examples[str(token_id)] }
