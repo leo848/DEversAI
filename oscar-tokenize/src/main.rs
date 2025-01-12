@@ -8,7 +8,7 @@ use std::{
     collections::BTreeSet,
     env::args,
     fs::{self, File, OpenOptions},
-    io::{self, BufReader, BufWriter, IsTerminal, Read, Seek, SeekFrom, Write},
+    io::{BufReader, BufWriter, Read, Seek, SeekFrom, Write},
     path::PathBuf,
     time::Instant,
 };
