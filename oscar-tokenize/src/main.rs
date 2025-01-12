@@ -31,10 +31,6 @@ pub fn main() {
 
     let paths = std::env::args().skip(1).map(PathBuf::from).collect::<Vec<_>>();
 
-    if io::stdout().is_terminal() {
-        eprintln!("you might want to redirect this to a file instead");
-    }
-
     let bpe_state = BpeState::synced_with_file("/vocab/german-complete.vocab");
 
     let tokens = bpe_state.tokens();
