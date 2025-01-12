@@ -1,10 +1,20 @@
+from contextlib import asynccontextmanager
 from typing import Annotated, Tuple
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from functools import cache as memoize
 import json
 
-app = FastAPI()
+token_infos = {}
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    with open("assets/example_strings.json") as f:
+        token_infos["value"] = json.load(f)
+    yield
+    token_infos.clear()
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -17,11 +27,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
-
-@memoize
-def load_token_infos() -> dict[int, list[Tuple[str, str]]]:
-    with open("assets/example_strings.json") as f:
-        return json.load(f)
 
 @app.get("/")
 def root_route():
