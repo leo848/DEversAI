@@ -5,7 +5,7 @@
 #![allow(clippy::unnecessary_wraps)]
 
 use std::{
-    collections::{BTreeMap, BTreeSet},
+    collections::BTreeSet,
     env::args,
     fs::{self, File, OpenOptions},
     io::{self, BufReader, BufWriter, IsTerminal, Read, Seek, SeekFrom, Write},
@@ -21,13 +21,15 @@ use oscar_tokenize::{
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use regex::Regex;
 
+use rusqlite::{params, Connection};
+
 #[allow(dead_code)]
 pub fn main() {
     const EXAMPLE_COUNT: usize = 100;
     const TOKENS_CONTEXT: usize = 100;
     const MAX_TRIES: usize = EXAMPLE_COUNT + 20;
 
-    let paths = args().skip(1).map(PathBuf::from).collect_vec();
+    let paths = std::env::args().skip(1).map(PathBuf::from).collect::<Vec<_>>();
 
     if io::stdout().is_terminal() {
         eprintln!("you might want to redirect this to a file instead");
@@ -36,6 +38,18 @@ pub fn main() {
     let bpe_state = BpeState::synced_with_file("/vocab/german-complete.vocab");
 
     let tokens = bpe_state.tokens();
+
+    // Open SQLite database connection
+    let conn = Connection::open("/output/token_examples.db").expect("Failed to open database");
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS token_examples (
+            token_id TEXT PRIMARY KEY,
+            examples TEXT
+        )",
+        [],
+    )
+    .expect("Failed to create table");
+
     let token_examples = tokens
         .into_par_iter()
         .progress()
@@ -51,7 +65,7 @@ pub fn main() {
                 let size_bytes = file.metadata().expect("File should have metadata").len();
                 let mut reader = BufReader::new(file);
 
-                let seek_bytes = fastrand::u64(TOKENS_CONTEXT as u64 * 10..size_bytes / 2) & !1; // ensure divisibility by two
+                let seek_bytes = fastrand::u64(TOKENS_CONTEXT as u64 * 10..size_bytes / 2) & !1;
                 reader
                     .seek(SeekFrom::Start(seek_bytes))
                     .expect("Failed to seek");
@@ -81,26 +95,21 @@ pub fn main() {
                     .read_exact(&mut bytes_before)
                     .expect("Failed to read left context");
 
-                let bytes_to_tokens = move |bytes: [u8; TOKENS_CONTEXT * 2]| {
+                let bytes_to_tokens = |bytes: [u8; TOKENS_CONTEXT * 2]| {
                     bytes
-                        .into_iter()
-                        .chunks(2)
-                        .into_iter()
-                        .map(|chunk| {
-                            let chunk = chunk.collect_vec();
-                            Token::new(u16::from_be_bytes([chunk[0], chunk[1]]))
-                        })
-                        .collect_vec()
+                        .chunks_exact(2)
+                        .map(|chunk| Token::new(u16::from_be_bytes([chunk[0], chunk[1]])))
+                        .collect::<Vec<_>>()
                 };
 
                 let [ctx_before, ctx_after] = [bytes_before, bytes_after]
-                    .map(|bytes| bytes_to_tokens(bytes))
+                    .map(bytes_to_tokens)
                     .map(|tokens| {
                         tokens
                             .iter()
                             .flat_map(|&token| bpe_state.at_token(token))
                             .copied()
-                            .collect_vec()
+                            .collect::<Vec<_>>()
                     })
                     .map(|bytes| String::from_utf8_lossy(&bytes).into_owned());
 
@@ -137,11 +146,22 @@ pub fn main() {
 
                 examples.insert((str_before, str_after));
             }
+
             (token.index().to_string(), examples)
         })
-        .collect::<BTreeMap<_, _>>();
+        .collect::<Vec<_>>();
 
-    serde_json::to_writer(io::stdout().lock(), &token_examples).expect("Serialization failed");
+    // Insert into SQLite
+    let mut stmt = conn
+        .prepare("INSERT OR REPLACE INTO token_examples (token_id, examples) VALUES (?, ?)")
+        .expect("Failed to prepare insert statement");
+
+    for (token_id, examples) in token_examples {
+        let examples_json =
+            serde_json::to_string(&examples).expect("Failed to serialize examples");
+        stmt.execute(params![token_id, examples_json])
+            .expect("Failed to insert token examples");
+    }
 }
 
 #[allow(dead_code)]
