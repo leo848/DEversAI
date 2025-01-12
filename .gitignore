@@ -46,3 +46,6 @@ nanogpt/venv/
 # Temporarily ignore misc
 misc/
 *.pdf
+
+# SQLite databases
+*.db
