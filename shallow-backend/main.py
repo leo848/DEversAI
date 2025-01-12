@@ -2,24 +2,21 @@ from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy.exc import NoResultFound
-from contextlib import contextmanager
+from sqlalchemy.orm import scoped_session
+import json
 
-DATABASE_URL = "sqlite:///token_examples.db"
+DATABASE_URL = "sqlite:///assets/token_examples.db"
 
 engine: Engine = create_engine(
     DATABASE_URL, connect_args={"check_same_thread": False}, future=True
 )
-SessionLocal = sessionmaker(bind=engine)
 
-@contextmanager
 def get_db():
-    db = scoped_session(SessionLocal)
+    connection = engine.connect()
     try:
-        yield db
+        yield connection
     finally:
-        db.remove()
+        connection.close()
 
 app = FastAPI()
 
@@ -43,8 +40,9 @@ def root_route():
 def get_token_examples(token_id: int, db: scoped_session = Depends(get_db)):
     query = text("SELECT examples FROM token_examples WHERE token_id = :token_id")
     result = db.execute(query, {"token_id": str(token_id)}).fetchone()
+    examples_idx = 0
 
     if not result:
         raise HTTPException(status_code=404, detail="Token ID not found")
 
-    return {"id": token_id, "examples": result["examples"]}
+    return {"id": token_id, "examples": json.loads(result[examples_idx])}
