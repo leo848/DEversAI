@@ -42,3 +42,7 @@ nanogpt/__pycache__/
 input.txt
 nanogpt/env/
 nanogpt/venv/
+
+# Temporarily ignore misc
+misc/
+*.pdf
