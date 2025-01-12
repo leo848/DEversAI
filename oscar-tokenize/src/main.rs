@@ -53,7 +53,6 @@ pub fn main() {
     let token_examples = tokens
         .into_par_iter()
         .progress()
-        .filter(|token| token.index() >= 256)
         .map(|token| {
             let mut examples = BTreeSet::new();
             let mut counter = 0;
