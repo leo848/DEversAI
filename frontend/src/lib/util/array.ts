@@ -22,3 +22,18 @@ export function shuffleArray<T>(arr: T[]): T[] {
 	}
 	return array;
 }
+
+export function sortByKey<T, K = T>(arr: T[], key: (element: T) => K): T[] {
+	return arr.slice().sort((a, b) => {
+		const keyA = key(a);
+		const keyB = key(b);
+
+		if (keyA < keyB) {
+			return -1;
+		} else if (keyA > keyB) {
+			return 1;
+		} else {
+			return 0;
+		}
+	});
+}
