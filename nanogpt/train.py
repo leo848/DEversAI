@@ -74,6 +74,10 @@ backend = 'nccl' # 'nccl', 'gloo', etc.
 device = 'cuda:3' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1' etc., or try 'mps' on macbooks
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32', 'bfloat16', or 'float16', the latter will auto implement a GradScaler
 compile = True # use PyTorch 2.0 to compile the model to be faster
+
+# deversai
+causality = "anticausal" # 'causal' or 'anticausal'
+
 # -----------------------------------------------------------------------------
 config_keys = [k for k,v in globals().items() if not k.startswith('_') and isinstance(v, (int, float, bool, str))]
 exec(open('configurator.py').read()) # overrides from command line or config file
@@ -116,7 +120,7 @@ ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=
 
 # poor man's data loader
 data_dir = "/data/"
-calls_per_file = 64
+calls_per_file = 32
 
 last_file: dict[str, Optional[str]] = {"train": None, "val": None}
 calls_remaining = {"train": 0, "val": 0}
@@ -124,6 +128,7 @@ def get_batch(split):
     global calls_remaining
     global last_file
     assert split in {"train", "val"}
+    assert causality in {"causal", "anticausal"}
     # We recreate np.memmap every batch to avoid a memory leak, as per
     # https://stackoverflow.com/questions/45132940/numpy-memmap-memory-usage-want-to-iterate-once/61472122#61472122
     if calls_remaining[split] <= 0 or last_file[split] == None:
@@ -138,8 +143,13 @@ def get_batch(split):
         calls_remaining[split] -= 1
     data = np.memmap(os.path.join(data_dir, split, file), dtype=np.dtype(">u2"), mode='r')
     ix = torch.randint(len(data) - block_size, (batch_size,))
-    x = torch.stack([torch.from_numpy((data[i:i+block_size]).astype(np.int64)) for i in ix])
-    y = torch.stack([torch.from_numpy((data[i+1:i+1+block_size]).astype(np.int64)) for i in ix])
+    if causality == "causal":
+        x = torch.stack([torch.from_numpy((data[i:i+block_size]).astype(np.int64)) for i in ix])
+        y = torch.stack([torch.from_numpy((data[i+1:i+1+block_size]).astype(np.int64)) for i in ix])
+    elif causality == "anticausal":
+        x = torch.stack([torch.from_numpy((data[i+1:i+1+block_size][::-1]).astype(np.int64)) for i in ix])
+        y = torch.stack([torch.from_numpy((data[i:i+block_size][::-1]).astype(np.int64)) for i in ix])
+
     if device_type == 'cuda':
         # pin arrays x,y, which allows us to move them to GPU asynchronously (non_blocking=True)
         x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
@@ -270,6 +280,8 @@ def get_lr(it):
 
 # training loop
 X, Y = get_batch('train') # fetch the very first batch
+print(X, Y)
+exit(1)
 t0 = time.time()
 local_iter_num = 0 # number of iterations in the lifetime of this process
 raw_model = model.module if ddp else model # unwrap DDP container if needed
