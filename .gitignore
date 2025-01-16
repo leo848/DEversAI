@@ -35,6 +35,7 @@ nanogpt/__pycache__/
 *.bin
 *.pkl
 *.pt
+*.pt
 *.pyc
 *.json
 *.jsonl
