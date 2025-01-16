@@ -23,6 +23,7 @@ import glob
 import pickle
 import random
 from contextlib import nullcontext
+from typing import Optional, cast
 
 import numpy as np
 import torch
@@ -117,24 +118,24 @@ ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=
 data_dir = "/data/"
 calls_per_file = 64
 
-last_file = None
-calls_remaining = 0
+last_file: dict[str, Optional[str]] = {"train": None, "val": None}
+calls_remaining = {"train": 0, "val": 0}
 def get_batch(split):
     global calls_remaining
     global last_file
     assert split in {"train", "val"}
     # We recreate np.memmap every batch to avoid a memory leak, as per
     # https://stackoverflow.com/questions/45132940/numpy-memmap-memory-usage-want-to-iterate-once/61472122#61472122
-    if calls_remaining <= 0 or last_file == None:
-        calls_remaining = calls_per_file
+    if calls_remaining[split] <= 0 or last_file[split] == None:
+        calls_remaining[split] = calls_per_file
         if random.random() < 0.3:
-            last_file = random.choice(glob.glob(os.path.join(data_dir, split) + "/wikipedia*"))
+            last_file[split] = random.choice(glob.glob(os.path.join(data_dir, split) + "/wikipedia*"))
         else:
-            last_file = random.choice(glob.glob(os.path.join(data_dir, split) + "/oscar*"))
-        file = last_file
+            last_file[split] = random.choice(glob.glob(os.path.join(data_dir, split) + "/oscar*"))
+        file: str = cast(str, last_file[split])
     else:
-        file = last_file
-        calls_remaining -= 1
+        file: str = cast(str, last_file[split])
+        calls_remaining[split] -= 1
     data = np.memmap(os.path.join(data_dir, split, file), dtype=np.dtype(">u2"), mode='r')
     ix = torch.randint(len(data) - block_size, (batch_size,))
     x = torch.stack([torch.from_numpy((data[i:i+block_size]).astype(np.int64)) for i in ix])
