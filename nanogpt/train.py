@@ -87,7 +87,7 @@ config = {k: globals()[k] for k in config_keys} # will be useful for logging
 # various inits, derived attributes, I/O setup
 ddp = int(os.environ.get('RANK', -1)) != -1 # is this a ddp run?
 if ddp:
-    gpus_to_use_now = [1, 2, 3, 7, 8, 9]
+    gpus_to_use_now = [3, 7, 8, 9]
     init_process_group(backend=backend)
     ddp_rank = int(os.environ['RANK'])
     ddp_local_rank = gpus_to_use_now[int(os.environ['LOCAL_RANK'])]
