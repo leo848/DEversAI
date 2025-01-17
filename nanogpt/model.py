@@ -309,7 +309,7 @@ class GPT(nn.Module):
         the sequence max_new_tokens times, feeding the predictions back into the model each time.
         Most likely you'll want to make sure to be in model.eval() mode of operation for this.
         """
-        return list(self.generate_generator(idx, max_new_tokens, temperature=temperature, top_k=top_k))
+        return [*[tokens[0].tolist()[0] for tokens in self.generate_generator(idx, max_new_tokens, temperature=temperature, top_k=top_k)]]
 
     @torch.no_grad()
     def generate_generator(self, idx, max_new_tokens, temperature=1.0, top_k=None):

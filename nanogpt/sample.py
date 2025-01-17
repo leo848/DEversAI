@@ -24,6 +24,8 @@ print(f"Using seed {seed}")
 device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
 compile = False # use PyTorch 2.0 to compile the model to be faster
+causality = "causal" # 'causal' or 'anticausal'
+
 exec(open('configurator.py').read()) # overrides from command line or config file
 # -----------------------------------------------------------------------------
 
@@ -102,6 +104,8 @@ def encode(string):
     return tokens
 
 def decode(tokens, return_bytes=False):
+    if causality == "anticausal":
+        tokens = list(reversed(tokens))
     token_bytes = bytes()
     for token in tokens:
         if token == 0xFF:
@@ -110,27 +114,40 @@ def decode(tokens, return_bytes=False):
     if return_bytes:
         return token_bytes
     else:
-        return token_bytes.decode(encoding="utf-8", errors="replace")
+        string = token_bytes.decode(encoding="utf-8", errors="replace")
+        if causality == "anticausal":
+            return "".join(reversed(string))
+        else:
+            return string
 
 # encode the beginning of the prompt
 prompt_input = start
 while prompt_input:
     raw_input = input("\n\x1B[32m>>> \x1B[0m")
-    prompt_input = "\n" + literal_eval(f'"{raw_input}"')
+    eval_input = literal_eval(f'"{raw_input}"')
+    if causality == "causal":
+        prompt_input = "\n" + eval_input
+    else:
+        prompt_input = eval_input + "\n"
     start_ids = encode(prompt_input)
     x = (torch.tensor(start_ids, dtype=torch.long, device=device)[None, ...])
 
     # run generation
     with torch.no_grad(), ctx:
-            # for k in range(num_samples)
-                gen = model.generate_generator(x, max_new_tokens, temperature=temperature, top_k=top_k)
-                print()
-                print(prompt_input, end="")
-                try:
-                    for token in gen:
-                        token_bytes = decode(token.tolist()[0], return_bytes=True)
-                        sys.stdout.buffer.write(token_bytes)
-                        sys.stdout.flush()
-                except KeyboardInterrupt:
-                    continue
-                print()
+        if causality == 'causal':
+            gen = model.generate_generator(x, max_new_tokens, temperature=temperature, top_k=top_k)
+            print()
+            print(prompt_input, end="")
+            try:
+                for token in gen:
+                    token_bytes = decode(token.tolist()[0], return_bytes=True)
+                    sys.stdout.buffer.write(token_bytes)
+                    sys.stdout.flush()
+            except KeyboardInterrupt:
+                continue
+            print()
+        elif causality == 'anticausal':
+            y = model.generate(x, max_new_tokens, temperature=temperature, top_k=top_k)
+            print(y)
+            string = "".join(decode(y))
+            print(string)
