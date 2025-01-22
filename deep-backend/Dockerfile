@@ -8,9 +8,6 @@ WORKDIR /app
 COPY ./requirements.txt /app/requirements.txt
 COPY . /app
 
-RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
-
-
 RUN apt-get update && apt-get install -y \
     python3.10 python3-pip python3-dev \
     git wget curl \
