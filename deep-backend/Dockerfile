@@ -22,5 +22,5 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86
 RUN pip install --upgrade pip && \
 	pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
-CMD ["fastapi", "run", "app/main.py", "--port", "80"]
+CMD ["fastapi", "run", "main.py", "--port", "80"]
 
