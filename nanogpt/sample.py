@@ -13,6 +13,7 @@ from model import GPTConfig, GPT
 
 # -----------------------------------------------------------------------------
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
+model_name = "ckpt_300000.pt"
 out_dir = 'output' # ignored if init_from is not 'resume'
 start = "\n\nRezept: Griechischer Salat\n\nZutaten:\n" # or "<|endoftext|>" or etc. Can also specify a file, use as: "FILE:prompt.txt"
 num_samples = 10 # number of samples to draw
@@ -24,7 +25,7 @@ print(f"Using seed {seed}")
 device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
 compile = False # use PyTorch 2.0 to compile the model to be faster
-causality = "causal" # 'causal' or 'anticausal'
+causality = "anticausal" # 'causal' or 'anticausal'
 
 exec(open('configurator.py').read()) # overrides from command line or config file
 # -----------------------------------------------------------------------------
@@ -40,7 +41,7 @@ ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=
 # model
 if init_from == 'resume':
     # init from a model saved in a specific directory
-    ckpt_path = os.path.join(out_dir, 'karpathy-gpt2-orig.pt')
+    ckpt_path = os.path.join(out_dir, model_name)
     checkpoint = torch.load(ckpt_path, map_location=device, weights_only=True)
     gptconf = GPTConfig(**checkpoint['model_args'])
     model = GPT(gptconf)
@@ -100,6 +101,8 @@ def encode(string):
         if not merged:
             new_tokens.append(tokens[-1])
         tokens = new_tokens
+    if causality == "anticausal":
+        tokens = list(reversed(tokens))
     print(tokens)
     return tokens
 
@@ -116,7 +119,7 @@ def decode(tokens, return_bytes=False):
     else:
         string = token_bytes.decode(encoding="utf-8", errors="replace")
         if causality == "anticausal":
-            return "".join(reversed(string))
+            return string
         else:
             return string
 
@@ -126,7 +129,7 @@ while prompt_input:
     raw_input = input("\n\x1B[32m>>> \x1B[0m")
     eval_input = literal_eval(f'"{raw_input}"')
     if causality == "causal":
-        prompt_input = "\n" + eval_input
+        prompt_input = "" + eval_input + "\n"
     else:
         prompt_input = eval_input + "\n"
     start_ids = encode(prompt_input)
@@ -138,16 +141,22 @@ while prompt_input:
             gen = model.generate_generator(x, max_new_tokens, temperature=temperature, top_k=top_k)
             print()
             print(prompt_input, end="")
+            COLORS = ["168;213;226", "248;191;213", "251;231;161", "178;226;180"]
+            current_color = 0
             try:
                 for token in gen:
                     token_bytes = decode(token.tolist()[0], return_bytes=True)
+                    sys.stdout.buffer.write(f"\x1B[30;48;2;{COLORS[current_color]}m".encode())
                     sys.stdout.buffer.write(token_bytes)
+                    sys.stdout.buffer.write(f"\x1B[0m".encode())
+                    current_color += 1
+                    if current_color == len(COLORS):
+                        current_color = 0
                     sys.stdout.flush()
             except KeyboardInterrupt:
                 continue
             print()
         elif causality == 'anticausal':
             y = model.generate(x, max_new_tokens, temperature=temperature, top_k=top_k)
-            print(y)
-            string = "".join(decode(y))
-            print(string)
+            string = decode(y)
+            print(string + prompt_input)
