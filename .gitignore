@@ -13,6 +13,7 @@ wikidata/
 **/.vercel
 **/.svelte-kit
 **/build
+**/.venv
 
 # OS
 .DS_Store
