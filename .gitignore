@@ -42,6 +42,7 @@ nanogpt/__pycache__/
 input.txt
 nanogpt/env/
 nanogpt/venv/
+errors.log
 
 # Temporarily ignore misc
 misc/
