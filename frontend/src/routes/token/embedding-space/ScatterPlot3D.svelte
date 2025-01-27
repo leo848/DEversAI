@@ -15,8 +15,6 @@
   let scatterplotElt: HTMLCanvasElement | undefined = $state();
   let deck; // Reference to the deck.gl instance
 
-  $effect(() => console.log(points))
-
   onMount(() => {
     // Initialize deck.gl
 
