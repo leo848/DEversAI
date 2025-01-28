@@ -158,7 +158,10 @@
 		<div class="flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
 			<div class="flex flex-col items-stretch gap-2">
 				<div class="text-xl">Darstellung</div>
-				<input type="range" min={0.5} max={3} step={0.1} bind:value={pointSize} />
+                <div>
+                  <div class="-mb-1">Punktgröße: {pointSize.toFixed(1)}</div>
+                  <input type="range" class="block w-full" min={0.5} max={3} step={0.1} bind:value={pointSize} />
+                </div>
 			</div>
 		</div>
 	</div>
