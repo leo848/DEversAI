@@ -26,6 +26,10 @@ export class Color {
 		this.b = b;
 	}
 
+	static luma(l: number): Color {
+		return new Color(l, l, l);
+	}
+
 	readable() {
 		return this.brightness() > 0.5 ? new Color(0, 0, 0) : new Color(1, 1, 1);
 	}
@@ -44,6 +48,14 @@ export class Color {
 	rgb(): Tuple<3, number> {
 		const { r, g, b } = this;
 		return [Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)];
+	}
+
+	lerp(other: Color, t: number): Color {
+		return new Color(
+			this.r + (other.r - this.r) * t,
+			this.g + (other.g - this.g) * t,
+			this.b + (other.b - this.b) * t
+		);
 	}
 }
 
