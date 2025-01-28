@@ -1,5 +1,5 @@
 import type { Token } from '$lib/tokenizing/token';
-import { TokenInfo } from './types';
+import { TokenEmbeddings, TokenInfo } from './types';
 
 const pathUtils = {
 	join: function (...paths: string[]) {
@@ -39,7 +39,19 @@ export class Client {
 		if (tokenInfo.success) {
 			return tokenInfo.data;
 		} else {
-			return Promise.reject('Could not parse response');
+			return Promise.reject('Could not parse response: ' + tokenInfo.error);
+		}
+	}
+
+	async getTokenEmbeddings(modelName: string): Promise<TokenEmbeddings> {
+		const apiPath = pathUtils.join(this.base, 'tokens', modelName, 'embeddings');
+		const response = await fetch(apiPath);
+		const json = await response.json();
+		const tokenEmbeddings = await TokenEmbeddings.safeParseAsync(json);
+		if (tokenEmbeddings.success) {
+			return tokenEmbeddings.data;
+		} else {
+			return Promise.reject('Could not parse response: ' + tokenEmbeddings.error);
 		}
 	}
 }
