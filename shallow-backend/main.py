@@ -1,8 +1,10 @@
+import re
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import scoped_session
+import numpy as np
 import json
 
 DATABASE_URL = "sqlite:///assets/token_examples.db"
@@ -46,3 +48,16 @@ def get_token_examples(token_id: int, db: scoped_session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Token ID not found")
 
     return {"id": token_id, "examples": json.loads(result[examples_idx])}
+
+@app.get("/v0/tokens/{model_name}/embeddings")
+def get_embeddings(model_name: str):
+    if not model_name.isalnum():
+        return 401, "Model name must be alphanumeric"
+    try:
+        embeddings_3d = list(np.load(f"assets/embedding/3d/{model_name}.npy"))
+        return {
+            "tokenCount": len(embeddings_3d),
+            "embeddings3D": embeddings_3d
+        }
+    except IOError:
+        return 404, "Model not found"
