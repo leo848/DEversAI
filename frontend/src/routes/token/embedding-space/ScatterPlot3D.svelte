@@ -67,7 +67,8 @@
 			data: points,
 			getColor: (d) => tokenColors.current[d.id].rgb(),
 			getPosition: (d) => d.position,
-			pointSize: 2,
+			pointSize: 0.02,
+			sizeUnits: 'meters',
 			coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
 			pickable: true,
 			onHover: (object, evt) => {

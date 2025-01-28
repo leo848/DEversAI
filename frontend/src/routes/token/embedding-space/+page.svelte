@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Client } from '$lib/backend/client';
+	import type { Token } from '$lib/tokenizing/token';
 	import vocabulary from '$lib/tokenizing/german50000';
 	import type { Tuple } from '$lib/util/array';
 	import { Color, Gradient } from '$lib/util/color';
@@ -7,10 +8,6 @@
 
 	const client = new Client();
 	const embeddingData = $derived(client.getTokenEmbeddings('anticausal1'));
-
-	const sampleColor = (t: number) => Gradient.Viridis.sample(t).rgb();
-
-	let paintSelection: string = $state('Suffix');
 
 	const toData = (data: Tuple<3, number>[]) => {
 		return data.map((pos, i) => {
@@ -23,53 +20,136 @@
 		});
 	};
 
+	type MetricInput = { id: number; token: Token };
+	type Metric = (input: MetricInput) => number;
+	type Painter = (input: MetricInput) => Color;
+
 	function paintCategorical(categoryIndex: number): Color {
 		const color = categoryIndex == -1 ? Color.luma(1.0) : Color.Category10[categoryIndex];
 		return color;
 	}
 
-	function paintPrefix(i: number): Color {
-		const bytes = vocabulary.tokens[i].value;
+	function paintContinuous(metric: Metric): Painter {
+		let min = Infinity,
+			max = -Infinity;
+		for (let id = 0; id < vocabulary.tokens.length; id++) {
+			const value = metric({ id, token: vocabulary.tokens[id] });
+			min = Math.min(min, value);
+			max = Math.max(max, value);
+		}
+		return ({ id }) => {
+			const value = metric({ id, token: vocabulary.tokens[id] });
+			const normalized = (value - min) / (max - min);
+			return Gradient.Viridis.sample(1 - normalized);
+		};
+	}
 
+	function paintPrefix(prefixes: number[]): Painter {
 		// const commonPrefixes = [101, 97, 115, 83, 65, 103, 105, 98, 66, 100];
-		const interestingPrefixes = [10, 46, 45, 40, 58, 44, 32, 41, 63, 33];
+		// const interestingPrefixes = [10, 46, 45, 40, 58, 44, 32, 41, 63, 33];
 
-		const categoryIndex = interestingPrefixes.findIndex((byte) => bytes[0] == byte);
-		return paintCategorical(categoryIndex);
+		return ({ token }) => {
+			const bytes = token.value;
+			const categoryIndex = prefixes.findIndex((byte) => bytes[0] == byte);
+			return paintCategorical(categoryIndex);
+		};
 	}
 
-	function paintSuffix(i: number): Color {
-		const bytes = vocabulary.tokens[i].value;
-
+	function paintSuffix(suffixes: number[]): Painter {
 		// const commonSuffixes = [32, 114, 110, 116, 108, 115, 10, 104, 101, 103];
-		const interestingSuffixes = [32, 10, 45, 46, 47, 40, 44, 58, 95, 34];
+		// const interestingSuffixes = [32, 10, 45, 46, 47, 40, 44, 58, 95, 34];
 
-		const categoryIndex = interestingSuffixes.findIndex((byte) => bytes[bytes.length - 1] == byte);
-
-		return paintCategorical(categoryIndex);
+		return ({ token }) => {
+			const bytes = token.value;
+			const categoryIndex = suffixes.findIndex((byte) => bytes[bytes.length - 1] == byte);
+			return paintCategorical(categoryIndex);
+		};
 	}
 
-	const tokenColor = $derived(
-		{
-			Suffix: paintSuffix,
-			Präfix: paintPrefix
-		}[paintSelection] ?? (() => paintCategorical(-1))
-	);
+	function paintCasing({ token }: MetricInput): Color {
+		const string = token.toString();
+		if (string.length < 1) {
+			return Color.luma(1.0);
+		}
+		let headUppercase = string[0].toUpperCase() == string[0];
+		let headLowercase = string[0].toLowerCase() == string[0];
+		let tailUppercase = string.substring(1).toUpperCase() == string.substring(1);
+		let tailLowercase = string.substring(1).toLowerCase() == string.substring(1);
+		const categoryIndex = [
+			headUppercase && tailLowercase,
+			headLowercase && tailLowercase,
+			headUppercase && tailUppercase
+		].findIndex(Boolean);
+		return paintCategorical(
+			headUppercase == headLowercase || tailUppercase == tailLowercase ? -1 : categoryIndex
+		);
+	}
+
+	const paintOptions = {
+		id: {
+			type: 'continuous',
+			name: 'Token-ID',
+			paint: paintContinuous(({ id }) => Math.log(id + 1000))
+		},
+		suffix: {
+			type: 'categorical',
+			name: 'Suffixe',
+			paint: paintSuffix([32, 10, 45, 46, 47, 40, 44, 58, 95, 34])
+		},
+		prefix: {
+			type: 'categorical',
+			name: 'Präfixe',
+			paint: paintPrefix([10, 46, 45, 40, 58, 44, 32, 41, 63, 33])
+		},
+		byteCount: {
+			type: 'continuous',
+			name: 'Anzahl Bytes',
+			paint: paintContinuous(({ token }) => token.value.length)
+		},
+		letterCount: {
+			type: 'continuous',
+			name: 'Anzahl Wörter',
+			paint: ({ token }) =>
+				paintCategorical(token.displayString.split(' ').filter(Boolean).length - 1)
+		},
+		casing: {
+			type: 'categorical',
+			name: 'Groß- / Kleinschreibung',
+			paint: paintCasing
+		}
+	} as const satisfies Record<
+		string,
+		{ type: string; name: string; paint: (input: MetricInput) => Color }
+	>;
+	const paintSelectionValues = Object.keys(paintOptions) as (keyof typeof paintOptions)[];
+
+	let paintSelection: keyof typeof paintOptions = $state('id');
+
+	const tokenColor = $derived(paintOptions[paintSelection].paint ?? (() => paintCategorical(-1)));
 </script>
 
 <div>
 	{#await embeddingData}
 		Loading data...
 	{:then object}
-		<ScatterPlot3D points={toData(object.embeddings3D)} coloring={tokenColor} initialZoom={5} />
+		<ScatterPlot3D
+			points={toData(object.embeddings3D)}
+			coloring={(id) => tokenColor({ id, token: vocabulary.tokens[id] })}
+			initialZoom={5}
+		/>
 	{:catch error}
 		Fehler: {error}
 	{/await}
 	<div class="selection absolute m-4 w-[300px] rounded-xl border border-black p-4">
-		<select bind:value={paintSelection}>
-			<option value="Suffix">Suffix</option>
-			<option value="Präfix">Präfix</option>
-		</select>
+		<div class="flex flex-col items-stretch gap-2">
+			{#each paintSelectionValues as key}
+				<button
+					class="border-gray block rounded border p-1 hover:bg-gray-100 active:bg-gray-100"
+					class:bg-gray-100={paintSelection == key}
+					onclick={() => (paintSelection = key)}>{paintOptions[key].name}</button
+				>
+			{/each}
+		</div>
 	</div>
 </div>
 
