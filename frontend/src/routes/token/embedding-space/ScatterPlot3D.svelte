@@ -33,7 +33,7 @@
 			pointSize: 2,
 			coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
 			pickable: true,
-			onHover: (object) => {
+			onHover: (object, evt) => {
 				if (!object.picked) {
 					tooltipContent = null;
 					tooltipStyle = 'display:none';
@@ -43,7 +43,8 @@
 					id: object.object.id,
 					position: object.object.position.map((pos: number) => pos.toFixed(2)).join(', ')
 				};
-				tooltipStyle = `display:block; left: ${object.x}px; top: ${object.y}px`;
+                console.log(evt);
+				tooltipStyle = `display:block; left: ${evt.srcEvent.clientX}px; top: ${evt.srcEvent.clientY}px`;
 			},
 			onClick: (object) => {
 				if (!object.picked) {
@@ -70,7 +71,7 @@
 	});
 </script>
 
-<div id="scatterplot-container">
+<div class="scatterplot-container w-full h-full">
 	<canvas id="scatterplot-canvas" bind:this={scatterplotElt}></canvas>
 	<!-- Tooltip -->
 	{#if tooltipContent}
@@ -83,11 +84,6 @@
 </div>
 
 <style>
-	#scatterplot-container {
-		position: relative;
-		width: 100vw;
-		height: 100vh;
-	}
 	canvas {
 		width: 100%;
 		height: 100%;
