@@ -89,7 +89,7 @@
 		id: {
 			type: 'continuous',
 			name: 'Token-ID',
-			paint: paintContinuous(({ id }) => Math.log(id + 1000))
+			paint: paintContinuous(({ id }) => id)
 		},
 		suffix: {
 			type: 'categorical',
