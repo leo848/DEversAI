@@ -54,7 +54,7 @@ def get_embeddings(model_name: str):
     if not model_name.isalnum():
         return 401, "Model name must be alphanumeric"
     try:
-        embeddings_3d = list(np.load(f"assets/embedding/3d/{model_name}.npy"))
+        embeddings_3d = np.load(f"assets/embedding/3d/{model_name}.npy").tolist()
         return {
             "tokenCount": len(embeddings_3d),
             "embeddings3D": embeddings_3d
