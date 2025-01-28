@@ -13,10 +13,12 @@
 	let {
 		points,
 		coloring,
+		pointSize = 2,
 		initialZoom = 8
 	}: {
 		points: { id: number; position: Tuple<3, number> }[];
 		coloring: (id: number) => Color;
+		pointSize?: number;
 		initialZoom?: number;
 	} = $props();
 
@@ -67,7 +69,7 @@
 			data: points,
 			getColor: (d) => tokenColors.current[d.id].rgb(),
 			getPosition: (d) => d.position,
-			pointSize: 0.02,
+			pointSize: pointSize / 100,
 			sizeUnits: 'meters',
 			coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
 			pickable: true,

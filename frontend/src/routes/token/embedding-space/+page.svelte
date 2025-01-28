@@ -124,6 +124,7 @@
 	const paintSelectionValues = Object.keys(paintOptions) as (keyof typeof paintOptions)[];
 
 	let paintSelection: keyof typeof paintOptions = $state('id');
+	let pointSize = $state(2);
 
 	const tokenColor = $derived(paintOptions[paintSelection].paint ?? (() => paintCategorical(-1)));
 </script>
@@ -134,29 +135,38 @@
 	{:then object}
 		<ScatterPlot3D
 			points={toData(object.embeddings3D)}
+			{pointSize}
 			coloring={(id) => tokenColor({ id, token: vocabulary.tokens[id] })}
 			initialZoom={5}
 		/>
 	{:catch error}
 		Fehler: {error}
 	{/await}
-	<div class="selection absolute m-4 w-[300px] rounded-xl border border-black p-4">
-		<div class="flex flex-col items-stretch gap-2">
-			{#each paintSelectionValues as key}
-				<button
-					class="border-gray block rounded border p-1 hover:bg-gray-100 active:bg-gray-100"
-					class:bg-gray-100={paintSelection == key}
-					onclick={() => (paintSelection = key)}>{paintOptions[key].name}</button
-				>
-			{/each}
+	<div class="selection absolute m-4 flex w-[300px] flex-col gap-4">
+		<div class="flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
+			<div class="flex flex-col items-stretch gap-2">
+				<div class="text-xl">Färben nach</div>
+				{#each paintSelectionValues as key}
+					<button
+						class="border-gray block rounded border p-1 hover:bg-gray-100 active:bg-gray-100"
+						class:bg-gray-100={paintSelection == key}
+						onclick={() => (paintSelection = key)}>{paintOptions[key].name}</button
+					>
+				{/each}
+			</div>
+		</div>
+		<div class="flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
+			<div class="flex flex-col items-stretch gap-2">
+				<div class="text-xl">Darstellung</div>
+				<input type="range" min={0.5} max={3} step={0.1} bind:value={pointSize} />
+			</div>
 		</div>
 	</div>
 </div>
 
 <style>
-	.selection {
+	.selection > div {
 		background: rgba(255, 255, 255, 0.9);
-		border: 1px solid #ddd;
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 		z-index: 1000;
 	}
