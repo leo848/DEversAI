@@ -9,7 +9,11 @@
 	const randomData = toData(
 		Array.from(
 			{ length: 50000 },
-			(_) => Array.from({ length: 3 }, (_) => Math.random() - 0.5) as Tuple<3, number>
+            (_, i: number) => [
+              i / 50000,
+              Math.random() - 0.5,
+              Math.random() - 0.5,
+            ]
 		)
 	);
 </script>

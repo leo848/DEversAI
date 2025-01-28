@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Deck, COORDINATE_SYSTEM, OrbitView } from '@deck.gl/core';
-	import { ScatterplotLayer, PointCloudLayer } from '@deck.gl/layers';
+	import { PointCloudLayer } from '@deck.gl/layers';
+    import Token from "$lib/components/Token.svelte";
+
+    import vocabulary from "$lib/tokenizing/german50000";
+	import {goto} from '$app/navigation';
 
 	let {
 		points
@@ -9,7 +13,7 @@
 		points: { id: number; position: [number, number, number]; label: string }[];
 	} = $props();
 
-	let tooltipContent = $state(null); // Holds the tooltip content
+    let tooltipContent: { label: string, id: number, position: string } | null = $state(null); // Holds the tooltip content
 	let tooltipStyle = $state('display: none;'); // Tooltip visibility and positioning
 
 	let scatterplotElt: HTMLCanvasElement | undefined = $state();
@@ -29,7 +33,26 @@
 			getPosition: (d) => d.position,
 			pointSize: 2,
 			coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
-			pickable: true
+            pickable: true,
+            onHover: (object) => {
+              if (!object.picked) {
+                tooltipContent = null;
+                tooltipStyle = "display:none";
+                return;
+              }
+              tooltipContent = {
+                label: object.object.label,
+                id: object.object.id,
+                position: object.object.position.map((pos: number) => pos.toFixed(2)).join(", "),
+              }
+              tooltipStyle = `display:block; left: ${object.x}px; top: ${object.y}px`
+            },
+            onClick: (object) => {
+              if (!object.picked) {
+                return;
+              }
+              goto(`/token/${object.object.id}`)
+            }
 		});
 
 		const view = new OrbitView({
@@ -53,8 +76,8 @@
 	<canvas id="scatterplot-canvas" bind:this={scatterplotElt}></canvas>
 	<!-- Tooltip -->
 	{#if tooltipContent}
-		<div class="tooltip" style={tooltipStyle}>
-			<h4>{tooltipContent.label}</h4>
+		<div class="tooltip text-xl" style={tooltipStyle}>
+            <Token noTransition token={vocabulary.tokens[tooltipContent.id]} />
 			<p>ID: {tooltipContent.id}</p>
 			<p>Position: {tooltipContent.position}</p>
 		</div>
@@ -79,7 +102,6 @@
 		border-radius: 4px;
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 		pointer-events: none;
-		font-size: 12px;
 		z-index: 1000;
 	}
 </style>

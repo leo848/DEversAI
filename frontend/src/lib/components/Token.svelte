@@ -10,6 +10,7 @@
 		showIndex = false,
 		bold = 'hover',
 		noPad = false,
+		noTransition = false,
 		color = 'gray',
 		onclick = gotoTokenPage
 	}: {
@@ -18,6 +19,7 @@
 		bold?: 'hover' | boolean;
 		size?: 'md' | 'xl';
 		showIndex?: boolean;
+		noTransition ?: boolean;
 		noPad?: boolean;
 		color?:
 			| 'gray'
@@ -73,7 +75,7 @@
 	<a
 		href={`/token/${token.id()}`}
 		class={classList}
-		in:scale
+		in:scale={{duration: noTransition ? 0 : 400}}
 		onclick={(e) => {
 			e.preventDefault();
 			onclick(token);
