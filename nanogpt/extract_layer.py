@@ -7,7 +7,7 @@ import sys
 import random
 import numpy as np
 
-tokens = torch.tensor(np.arange(0, 25056))
+tokens = torch.tensor(np.arange(0, 50256))
 
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
 model_name = "ckpt_300000.pt"
