@@ -1,23 +1,25 @@
 <script lang="ts">
+	import { Client } from '$lib/backend/client';
 	import type { Tuple } from '$lib/util/array';
 	import ScatterPlot3D from './ScatterPlot3D.svelte';
 
-	const toData = (data: Tuple<3, number>[]) => {
-		return data.map((pos, i) => ({ id: i, position: pos, label: `token ${i}` }));
-	};
+	const client = new Client();
+    const embeddingData = $derived(client.getTokenEmbeddings("anticausal1"))
 
-	const randomData = toData(
-		Array.from(
-			{ length: 50000 },
-            (_, i: number) => [
-              i / 50000,
-              Math.random() - 0.5,
-              Math.random() - 0.5,
-            ]
-		)
-	);
+	const toData = (data: Tuple<3, number>[]) => {
+        return data.map((pos, i) => ({
+          id: i,
+          position: pos
+        }));
+	};
 </script>
 
 <div>
-	<ScatterPlot3D points={randomData} />
+    {#await embeddingData}
+      Loading data...
+    {:then object}
+      <ScatterPlot3D points={toData(object.embeddings3D)} initialZoom={5} />
+    {:catch error}
+      Fehler: {error}
+    {/await}
 </div>

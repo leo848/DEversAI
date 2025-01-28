@@ -19,7 +19,7 @@
 		bold?: 'hover' | boolean;
 		size?: 'md' | 'xl';
 		showIndex?: boolean;
-		noTransition ?: boolean;
+		noTransition?: boolean;
 		noPad?: boolean;
 		color?:
 			| 'gray'
@@ -75,7 +75,7 @@
 	<a
 		href={`/token/${token.id()}`}
 		class={classList}
-		in:scale={{duration: noTransition ? 0 : 400}}
+		in:scale={{ duration: noTransition ? 0 : 400 }}
 		onclick={(e) => {
 			e.preventDefault();
 			onclick(token);

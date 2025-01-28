@@ -6,11 +6,15 @@
 
 	import vocabulary from '$lib/tokenizing/german50000';
 	import { goto } from '$app/navigation';
+	import {Gradient} from '$lib/util/color';
+	import type {Tuple} from '$lib/util/array';
 
 	let {
-		points
+        points,
+        initialZoom = 8,
 	}: {
-		points: { id: number; position: [number, number, number]; label: string }[];
+        points: { id: number; position: [number, number, number] }[];
+        initialZoom ?: number,
 	} = $props();
 
 	let tooltipContent: { label: string; id: number; position: string } | null = $state(null); // Holds the tooltip content
@@ -21,15 +25,13 @@
 
 	onMount(() => {
 		// Initialize deck.gl
-
 		const layer = new PointCloudLayer({
 			id: 'PointCloudLayer',
 			data: points,
-			getColor: (d) => [
-				d.position[0] * 256 + 128,
-				d.position[1] * 256 + 128,
-				d.position[2] * 256 + 128
-			],
+            getColor: (d) => {
+              const color = Gradient.Viridis.sample(d.id / points.length)
+              return [color.r, color.g, color.b].map(comp => comp * 255) as Tuple<3, number>;
+            },
 			getPosition: (d) => d.position,
 			pointSize: 2,
 			coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
@@ -41,7 +43,6 @@
 					return;
 				}
 				tooltipContent = {
-					label: object.object.label,
 					id: object.object.id,
 					position: object.object.position.map((pos: number) => pos.toFixed(2)).join(', ')
 				};
@@ -63,7 +64,7 @@
 		deck = new Deck({
 			initialViewState: {
 				target: [0, 0, 0],
-				zoom: 8
+				zoom: initialZoom,
 			},
 			canvas: scatterplotElt,
 			layers: [layer],
