@@ -6,15 +6,15 @@
 
 	import vocabulary from '$lib/tokenizing/german50000';
 	import { goto } from '$app/navigation';
-	import {Gradient} from '$lib/util/color';
-	import type {Tuple} from '$lib/util/array';
+	import { Gradient } from '$lib/util/color';
+	import type { Tuple } from '$lib/util/array';
 
 	let {
-        points,
-        initialZoom = 8,
+		points,
+		initialZoom = 8
 	}: {
-        points: { id: number; position: [number, number, number] }[];
-        initialZoom ?: number,
+		points: { id: number; position: [number, number, number]; color: [number, number, number] }[];
+		initialZoom?: number;
 	} = $props();
 
 	let tooltipContent: { label: string; id: number; position: string } | null = $state(null); // Holds the tooltip content
@@ -28,10 +28,7 @@
 		const layer = new PointCloudLayer({
 			id: 'PointCloudLayer',
 			data: points,
-            getColor: (d) => {
-              const color = Gradient.Viridis.sample(d.id / points.length)
-              return [color.r, color.g, color.b].map(comp => comp * 255) as Tuple<3, number>;
-            },
+			getColor: (d) => d.color,
 			getPosition: (d) => d.position,
 			pointSize: 2,
 			coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
@@ -64,7 +61,7 @@
 		deck = new Deck({
 			initialViewState: {
 				target: [0, 0, 0],
-				zoom: initialZoom,
+				zoom: initialZoom
 			},
 			canvas: scatterplotElt,
 			layers: [layer],

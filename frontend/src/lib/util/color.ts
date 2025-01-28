@@ -1,3 +1,4 @@
+import type { Tuple } from './array';
 import { leftPad } from './string';
 import { assert } from './typed';
 
@@ -25,6 +26,11 @@ export class Color {
 		const [ri, gi, bi] = [r, g, b].map((comp) => Math.floor(comp * 255));
 		const n = ri * 256 * 256 + gi * 256 + bi;
 		return '#' + leftPad(n.toString(16), '0', 6);
+	}
+
+	rgb(): Tuple<3, number> {
+		const { r, g, b } = this;
+		return [Math.floor(r * 255), Math.floor(g * 255), Math.floor(b * 255)];
 	}
 }
 
@@ -297,9 +303,9 @@ export class Gradient {
 	}
 
 	sample(t: number) {
-		assert(0 <= t && t <= 1);
-		const leftIndex = Math.floor((this.stops.length - 1) * t);
-		const rightIndex = Math.floor((this.stops.length - 1) * t + 1);
+		assert(0 <= t && t <= 1, 'value in range');
+		const leftIndex = Math.floor((this.stops.length - 2) * t);
+		const rightIndex = Math.floor((this.stops.length - 2) * t + 1);
 		const [leftColor, rightColor] = [leftIndex, rightIndex].map((index) => this.stops[index]);
 		const leftWeight = t % (1 / this.stops.length);
 		const rightWeight = 1 - leftWeight;
