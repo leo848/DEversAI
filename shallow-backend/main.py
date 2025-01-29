@@ -55,9 +55,11 @@ def get_embeddings(model_name: str):
         return 401, "Model name must be alphanumeric"
     try:
         embeddings_3d = np.load(f"assets/embedding/3d/{model_name}.npy").tolist()
+        embeddings_2d = np.load(f"assets/embedding/2d/{model_name}.npy").tolist()
         return {
             "tokenCount": len(embeddings_3d),
-            "embeddings3D": embeddings_3d
+            "embeddings3D": embeddings_3d,
+            "embeddings2D": embeddings_2d,
         }
     except IOError:
         return 404, "Model not found"
