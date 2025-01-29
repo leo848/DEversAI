@@ -340,4 +340,15 @@ export class Gradient {
 			leftColor.b * leftWeight + rightColor.b * rightWeight
 		);
 	}
+
+	reverse() {
+		return new Gradient(this.stops.slice().reverse());
+	}
+
+	css(direction: string = 'to right'): string {
+		let string = `linear-gradient(${direction}, `;
+		string += this.stops.join(', ');
+		string += ')';
+		return string;
+	}
 }
