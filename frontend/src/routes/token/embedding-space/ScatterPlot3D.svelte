@@ -94,6 +94,13 @@
 			},
 			updateTriggers: {
 				getColor: [tokenColors.current]
+			},
+			transitions: {
+				getPosition: {
+					type: 'spring',
+					damping: 0.5,
+					stiffness: 0.05
+				}
 			}
 		});
 

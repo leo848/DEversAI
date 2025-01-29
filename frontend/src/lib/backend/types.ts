@@ -9,6 +9,6 @@ export type TokenInfo = z.infer<typeof TokenInfo>;
 export const TokenEmbeddings = z.object({
 	tokenCount: z.number(),
 	embeddings3D: z.array(z.tuple([z.number(), z.number(), z.number()])),
-	embeddings2D: z.array(z.tuple([z.number(), z.number()])),
+	embeddings2D: z.array(z.tuple([z.number(), z.number()]))
 });
 export type TokenEmbeddings = z.infer<typeof TokenEmbeddings>;

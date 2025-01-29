@@ -24,6 +24,9 @@
 			};
 		});
 	};
+	const toData2D = (data: Tuple<2, number>[]) => {
+		return toData(data.map(([x, y]) => [x, y, 0]));
+	};
 
 	type MetricInput = { id: number; token: Token };
 	type Metric = (input: MetricInput) => number;
@@ -230,6 +233,8 @@
 	const paintKeys = Object.keys(paintOptions) as (keyof typeof paintOptions)[];
 
 	let paintKey = $state('id') as keyof typeof paintOptions;
+	let dimensionality: '2d' | '3d' = $state('3d') as '2d' | '3d';
+
 	let paintOption: (typeof paintOptions)[keyof typeof paintOptions] = $derived(
 		paintOptions[paintKey]
 	);
@@ -246,7 +251,7 @@
 		<FullLoader />
 	{:then object}
 		<ScatterPlot3D
-			points={toData(object.embeddings3D)}
+			points={dimensionality == '3d' ? toData(object.embeddings3D) : toData2D(object.embeddings2D)}
 			{pointSize}
 			coloring={(id) => paintOption.paint({ id, token: vocabulary.tokens[id] })}
 			initialZoom={5}
@@ -257,10 +262,29 @@
 	<div
 		class="selection absolute flex h-svh w-[300px] flex-col gap-4 overflow-scroll p-4 2xl:w-[400px]"
 	>
+		<MenuEntry title="Ansicht">
+			<div class="grid grid-cols-2 gap-4">
+				<button
+					class="align-center rounded border border-gray-200 p-3 text-center text-4xl transition-all hover:bg-gray-100 active:bg-gray-100"
+					class:bg-gray-100={dimensionality == '2d'}
+					onclick={() => (dimensionality = '2d')}
+				>
+					2D
+				</button>
+				<button
+					class="align-center rounded border border-gray-200 p-3 text-center text-4xl transition-all hover:bg-gray-100 active:bg-gray-100"
+					class:bg-gray-100={dimensionality == '3d'}
+					onclick={() => (dimensionality = '3d')}
+				>
+					3D
+				</button>
+			</div>
+		</MenuEntry>
+
 		<MenuEntry title="Färben nach">
 			{#each paintKeys as key}
 				<button
-					class="border-gray block rounded border p-1 hover:bg-gray-100 active:bg-gray-100"
+					class="border-gray block rounded border p-1 transition-all hover:bg-gray-100 active:bg-gray-100"
 					class:bg-gray-100={paintKey == key}
 					onclick={() => (paintKey = key)}>{paintOptions[key].name}</button
 				>
