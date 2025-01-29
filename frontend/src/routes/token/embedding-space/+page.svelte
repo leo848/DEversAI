@@ -261,8 +261,8 @@
 					<input
 						type="range"
 						class="block w-full"
-						min={0.5}
-						max={3}
+						min={0.1}
+						max={5}
 						step={0.1}
 						bind:value={pointSize}
 					/>
