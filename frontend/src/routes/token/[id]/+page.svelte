@@ -13,12 +13,18 @@
 	const tokenIndex = $derived(+$page.params.id);
 	const token = $derived(vocabulary.tokens[tokenIndex]);
 
+	let inputTokenIndex = $state(+$page.params.id);
+	$effect(() => {
+		inputTokenIndex = +$page.params.id;
+	});
+
 	const client = new Client();
 
 	const tokenData = $derived(client.getTokenInfo(token));
 
 	function setTokenIndex(newTokenIndex: number) {
 		if (newTokenIndex != tokenIndex) {
+			inputTokenIndex = newTokenIndex;
 			goto(`/token/${newTokenIndex}`, { replaceState: false });
 		}
 	}
@@ -38,9 +44,9 @@
 					<input
 						class="m-0 max-w-16 border-none bg-gray-100 p-0 text-2xl focus:border-none"
 						type="number"
-						value={token.id()}
+						bind:value={inputTokenIndex}
 						in:scale
-						onblur={(e) => setTokenIndex(+e.target!.value ?? tokenIndex)}
+						onchange={(e) => setTokenIndex(inputTokenIndex ?? tokenIndex)}
 					/>
 				{/key}
 			</div>
