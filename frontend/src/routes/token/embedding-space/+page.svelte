@@ -9,6 +9,7 @@
 	import PieChart from '$lib/components/PieChart.svelte';
 	import Histogram from '$lib/components/Histogram.svelte';
 	import MenuEntry from './MenuEntry.svelte';
+	import { slide } from 'svelte/transition';
 
 	const client = new Client();
 	const embeddingData = $derived(client.getTokenEmbeddings('anticausal1'));
@@ -69,7 +70,7 @@
 		}
 		let histogramBucketSize = 1;
 		if (max - min == 100) {
-			histogramBucketSize = 10;
+			histogramBucketSize = 11;
 		}
 		while ((max - min) / histogramBucketSize > 20) {
 			histogramBucketSize *= 2;
@@ -272,7 +273,7 @@
 				{@const colors = Color.Category10}
 				{@const categoryCounts = paintOption.categories}
 
-				<div class="grid grid-cols-4 gap-4">
+				<div class="grid grid-cols-4 gap-4" in:slide={{ axis: 'y' }}>
 					{#each labels as label, id}
 						<div class="h-8 w-8 rounded" style:background={colors[id].toString()}></div>
 						<div class="self-start">{label}</div>
@@ -295,21 +296,23 @@
 				{@const min = paintOption.min}
 				{@const max = paintOption.max}
 				{@const digits = Math.max(-Math.log(max - min), 0)}
-				{@const rangeStepCount = Math.min(
-					max - min + 1,
-					Math.max(3, 10 - max.toFixed(digits).length)
-				)}
+				{@const rangeStepCount =
+					max - min == 100
+						? 6
+						: Math.min(max - min + 1, Math.max(3, 10 - max.toFixed(digits).length))}
 				{@const rangeStepSize = (max - min) / (rangeStepCount - 1)}
 				{@const rangeSteps = new Array(rangeStepCount)
 					.fill(-1)
 					.map((_, i) => min + rangeStepSize * i)}
-				<div>
+				<div transition:slide={{ axis: 'x' }}>
 					<div style:background={scaleGradient} class="h-8 w-full rounded"></div>
-					<div class="flex flex-row justify-between">
-						{#each rangeSteps as rangeStepValue}
-							<div>{rangeStepValue.toFixed(digits)}</div>
-						{/each}
-					</div>
+					{#key rangeSteps}
+						<div class="flex flex-row justify-between" in:slide={{ axis: 'x' }}>
+							{#each rangeSteps as rangeStepValue}
+								<div>{rangeStepValue.toFixed(digits)}</div>
+							{/each}
+						</div>
+					{/key}
 				</div>
 			{/if}
 		</MenuEntry>

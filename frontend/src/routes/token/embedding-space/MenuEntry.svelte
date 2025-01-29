@@ -9,7 +9,11 @@
 </script>
 
 <div class="entry flex flex-col rounded-xl border border-gray-300 p-4">
-	<button class="block flex flex-row text-xl font-bold items-center gap-2" class:mb-4={open} onclick={() => (open = !open)}>
+	<button
+		class="block flex flex-row items-center gap-2 text-xl font-bold"
+		class:mb-4={open}
+		onclick={() => (open = !open)}
+	>
 		<div>
 			<Icon
 				icon="line-md:chevron-up"
