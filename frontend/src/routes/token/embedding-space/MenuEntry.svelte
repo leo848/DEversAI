@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '@iconify/svelte';
 	import type { Snippet } from 'svelte';
 	import { slide } from 'svelte/transition';
 
@@ -7,8 +8,20 @@
 	let open = $state(true);
 </script>
 
-<div class="entry flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
-	<button class="block text-xl" onclick={() => (open = !open)}>{title}</button>
+<div class="entry flex flex-col rounded-xl border border-gray-300 p-4">
+	<button class="block flex flex-row text-xl font-bold items-center gap-2" class:mb-4={open} onclick={() => (open = !open)}>
+		<div>
+			<Icon
+				icon="line-md:chevron-up"
+				style={`transform: rotate(${90 + Number(open) * 90}deg)`}
+				class="transition-all"
+				height="1em"
+			/>
+		</div>
+		<div>
+			{title}
+		</div>
+	</button>
 	{#if open}
 		<div class="flex flex-col items-stretch gap-2" transition:slide={{ axis: 'y' }}>
 			{@render children()}
