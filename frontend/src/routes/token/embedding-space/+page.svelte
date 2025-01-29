@@ -170,8 +170,8 @@
 	>;
 	const paintKeys = Object.keys(paintOptions) as (keyof typeof paintOptions)[];
 
-	let paintKey: keyof typeof paintOptions = $state('id');
-	let paintOption = $derived(paintOptions[paintKey]);
+	let paintKey = $state('id') as keyof typeof paintOptions;
+	let paintOption: typeof paintOptions[keyof typeof paintOptions] = $derived(paintOptions[paintKey]);
 
 	let pointSize = $state(2);
 
@@ -209,23 +209,7 @@
 		<div class="flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
 			<div class="flex flex-col items-stretch gap-2">
 				<div class="text-xl">Legende</div>
-				{#if paintOption.type === 'continuous'}
-					{@const { min, max } = paintOption}
-					{@const digits = Math.max(-Math.log(max - min), 0)}
-					{@const rangeStepCount = Math.max(3, 10 - max.toFixed(digits).length)}
-					{@const rangeStepSize = (max - min) / (rangeStepCount - 1)}
-					{@const rangeSteps = new Array(rangeStepCount)
-						.fill(-1)
-						.map((_, i) => min + rangeStepSize * i)}
-					<div>
-						<div style:background={scaleGradient} class="h-8 w-full rounded"></div>
-						<div class="flex flex-row justify-between">
-							{#each rangeSteps as rangeStepValue}
-								<div>{rangeStepValue.toFixed(digits)}</div>
-							{/each}
-						</div>
-					</div>
-				{:else if paintOption.type === 'discrete'}
+				{#if paintOption.type === 'discrete'}
 					{@const labels = paintOption.labels}
 					{@const colors = Color.Category10}
 					{@const categoryCounts = paintOption.categories}
@@ -249,6 +233,24 @@
 						{/if}
 					</div>
 				{/if}
+				{#if paintOption.type === 'continuous'}
+					{@const min = paintOption.min}
+					{@const max = paintOption.max}
+					{@const digits = Math.max(-Math.log(max - min), 0)}
+					{@const rangeStepCount = Math.max(3, 10 - max.toFixed(digits).length)}
+					{@const rangeStepSize = (max - min) / (rangeStepCount - 1)}
+					{@const rangeSteps = new Array(rangeStepCount)
+						.fill(-1)
+						.map((_, i) => min + rangeStepSize * i)}
+					<div>
+						<div style:background={scaleGradient} class="h-8 w-full rounded"></div>
+						<div class="flex flex-row justify-between">
+							{#each rangeSteps as rangeStepValue}
+								<div>{rangeStepValue.toFixed(digits)}</div>
+							{/each}
+						</div>
+					</div>
+                {/if}
 			</div>
 		</div>
 		<div class="flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
