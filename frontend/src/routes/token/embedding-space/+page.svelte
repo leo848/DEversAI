@@ -7,6 +7,7 @@
 	import ScatterPlot3D from './ScatterPlot3D.svelte';
 	import FullLoader from '$lib/components/FullLoader.svelte';
 	import PieChart from '$lib/components/PieChart.svelte';
+	import Histogram from '$lib/components/Histogram.svelte';
 
 	const client = new Client();
 	const embeddingData = $derived(client.getTokenEmbeddings('anticausal1'));
@@ -52,7 +53,12 @@
 		};
 	}
 
-	function paintContinuous(metric: Metric): { paint: Painter; min: number; max: number } {
+	function paintContinuous(metric: Metric): {
+		paint: Painter;
+		min: number;
+		max: number;
+		histogram: { values: number[]; posts: number[] };
+	} {
 		let min = Infinity,
 			max = -Infinity;
 		for (let id = 0; id < vocabulary.tokens.length; id++) {
@@ -60,11 +66,31 @@
 			min = Math.min(min, value);
 			max = Math.max(max, value);
 		}
+		let histogramBucketSize = 1;
+		while ((max - min) / histogramBucketSize > 20) {
+			histogramBucketSize *= 2;
+		}
+		const histogramBuckets = [min];
+		while (histogramBuckets[histogramBuckets.length - 1] <= max) {
+			histogramBuckets.push(histogramBuckets[histogramBuckets.length - 1] + histogramBucketSize);
+		}
+
+		const histogram = new Array(histogramBuckets.length - 1).fill(0);
+		for (let id = 0; id < vocabulary.tokens.length; id++) {
+			const value = metric({ id, token: vocabulary.tokens[id] });
+			histogram[Math.floor((value - min) / histogramBucketSize)] += 1;
+		}
+		console.log(histogram, histogramBuckets);
+
 		return {
 			paint: ({ id }) => {
 				const value = metric({ id, token: vocabulary.tokens[id] });
 				const normalized = (value - min) / (max - min);
 				return Gradient.Viridis.sample(1 - normalized);
+			},
+			histogram: {
+				values: histogram,
+				posts: histogramBuckets
 			},
 			min,
 			max
@@ -163,7 +189,12 @@
 		string,
 		{ type: string; name: string; paint: (input: MetricInput) => Color } & (
 			| { type: 'discrete'; labels: string[]; categories: number[]; unknownCategory: number }
-			| { type: 'continuous'; min: number; max: number }
+			| {
+					type: 'continuous';
+					min: number;
+					max: number;
+					histogram: { posts: number[]; values: number[] };
+			  }
 		)
 	>;
 	const paintKeys = Object.keys(paintOptions) as (keyof typeof paintOptions)[];
@@ -255,7 +286,14 @@
 				{/if}
 			</div>
 		</div>
-		{#if paintOption.type === 'discrete'}
+		{#if paintOption.type === 'continuous'}
+			<div class="flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
+				<div class="flex flex-col items-stretch gap-2">
+					<div class="text-xl">Histogramm</div>
+					<Histogram {...paintOption.histogram} colorGradient={Gradient.Viridis.reverse()} />
+				</div>
+			</div>
+		{:else if paintOption.type === 'discrete'}
 			<div class="flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
 				<div class="flex flex-col items-stretch gap-2">
 					<div class="text-xl">Tortendiagramm</div>
