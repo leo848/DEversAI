@@ -5,6 +5,7 @@
 	import type { Tuple } from '$lib/util/array';
 	import { Color, Gradient } from '$lib/util/color';
 	import ScatterPlot3D from './ScatterPlot3D.svelte';
+	import FullLoader from '$lib/components/FullLoader.svelte';
 
 	const client = new Client();
 	const embeddingData = $derived(client.getTokenEmbeddings('anticausal1'));
@@ -181,7 +182,7 @@
 
 <div>
 	{#await embeddingData}
-		Loading data...
+        <FullLoader />
 	{:then object}
 		<ScatterPlot3D
 			points={toData(object.embeddings3D)}
@@ -192,7 +193,7 @@
 	{:catch error}
 		Fehler: {error}
 	{/await}
-	<div class="selection absolute m-4 flex h-svh w-[300px] flex-col gap-4 overflow-scroll">
+	<div class="selection absolute p-4 flex h-svh w-[300px] flex-col gap-4 overflow-scroll">
 		<div class="flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
 			<div class="flex flex-col items-stretch gap-2">
 				<div class="text-xl">Färben nach</div>

@@ -102,7 +102,7 @@
 	});
 </script>
 
-<div class="scatterplot-container h-full w-full">
+<div class="h-full w-full">
 	<canvas id="scatterplot-canvas" bind:this={scatterplotElt}></canvas>
 	<!-- Tooltip -->
 	{#if tooltipContent}
