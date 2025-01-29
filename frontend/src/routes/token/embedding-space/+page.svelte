@@ -8,6 +8,7 @@
 	import FullLoader from '$lib/components/FullLoader.svelte';
 	import PieChart from '$lib/components/PieChart.svelte';
 	import Histogram from '$lib/components/Histogram.svelte';
+	import MenuEntry from './MenuEntry.svelte';
 
 	const client = new Client();
 	const embeddingData = $derived(client.getTokenEmbeddings('anticausal1'));
@@ -67,6 +68,9 @@
 			max = Math.max(max, value);
 		}
 		let histogramBucketSize = 1;
+		if (max - min == 100) {
+			histogramBucketSize = 10;
+		}
 		while ((max - min) / histogramBucketSize > 20) {
 			histogramBucketSize *= 2;
 		}
@@ -252,120 +256,98 @@
 	<div
 		class="selection absolute flex h-svh w-[300px] flex-col gap-4 overflow-scroll p-4 2xl:w-[400px]"
 	>
-		<div class="flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
-			<div class="flex flex-col items-stretch gap-2">
-				<div class="text-xl">Färben nach</div>
-				{#each paintKeys as key}
-					<button
-						class="border-gray block rounded border p-1 hover:bg-gray-100 active:bg-gray-100"
-						class:bg-gray-100={paintKey == key}
-						onclick={() => (paintKey = key)}>{paintOptions[key].name}</button
-					>
-				{/each}
-			</div>
-		</div>
-		<div class="flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
-			<div class="flex flex-col items-stretch gap-2">
-				<div class="text-xl">Legende</div>
-				{#if paintOption.type === 'discrete'}
-					{@const labels = paintOption.labels}
-					{@const colors = Color.Category10}
-					{@const categoryCounts = paintOption.categories}
+		<MenuEntry title="Färben nach">
+			{#each paintKeys as key}
+				<button
+					class="border-gray block rounded border p-1 hover:bg-gray-100 active:bg-gray-100"
+					class:bg-gray-100={paintKey == key}
+					onclick={() => (paintKey = key)}>{paintOptions[key].name}</button
+				>
+			{/each}
+		</MenuEntry>
 
-					<div class="grid grid-cols-4 gap-4">
-						{#each labels as label, id}
-							<div class="h-8 w-8 rounded" style:background={colors[id].toString()}></div>
-							<div class="self-start">{label}</div>
-							<div class="opacity-50">({categoryCounts[id]})</div>
-							<div class="opacity-50">
-								{((categoryCounts[id] / vocabulary.tokens.length) * 100).toFixed(2)}%
-							</div>
-						{/each}
-						{#if paintOption.unknownCategory !== 0}
-							<div class="h-8 w-8 rounded bg-gray-300"></div>
-							<div class="self-start">Rest</div>
-							<div class="opacity-50">({paintOption.unknownCategory})</div>
-							<div class="opacity-50">
-								{((paintOption.unknownCategory / vocabulary.tokens.length) * 100).toFixed(2)}%
-							</div>
-						{/if}
-					</div>
-				{/if}
-				{#if paintOption.type === 'continuous'}
-					{@const min = paintOption.min}
-					{@const max = paintOption.max}
-					{@const digits = Math.max(-Math.log(max - min), 0)}
-					{@const rangeStepCount = Math.min(
-						max - min + 1,
-						Math.max(3, 10 - max.toFixed(digits).length)
-					)}
-					{@const rangeStepSize = (max - min) / (rangeStepCount - 1)}
-					{@const rangeSteps = new Array(rangeStepCount)
-						.fill(-1)
-						.map((_, i) => min + rangeStepSize * i)}
-					<div>
-						<div style:background={scaleGradient} class="h-8 w-full rounded"></div>
-						<div class="flex flex-row justify-between">
-							{#each rangeSteps as rangeStepValue}
-								<div>{rangeStepValue.toFixed(digits)}</div>
-							{/each}
+		<MenuEntry title="Legende">
+			{#if paintOption.type === 'discrete'}
+				{@const labels = paintOption.labels}
+				{@const colors = Color.Category10}
+				{@const categoryCounts = paintOption.categories}
+
+				<div class="grid grid-cols-4 gap-4">
+					{#each labels as label, id}
+						<div class="h-8 w-8 rounded" style:background={colors[id].toString()}></div>
+						<div class="self-start">{label}</div>
+						<div class="opacity-50">({categoryCounts[id]})</div>
+						<div class="opacity-50">
+							{((categoryCounts[id] / vocabulary.tokens.length) * 100).toFixed(2)}%
 						</div>
-					</div>
-				{/if}
-			</div>
-		</div>
-		{#if paintOption.type === 'continuous'}
-			<div class="flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
-				<div class="flex flex-col items-stretch gap-2">
-					<div class="text-xl">Histogramm</div>
-					<Histogram {...paintOption.histogram} colorGradient={Gradient.Viridis.reverse()} />
+					{/each}
+					{#if paintOption.unknownCategory !== 0}
+						<div class="h-8 w-8 rounded bg-gray-300"></div>
+						<div class="self-start">Rest</div>
+						<div class="opacity-50">({paintOption.unknownCategory})</div>
+						<div class="opacity-50">
+							{((paintOption.unknownCategory / vocabulary.tokens.length) * 100).toFixed(2)}%
+						</div>
+					{/if}
 				</div>
-			</div>
-		{:else if paintOption.type === 'discrete'}
-			<div class="flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
-				<div class="flex flex-col items-stretch gap-2">
-					<div class="text-xl">Tortendiagramm</div>
-					<PieChart
-						data={new Array(11).fill(-1).map((_, i) =>
-							i == 10
-								? {
-										color: Color.luma(0.8),
-										value: paintOption.unknownCategory / vocabulary.tokens.length,
-										label: 'Rest'
-									}
-								: {
-										value: paintOption.categories[i] / vocabulary.tokens.length,
-										color: Color.Category10[i],
-										label: paintOption.labels[i]
-									}
-						)}
-					/>
-				</div>
-			</div>
-		{/if}
-		<div class="flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
-			<div class="flex flex-col items-stretch gap-2">
-				<div class="text-xl">Darstellung</div>
+			{/if}
+			{#if paintOption.type === 'continuous'}
+				{@const min = paintOption.min}
+				{@const max = paintOption.max}
+				{@const digits = Math.max(-Math.log(max - min), 0)}
+				{@const rangeStepCount = Math.min(
+					max - min + 1,
+					Math.max(3, 10 - max.toFixed(digits).length)
+				)}
+				{@const rangeStepSize = (max - min) / (rangeStepCount - 1)}
+				{@const rangeSteps = new Array(rangeStepCount)
+					.fill(-1)
+					.map((_, i) => min + rangeStepSize * i)}
 				<div>
-					<div class="-mb-1">Punktgröße: {pointSize.toFixed(1)}</div>
-					<input
-						type="range"
-						class="block w-full"
-						min={0.1}
-						max={5}
-						step={0.1}
-						bind:value={pointSize}
-					/>
+					<div style:background={scaleGradient} class="h-8 w-full rounded"></div>
+					<div class="flex flex-row justify-between">
+						{#each rangeSteps as rangeStepValue}
+							<div>{rangeStepValue.toFixed(digits)}</div>
+						{/each}
+					</div>
 				</div>
+			{/if}
+		</MenuEntry>
+		{#if paintOption.type === 'continuous'}
+			<MenuEntry title="Histogramm">
+				<Histogram {...paintOption.histogram} colorGradient={Gradient.Viridis.reverse()} />
+			</MenuEntry>
+		{:else if paintOption.type === 'discrete'}
+			<MenuEntry title="Tortendiagramm">
+				<PieChart
+					data={new Array(11).fill(-1).map((_, i) =>
+						i == 10
+							? {
+									color: Color.luma(0.8),
+									value: paintOption.unknownCategory / vocabulary.tokens.length,
+									label: 'Rest'
+								}
+							: {
+									value: paintOption.categories[i] / vocabulary.tokens.length,
+									color: Color.Category10[i],
+									label: paintOption.labels[i]
+								}
+					)}
+				/>
+			</MenuEntry>
+		{/if}
+		<MenuEntry title="Darstellung">
+			<div>
+				<div class="-mb-1">Punktgröße: {pointSize.toFixed(1)}</div>
+				<input
+					type="range"
+					class="block w-full"
+					min={0.1}
+					max={5}
+					step={0.1}
+					bind:value={pointSize}
+				/>
 			</div>
-		</div>
+		</MenuEntry>
 	</div>
 </div>
-
-<style>
-	.selection > div {
-		background: rgba(255, 255, 255, 0.9);
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-		z-index: 1000;
-	}
-</style>
