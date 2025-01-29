@@ -32,22 +32,16 @@
 
 		const paths = selection.selectAll<SVGPathElement, d3.PieArcDatum<Datum>>('path').data(pieData);
 
-		paths.join(
-			(enter) =>
-				enter
-					.append('path')
-					.attr('fill', (d) => d.data.color.toString())
-					.attr('stroke', 'white')
-					.attr('stroke-width', '1px')
-					.attr('d', arcGenerator)
-					.attr('opacity', 0)
-					.transition()
-					.duration(600)
-					.attr('opacity', 1),
-			(update) => update.transition().duration(600).attr('d', arcGenerator)
-		);
-
-		paths.exit().transition().duration(600).attr('opacity', 0).remove();
+		paths
+			.join('path')
+			.transition()
+			.duration(200)
+			.attr('d', arcGenerator)
+			.attr('fill', (d) => d.data.color.toString())
+			.attr('title', (d) => d.data.label)
+			.attr('stroke', 'white')
+			.attr('stroke-width', '1px')
+			.attr('opacity', 1);
 	});
 </script>
 

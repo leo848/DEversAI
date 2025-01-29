@@ -260,21 +260,19 @@
 				<div class="flex flex-col items-stretch gap-2">
 					<div class="text-xl">Tortendiagramm</div>
 					<PieChart
-						data={new Array(11)
-							.fill(-1)
-							.map((_, i) =>
-								i == 10
-									? {
-											color: Color.luma(0.8),
-											value: paintOption.unknownCategory / vocabulary.tokens.length,
-											label: 'Rest'
-										}
-									: {
-											value: paintOption.categories[i] / vocabulary.tokens.length,
-											color: Color.Category10[i],
-											label: paintOption.labels[i]
-										}
-							)}
+						data={new Array(11).fill(-1).map((_, i) =>
+							i == 10
+								? {
+										color: Color.luma(0.8),
+										value: paintOption.unknownCategory / vocabulary.tokens.length,
+										label: 'Rest'
+									}
+								: {
+										value: paintOption.categories[i] / vocabulary.tokens.length,
+										color: Color.Category10[i],
+										label: paintOption.labels[i]
+									}
+						)}
 					/>
 				</div>
 			</div>
