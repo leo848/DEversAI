@@ -193,7 +193,7 @@
 	{:catch error}
 		Fehler: {error}
 	{/await}
-	<div class="selection absolute flex h-svh w-[300px] flex-col gap-4 overflow-scroll p-4">
+	<div class="selection absolute flex h-svh w-[300px] 2xl:w-[400px] flex-col gap-4 overflow-scroll p-4">
 		<div class="flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
 			<div class="flex flex-col items-stretch gap-2">
 				<div class="text-xl">Färben nach</div>
