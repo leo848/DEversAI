@@ -1,14 +1,19 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { slide } from 'svelte/transition';
 
 	const { title, children }: { title: string; children: Snippet } = $props();
+
+	let open = $state(true);
 </script>
 
 <div class="entry flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
-	<div class="flex flex-col items-stretch gap-2">
-		<div class="text-xl">{title}</div>
-		{@render children()}
-	</div>
+	<button class="block text-xl" onclick={() => (open = !open)}>{title}</button>
+	{#if open}
+		<div class="flex flex-col items-stretch gap-2" transition:slide={{ axis: 'y' }}>
+			{@render children()}
+		</div>
+	{/if}
 </div>
 
 <style>

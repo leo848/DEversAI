@@ -313,12 +313,10 @@
 				</div>
 			{/if}
 		</MenuEntry>
-		{#if paintOption.type === 'continuous'}
-			<MenuEntry title="Histogramm">
+		<MenuEntry title={paintOption.type === 'continuous' ? 'Histogramm' : 'Tortendiagramm'}>
+			{#if paintOption.type === 'continuous'}
 				<Histogram {...paintOption.histogram} colorGradient={Gradient.Viridis.reverse()} />
-			</MenuEntry>
-		{:else if paintOption.type === 'discrete'}
-			<MenuEntry title="Tortendiagramm">
+			{:else if paintOption.type === 'discrete'}
 				<PieChart
 					data={new Array(11).fill(-1).map((_, i) =>
 						i == 10
@@ -334,8 +332,8 @@
 								}
 					)}
 				/>
-			</MenuEntry>
-		{/if}
+			{/if}
+		</MenuEntry>
 		<MenuEntry title="Darstellung">
 			<div>
 				<div class="-mb-1">Punktgröße: {pointSize.toFixed(1)}</div>
