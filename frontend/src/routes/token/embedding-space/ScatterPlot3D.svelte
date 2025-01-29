@@ -83,7 +83,8 @@
 					id: object.object.id,
 					position: object.object.position.map((pos: number) => pos.toFixed(2)).join(', ')
 				};
-				tooltipStyle = `display:block; left: ${evt.srcEvent.clientX}px; top: ${evt.srcEvent.clientY}px`;
+				const { clientX, clientY } = evt.srcEvent as MouseEvent;
+				tooltipStyle = `display:block; left: ${clientX}px; top: ${clientY}px`;
 			},
 			onClick: (object) => {
 				if (!object.picked) {
