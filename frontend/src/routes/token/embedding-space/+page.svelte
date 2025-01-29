@@ -169,7 +169,9 @@
 	const paintKeys = Object.keys(paintOptions) as (keyof typeof paintOptions)[];
 
 	let paintKey = $state('id') as keyof typeof paintOptions;
-	let paintOption: typeof paintOptions[keyof typeof paintOptions] = $derived(paintOptions[paintKey]);
+	let paintOption: (typeof paintOptions)[keyof typeof paintOptions] = $derived(
+		paintOptions[paintKey]
+	);
 
 	let pointSize = $state(2);
 
@@ -191,7 +193,9 @@
 	{:catch error}
 		Fehler: {error}
 	{/await}
-	<div class="selection absolute flex h-svh w-[300px] 2xl:w-[400px] flex-col gap-4 overflow-scroll p-4">
+	<div
+		class="selection absolute flex h-svh w-[300px] flex-col gap-4 overflow-scroll p-4 2xl:w-[400px]"
+	>
 		<div class="flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
 			<div class="flex flex-col items-stretch gap-2">
 				<div class="text-xl">Färben nach</div>
@@ -248,21 +252,33 @@
 							{/each}
 						</div>
 					</div>
-                {/if}
+				{/if}
 			</div>
 		</div>
-        {#if paintOption.type === "discrete"}
-		<div class="flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
-			<div class="flex flex-col items-stretch gap-2">
-				<div class="text-xl">Tortendiagramm</div>
-                <PieChart
-                  data={
-                  new Array(11).fill(-1).map((_, i) => i == 10 ? { color: Color.luma(0.8), value: paintOption.unknownCategory / vocabulary.tokens.length, label: "Rest" } : { value: paintOption.categories[i] / vocabulary.tokens.length, color: Color.Category10[i], label: paintOption.labels[i] })
-                  }
-                  />
+		{#if paintOption.type === 'discrete'}
+			<div class="flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
+				<div class="flex flex-col items-stretch gap-2">
+					<div class="text-xl">Tortendiagramm</div>
+					<PieChart
+						data={new Array(11)
+							.fill(-1)
+							.map((_, i) =>
+								i == 10
+									? {
+											color: Color.luma(0.8),
+											value: paintOption.unknownCategory / vocabulary.tokens.length,
+											label: 'Rest'
+										}
+									: {
+											value: paintOption.categories[i] / vocabulary.tokens.length,
+											color: Color.Category10[i],
+											label: paintOption.labels[i]
+										}
+							)}
+					/>
+				</div>
 			</div>
-		</div>
-        {/if}
+		{/if}
 		<div class="flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
 			<div class="flex flex-col items-stretch gap-2">
 				<div class="text-xl">Darstellung</div>
