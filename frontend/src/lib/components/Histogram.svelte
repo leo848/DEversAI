@@ -53,7 +53,7 @@
 			.attr('width', barWidth - 1)
 			.attr('y', height)
 			.attr('height', 0)
-			.attr('fill', (_, i) => colorGradient.sample(i / values.length).toString())
+			.attr('fill', (_, i) => colorGradient.sample(i / (values.length - 1)).toString())
 			.transition()
 			.duration(400)
 			.attr('y', (d) => yScale(d))
@@ -67,7 +67,7 @@
 			.attr('width', barWidth - 1)
 			.attr('y', (d) => yScale(d))
 			.attr('height', (d) => height - yScale(d))
-			.attr('fill', (_, i) => colorGradient.sample(i / values.length).toString());
+			.attr('fill', (_, i) => colorGradient.sample(i / (values.length - 1)).toString());
 
 		// Exit: Remove disappearing bars
 		bars.exit().transition().duration(400).attr('height', 0).remove();

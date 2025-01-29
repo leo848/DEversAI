@@ -80,7 +80,6 @@
 			const value = metric({ id, token: vocabulary.tokens[id] });
 			histogram[Math.floor((value - min) / histogramBucketSize)] += 1;
 		}
-		console.log(histogram, histogramBuckets);
 
 		return {
 			paint: ({ id }) => {
@@ -175,10 +174,36 @@
 			name: 'Anzahl Bytes',
 			metric: ({ token }) => token.value.length
 		}),
-		letterCount: option.discrete({
+		percentCapital: option.continuous({
+			name: 'Anteil Großbuchstaben (%)',
+			metric: ({ token }) => {
+				return (
+					(token.value.filter((value) => value >= 65 && value <= 90).length / token.value.length) *
+					100
+				);
+			}
+		}),
+		percentSmall: option.continuous({
+			name: 'Anteil Kleinbuchstaben (%)',
+			metric: ({ token }) => {
+				return (
+					(token.value.filter((value) => value >= 97 && value <= 122).length / token.value.length) *
+					100
+				);
+			}
+		}),
+		percentDigit: option.continuous({
+			name: 'Anteil Ziffern (%)',
+			metric: ({ token }) => {
+				return (
+					(token.value.filter((value) => value >= 48 && value <= 57).length / token.value.length) *
+					100
+				);
+			}
+		}),
+		letterCount: option.continuous({
 			name: 'Anzahl Wörter',
-			labels: ['1', '2'],
-			classifier: ({ token }) => token.displayString.split(' ').filter(Boolean).length - 1
+			metric: ({ token }) => token.displayString.split(' ').filter(Boolean).length
 		}),
 		casing: option.discrete({
 			name: 'Groß- / Kleinschreibung',
@@ -270,7 +295,10 @@
 					{@const min = paintOption.min}
 					{@const max = paintOption.max}
 					{@const digits = Math.max(-Math.log(max - min), 0)}
-					{@const rangeStepCount = Math.max(3, 10 - max.toFixed(digits).length)}
+					{@const rangeStepCount = Math.min(
+						max - min + 1,
+						Math.max(3, 10 - max.toFixed(digits).length)
+					)}
 					{@const rangeStepSize = (max - min) / (rangeStepCount - 1)}
 					{@const rangeSteps = new Array(rangeStepCount)
 						.fill(-1)
