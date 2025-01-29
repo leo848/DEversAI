@@ -6,6 +6,7 @@
 	import { Color, Gradient } from '$lib/util/color';
 	import ScatterPlot3D from './ScatterPlot3D.svelte';
 	import FullLoader from '$lib/components/FullLoader.svelte';
+	import PieChart from '$lib/components/PieChart.svelte';
 
 	const client = new Client();
 	const embeddingData = $derived(client.getTokenEmbeddings('anticausal1'));
@@ -39,9 +40,6 @@
 			} else {
 				unknownCategory += 1;
 			}
-		}
-		while (categories[categories.length - 1] == 0) {
-			categories.length -= 1;
 		}
 		return {
 			categories,
@@ -253,6 +251,18 @@
                 {/if}
 			</div>
 		</div>
+        {#if paintOption.type === "discrete"}
+		<div class="flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
+			<div class="flex flex-col items-stretch gap-2">
+				<div class="text-xl">Tortendiagramm</div>
+                <PieChart
+                  data={
+                  new Array(11).fill(-1).map((_, i) => i == 10 ? { color: Color.luma(0.8), value: paintOption.unknownCategory / vocabulary.tokens.length, label: "Rest" } : { value: paintOption.categories[i] / vocabulary.tokens.length, color: Color.Category10[i], label: paintOption.labels[i] })
+                  }
+                  />
+			</div>
+		</div>
+        {/if}
 		<div class="flex flex-col gap-4 rounded-xl border border-gray-300 p-4">
 			<div class="flex flex-col items-stretch gap-2">
 				<div class="text-xl">Darstellung</div>
