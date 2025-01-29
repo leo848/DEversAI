@@ -38,11 +38,11 @@ data = model.transformer.wte(tokens).detach().clone().numpy()
 
 # print(data)
 
-embedding = pacmap.PaCMAP(n_components=3, n_neighbors=None, num_iters=900, verbose=True)
+embedding = pacmap.PaCMAP(n_components=2, n_neighbors=None, num_iters=900, verbose=True)
 
 data_transformed = embedding.fit_transform(data)
 
-np.save("output/anticausal1-embedding.npy", data_transformed)
+np.save("output/anticausal1-embedding-2d.npy", data_transformed)
 
 # from mpl_toolkits.mplot3d import Axes3D
 
