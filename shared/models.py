@@ -1,8 +1,7 @@
 from typing import Literal, Union
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class BaseRequest(BaseModel):
-    type: str
     request_id: str
 
 
@@ -16,7 +15,8 @@ class DistributionRequest(BaseRequest):
     model_id: str
     token_input: list[int]
 
-RequestUnion = Union[InferenceRequest, DistributionRequest]
+class RequestUnion(BaseRequest):
+    action: Union[InferenceRequest, DistributionRequest] = Field(discriminator="type")
 
 class InferenceResponse(BaseModel):
     type: Literal["autoregressiveInference"]
