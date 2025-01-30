@@ -5,9 +5,6 @@ ENV PATH=/opt/conda/bin:$PATH
 
 WORKDIR /app
 
-COPY ./requirements.txt /app/requirements.txt
-COPY . /app
-
 RUN apt-get update && apt-get install -y \
     python3.10 python3-pip python3-dev \
     git wget curl \
@@ -19,8 +16,14 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86
     bash ~/miniconda.sh -b -p /opt/conda && \
     rm ~/miniconda.sh
 
+COPY ./requirements.txt /app/requirements.txt
+
 RUN pip install --upgrade pip && \
 	pip install --no-cache-dir --upgrade -r /app/requirements.txt
+
+COPY ./models.py /app/models.py
+COPY . /app
+
 
 CMD ["fastapi", "run", "main.py", "--port", "80"]
 
