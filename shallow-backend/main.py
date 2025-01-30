@@ -1,13 +1,15 @@
 import re
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import scoped_session
 import numpy as np
 import json
+from models import RequestUnion, InferenceRequest
 
 DATABASE_URL = "sqlite:///assets/token_examples.db"
+DEEP_URL = "ws://127.0.0.1:8910/ws"
 
 engine: Engine = create_engine(
     DATABASE_URL, connect_args={"check_same_thread": False}, future=True
@@ -63,3 +65,40 @@ def get_embeddings(model_name: str):
         }
     except IOError:
         raise HTTPException(404, "Model not found")
+
+# Mapping from request_id -> client WebSocket
+active_clients: dict[str, WebSocket] = {}
+
+@app.websocket("/ws")
+async def websocket_endpoint(client_ws: WebSocket):
+    """Handles incoming WebSocket connections from clients."""
+    await client_ws.accept()
+    request_id = None  # Track the active request ID for cleanup
+    
+    try:
+        while True:
+            message = await client_ws.receive_text()
+            data = json.loads(message)
+            request = RequestUnion(**data)  # Auto-detect request type
+            
+            if isinstance(request, InferenceRequest):
+                request_id = request.request_id
+                active_clients[request_id] = client_ws  # Store client connection
+                
+                # Forward the request to Kira
+                async with websockets.connect(DEEP_URL) as kira_ws:
+                    await kira_ws.send(message)
+
+                    # Relay responses back to the correct client
+                    async for response_text in kira_ws:
+                        response = json.loads(response_text)
+                        if response.get("request_id") == request_id:
+                            await client_ws.send_text(response_text)
+
+    except WebSocketDisconnect:
+        pass  # Client disconnected
+    except Exception as e:
+        print(f"WebSocket error: {e}")
+    finally:
+        if request_id and request_id in active_clients:
+            del active_clients[request_id]  # Cleanup
