@@ -19,7 +19,10 @@ const pathUtils = {
 
 export class Client {
 	base: string;
+	embeddingCache: Record<string, TokenEmbeddings>;
+
 	constructor({ base }: { base?: string } = {}) {
+		this.embeddingCache = {};
 		if (base) {
 			this.base = base;
 		} else if (import.meta.env.DEV) {
@@ -44,11 +47,16 @@ export class Client {
 	}
 
 	async getTokenEmbeddings(modelName: string): Promise<TokenEmbeddings> {
+		const cached = this.embeddingCache[modelName]
+		if (cached != null) {
+			return cached;
+		}
 		const apiPath = pathUtils.join(this.base, 'tokens', modelName, 'embeddings');
 		const response = await fetch(apiPath);
 		const json = await response.json();
 		const tokenEmbeddings = await TokenEmbeddings.safeParseAsync(json);
 		if (tokenEmbeddings.success) {
+			this.embeddingCache[modelName] = tokenEmbeddings.data;
 			return tokenEmbeddings.data;
 		} else {
 			return Promise.reject('Could not parse response: ' + tokenEmbeddings.error);

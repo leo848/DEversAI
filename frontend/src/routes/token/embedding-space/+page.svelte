@@ -12,7 +12,9 @@
 	import { slide } from 'svelte/transition';
 
 	const client = new Client();
-	const embeddingData = $derived(client.getTokenEmbeddings('anticausal1'));
+	let modelName = $state("anticausal1") as "anticausal1" | "causal1";
+
+	const embeddingData = $derived(client.getTokenEmbeddings(modelName));
 
 	const toData = (data: Tuple<3, number>[]) => {
 		return data.map((pos, i) => {
@@ -277,6 +279,20 @@
 					onclick={() => (dimensionality = '3d')}
 				>
 					3D
+				</button>
+				<button
+					class="align-center rounded border border-gray-200 p-3 text-center transition-all hover:bg-gray-100 active:bg-gray-100"
+					class:bg-gray-100={modelName == 'causal1'}
+					onclick={() => (modelName = 'causal1')}
+				>
+				causal1
+				</button>
+				<button
+					class="align-center rounded border border-gray-200 p-3 text-center transition-all hover:bg-gray-100 active:bg-gray-100"
+					class:bg-gray-100={modelName == 'anticausal1'}
+					onclick={() => (modelName = 'anticausal1')}
+				>
+				anticausal1
 				</button>
 			</div>
 		</MenuEntry>
