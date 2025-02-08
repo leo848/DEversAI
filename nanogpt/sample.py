@@ -13,11 +13,11 @@ from model import GPTConfig, GPT
 
 # -----------------------------------------------------------------------------
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
-model_name = "ckpt_300000.pt"
+model_name = "causal1.pt"
 out_dir = 'output' # ignored if init_from is not 'resume'
 start = "\n\nRezept: Griechischer Salat\n\nZutaten:\n" # or "<|endoftext|>" or etc. Can also specify a file, use as: "FILE:prompt.txt"
 num_samples = 10 # number of samples to draw
-max_new_tokens = 100 # number of tokens generated in each sample
+max_new_tokens = 350 # number of tokens generated in each sample
 temperature = 0.8 # 1.0 = no change, < 1.0 = less random, > 1.0 = more random, in predictions
 top_k = 200 # retain only the top_k most likely tokens, clamp others to have 0 probability
 seed = random.randint(0, int(1e10))
@@ -25,7 +25,7 @@ print(f"Using seed {seed}")
 device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
 compile = False # use PyTorch 2.0 to compile the model to be faster
-causality = "anticausal" # 'causal' or 'anticausal'
+causality = "causal" # 'causal' or 'anticausal'
 
 exec(open('configurator.py').read()) # overrides from command line or config file
 # -----------------------------------------------------------------------------
@@ -129,7 +129,7 @@ while prompt_input:
     raw_input = input("\n\x1B[32m>>> \x1B[0m")
     eval_input = literal_eval(f'"{raw_input}"')
     if causality == "causal":
-        prompt_input = "" + eval_input + "\n"
+        prompt_input = "\n" + eval_input
     else:
         prompt_input = eval_input + "\n"
     start_ids = encode(prompt_input)
@@ -141,17 +141,20 @@ while prompt_input:
             gen = model.generate_generator(x, max_new_tokens, temperature=temperature, top_k=top_k)
             print()
             print(prompt_input, end="")
+            colored = False
             COLORS = ["168;213;226", "248;191;213", "251;231;161", "178;226;180"]
             current_color = 0
             try:
                 for token in gen:
                     token_bytes = decode(token.tolist()[0], return_bytes=True)
-                    sys.stdout.buffer.write(f"\x1B[30;48;2;{COLORS[current_color]}m".encode())
+                    if colored:
+                        sys.stdout.buffer.write(f"\x1B[30;48;2;{COLORS[current_color]}m".encode())
                     sys.stdout.buffer.write(token_bytes)
-                    sys.stdout.buffer.write(f"\x1B[0m".encode())
-                    current_color += 1
-                    if current_color == len(COLORS):
-                        current_color = 0
+                    if colored:
+                        sys.stdout.buffer.write(f"\x1B[0m".encode())
+                        current_color += 1
+                        if current_color == len(COLORS):
+                            current_color = 0
                     sys.stdout.flush()
             except KeyboardInterrupt:
                 continue
