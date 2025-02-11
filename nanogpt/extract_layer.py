@@ -8,10 +8,10 @@ import random
 import numpy as np
 
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
-model_name = "anticausal1.pt"
+model_name = "causal1.pt"
 out_dir = 'output' # ignored if init_from is not 'resume'
 
-device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
+device = 'cpu' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
 compile = False # use PyTorch 2.0 to compile the model to be faster
 
@@ -38,13 +38,10 @@ tokens = torch.tensor(np.arange(0, 50256))
 
 data = model.transformer.wpe(torch.tensor(np.arange(0, 1024))).detach().clone().transpose(0, 1).numpy()
 
-for pos, datum in enumerate(data):
-    plt.plot(range(1024), datum)
-ax = plt.gca()
-ax.set_ylim((-0.2, 0.2))
-plt.show()
 
-np.save("output/anticausal1-wpe.npy", data)
+mads = [mad(row) for row in data]
+
+# np.save("output/anticausal1-wpe.npy", data)
 
 # print(data)
 
