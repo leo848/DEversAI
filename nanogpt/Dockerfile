@@ -21,7 +21,9 @@ RUN pip install --upgrade pip && \
     torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 && \
     pip install \
     diffusers transformers accelerate \
-    Pillow alive-progress tensorboard
+    Pillow alive-progress tensorboard \
+    matplotlib pacmap scipy numpy \
+
 
 COPY . /workspace
 
