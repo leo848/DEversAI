@@ -13,11 +13,11 @@ from model import GPTConfig, GPT
 
 # -----------------------------------------------------------------------------
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
-model_name = "causal1.pt"
+model_name = "anticausal1.pt"
 out_dir = 'output' # ignored if init_from is not 'resume'
 start = "\n\nRezept: Griechischer Salat\n\nZutaten:\n" # or "<|endoftext|>" or etc. Can also specify a file, use as: "FILE:prompt.txt"
 num_samples = 10 # number of samples to draw
-max_new_tokens = 350 # number of tokens generated in each sample
+max_new_tokens = 750 # number of tokens generated in each sample
 temperature = 0.8 # 1.0 = no change, < 1.0 = less random, > 1.0 = more random, in predictions
 top_k = 200 # retain only the top_k most likely tokens, clamp others to have 0 probability
 seed = random.randint(0, int(1e10))
@@ -25,7 +25,7 @@ print(f"Using seed {seed}")
 device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
 compile = False # use PyTorch 2.0 to compile the model to be faster
-causality = "causal" # 'causal' or 'anticausal'
+causality = "anticausal" # 'causal' or 'anticausal'
 
 exec(open('configurator.py').read()) # overrides from command line or config file
 # -----------------------------------------------------------------------------
@@ -129,10 +129,11 @@ while prompt_input:
     raw_input = input("\n\x1B[32m>>> \x1B[0m")
     eval_input = literal_eval(f'"{raw_input}"')
     if causality == "causal":
-        prompt_input = "\n" + eval_input
+        prompt_input = eval_input
     else:
-        prompt_input = eval_input + "\n"
+        prompt_input = eval_input
     start_ids = encode(prompt_input)
+
     x = (torch.tensor(start_ids, dtype=torch.long, device=device)[None, ...])
 
     # run generation
@@ -140,7 +141,7 @@ while prompt_input:
         if causality == 'causal':
             gen = model.generate_generator(x, max_new_tokens, temperature=temperature, top_k=top_k)
             print()
-            print(prompt_input, end="")
+            print(prompt_input, end="", flush=True)
             colored = False
             COLORS = ["168;213;226", "248;191;213", "251;231;161", "178;226;180"]
             current_color = 0

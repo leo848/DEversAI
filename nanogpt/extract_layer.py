@@ -7,10 +7,8 @@ import sys
 import random
 import numpy as np
 
-tokens = torch.tensor(np.arange(0, 50256))
-
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
-model_name = "causal1.pt"
+model_name = "anticausal1.pt"
 out_dir = 'output' # ignored if init_from is not 'resume'
 
 device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
@@ -34,29 +32,25 @@ model.load_state_dict(state_dict)
 
 model.eval()
 
-data = model.transformer.wte(tokens).detach().clone().numpy()
+
+tokens = torch.tensor(np.arange(0, 50256))
+
+
+data = model.transformer.wpe(torch.tensor(np.arange(0, 1024))).detach().clone().transpose(0, 1).numpy()
+
+for pos, datum in enumerate(data):
+    plt.plot(range(1024), datum)
+ax = plt.gca()
+ax.set_ylim((-0.2, 0.2))
+plt.show()
+
+np.save("output/anticausal1-wpe.npy", data)
 
 # print(data)
 
-embedding = pacmap.PaCMAP(n_components=2, n_neighbors=None, num_iters=900, verbose=True)
+# embedding = pacmap.PaCMAP(n_components=2, n_neighbors=None, num_iters=900, verbose=True)
 
-data_transformed = embedding.fit_transform(data)
+# data_transformed = embedding.fit_transform(data)
 
-np.save("output/causal1-embedding-2d.npy", data_transformed)
+# np.save("output/causal1-embedding-2d.npy", data_transformed)
 
-# from mpl_toolkits.mplot3d import Axes3D
-
-# # Create a 3D scatter plot
-# fig = plt.figure(figsize=(8, 8))
-# ax = fig.add_subplot(111, projection='3d')
-
-# # Plotting the points
-# ax.scatter(data_transformed[:, 0], data_transformed[:, 1], data_transformed[:, 2], s=0.5, alpha=0.6)
-
-# # Set labels
-# ax.set_xlabel('Component 1')
-# ax.set_ylabel('Component 2')
-# ax.set_zlabel('Component 3')
-
-# plt.title('3D Visualization using PaCMAP')
-# plt.show()
