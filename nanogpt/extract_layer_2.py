@@ -58,7 +58,7 @@ def get_wpe_mad():
     input_path = "/output/"
     results = {}
     for model_name in ("causal1", "anticausal1"):
-        wpe_dir = input_path + model_name + "/"
+        wpe_dir = input_path + model_name + "/" + "wpe/"
         wpe_files = os.listdir(wpe_dir)
 
         get_train_step = lambda filename: int(filename.split(".")[0].split("_")[-1])
