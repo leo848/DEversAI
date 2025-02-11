@@ -38,6 +38,11 @@ tokens = torch.tensor(np.arange(0, 50256))
 
 data = model.transformer.wpe(torch.tensor(np.arange(0, 1024))).detach().clone().transpose(0, 1).numpy()
 
+def mad(row):
+    total_differences = 0
+    for i in range(len(row)-1):
+        total_differences += abs(row[i] - row[i+1])
+    return (mad := total_differences / len(row))
 
 mads = [mad(row) for row in data]
 
