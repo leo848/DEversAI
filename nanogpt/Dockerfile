@@ -22,7 +22,7 @@ RUN pip install --upgrade pip && \
     pip install \
     diffusers transformers accelerate \
     Pillow alive-progress tensorboard \
-    matplotlib pacmap scipy numpy \
+    matplotlib pacmap scipy numpy
 
 
 COPY . /workspace
