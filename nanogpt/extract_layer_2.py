@@ -71,7 +71,7 @@ def get_wpe_mad():
             wpe_rows = np.load(os.path.join(wpe_dir, filename))
             mads = [mad(row) for row in wpe_rows]
             avg_mad = sum(mads) / len(mads)
-            model_results.append([train_step, avg_mad])
+            model_results.append([train_step, float(avg_mad)])
         results[model_name] = model_results
     with open("/output/wpe-mad-over-train.json", "w") as f:
         json.dump(results, f)
