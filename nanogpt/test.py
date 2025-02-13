@@ -59,13 +59,14 @@ with torch.no_grad(), ctx:
         total_loss = 0
         num_batches = 0
 
-        for start_i in tqdm(range(len(data) - block_size - batch_size, batch_size - 1)):
+        for start_i in tqdm(range(0, len(data) - block_size - batch_size, batch_size - 1)):
             x = torch.stack([torch.from_numpy(data[i:i + block_size]) for i in range(start_i, start_i + block_size)])
             y = torch.stack([torch.from_numpy(data[i + 1: i + 1 + block_size]) for i in range(start_i + 1, start_i + 1 + block_size)])
             x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
             _, loss = model(x, y)
             total_loss += loss
             num_batches += 1
+
         loss = total_loss / num_batches
         print(f"\nNLL Loss {file}: {loss:.5}")
 
