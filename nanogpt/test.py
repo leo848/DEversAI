@@ -10,13 +10,13 @@ from model import GPTConfig, GPT
 
 # -----------------------------------------------------------------------------
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
-start = "\n\nRezept: Griechischer Salat\n\nZutaten:\n" # or "<|endoftext|>" or etc. Can also specify a file, use as: "FILE:prompt.txt"
 seed = random.randint(0, int(1e10))
 print(f"Using seed {seed}")
 device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
 compile = True # use PyTorch 2.0 to compile the model to be faster
 show_probs = True
+causality = "causal"
 
 exec(open('configurator.py').read()) # overrides from command line or config file
 # -----------------------------------------------------------------------------
@@ -29,7 +29,7 @@ device_type = 'cuda' if 'cuda' in device else 'cpu' # for later use in torch.aut
 ptdtype = {'float32': torch.float32, 'bfloat16': torch.bfloat16, 'float16': torch.float16}[dtype]
 ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=device_type, dtype=ptdtype)
 
-ckpt_path = "/output/causal1/ckpt_300000.pt"
+ckpt_path = f"/output/{causality}1/ckpt_300000.pt"
 checkpoint = torch.load(ckpt_path, map_location=device, weights_only=True)
 gptconf = GPTConfig(**checkpoint['model_args'])
 model = GPT(gptconf)
@@ -49,5 +49,7 @@ if compile:
 with torch.no_grad(), ctx:
     directory = "/data/val"
     for file in os.listdir(directory):
-        loaded = np.load(os.path.join(directory, file))
-        print(loaded)
+        path = os.path.join(directory, file)
+        if not os.path.isfile(path): continue
+        data = np.memmap(path, dtype=np.dtype(">u2"), mode="r")
+        print(data)
