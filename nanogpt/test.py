@@ -47,7 +47,7 @@ if compile:
 
 # run generation
 with torch.no_grad(), ctx:
-    directory = "/input/val"
+    directory = "/data/val"
     for file in os.listdir(directory):
         loaded = np.load(os.path.join(directory, file))
         print(loaded)
