@@ -10,6 +10,8 @@ from contextlib import nullcontext
 import torch
 import random
 from model import GPTConfig, GPT
+from torch.nn import functional as F
+from torchinfo import summary
 
 # -----------------------------------------------------------------------------
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
@@ -26,6 +28,7 @@ device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
 compile = False # use PyTorch 2.0 to compile the model to be faster
 causality = "anticausal" # 'causal' or 'anticausal'
+show_probs = True
 
 exec(open('configurator.py').read()) # overrides from command line or config file
 # -----------------------------------------------------------------------------
@@ -138,7 +141,13 @@ while prompt_input:
 
     # run generation
     with torch.no_grad(), ctx:
-        if causality == 'causal':
+        if show_probs:
+            logits, loss = model.forward(x)
+            probs = F.softmax(logits, dim=-1)
+            v, i = torch.topk(probs, 10)
+            print(v)
+            print(i)
+        elif causality == 'causal':
             gen = model.generate_generator(x, max_new_tokens, temperature=temperature, top_k=top_k)
             print()
             print(prompt_input, end="", flush=True)

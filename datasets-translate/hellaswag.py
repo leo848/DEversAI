@@ -7,18 +7,16 @@ import json
 import random
 from datasets import load_dataset
 
-run_type: Literal["test"] | Literal["count_input_tokens"] | Literal["run_batch"] = "count_input_tokens"
+run_type: Literal["test"] | Literal["count_input_tokens"] | Literal["run_batch"] = "test"
 
 client = OpenAI(
-    # api_key="92130219"
-        base_url="https://api.zukijourney.com/v1",
-        api_key="zu-c4ca9126e8039773b099a8284445d7ea"
+    api_key="proj_GFJcD9j7JTpajQylCbE2NwEe"
 )
 
 ds = load_dataset("Rowan/hellaswag")
 
 system_prompt = """
-You are designed to translate structured data. Your output must have exactly the same JSON keys as the input. You will translate from English to perfect, common and idiomatic German. s and comp must together form one congruent sentence. Output nothing but JSON.
+You are designed to translate structured data. Your output must have exactly the same JSON keys as the input. You will translate from English to perfectly idiomatic German. For each comp, s and comp must together form one coherent sentence. Do not add any extra text. Output only valid JSON.
 """.strip()
 
 def translation_task(datum):
@@ -131,7 +129,7 @@ if __name__ == "__main__":
         for datum in ds[key]:
             tasks.append(translation_task(datum))
 
-    print(" {len(tasks)} tasks")
+    print(f" {len(tasks)} tasks")
 
     print()
     print("Writing tasks to .jsonl file")
