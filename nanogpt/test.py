@@ -54,7 +54,7 @@ with torch.no_grad(), ctx:
     for file in os.listdir(directory):
         path = os.path.join(directory, file)
         if not os.path.isfile(path): continue
-        data = np.memmap(path, dtype=np.dtype(">u2"), mode="r")
+        data = np.memmap(path, dtype=np.dtype(">u2"), mode="r").astype(np.dtype("<u2"))
 
         total_loss = 0
         num_batches = 0
