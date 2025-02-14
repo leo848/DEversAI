@@ -50,7 +50,7 @@ if compile:
 
 # run generation
 with torch.no_grad(), ctx:
-    directory = "/data/val"
+    directory = "/data/tokenized-corpus/val"
     for file in [file]:
         path = os.path.join(directory, file)
         if not os.path.isfile(path): continue
