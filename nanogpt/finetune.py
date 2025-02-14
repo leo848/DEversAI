@@ -124,7 +124,7 @@ ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=
 data_dir = "/data/"
 calls_per_file = 32
 access_indices = {"train": [], "val": []}
-epoch = {"train": 1, "val": 1}
+epoch = {"train": 0, "val": 0}
 
 def get_batch(split):
     assert split in {"train", "val"}
