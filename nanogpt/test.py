@@ -13,10 +13,11 @@ from tqdm import tqdm
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
 seed = random.randint(0, int(1e10))
 print(f"Using seed {seed}")
+causality = "causal"
+file = "wikipedia-shard-00002.bin"
 device = 'cuda:2' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
 compile = True # use PyTorch 2.0 to compile the model to be faster
-causality = "causal"
 batch_size = 64
 block_size = 1024
 
@@ -50,7 +51,6 @@ if compile:
 # run generation
 with torch.no_grad(), ctx:
     directory = "/data/val"
-    file = "wikipedia-shard-00002.bin"
     for file in [file]:
         path = os.path.join(directory, file)
         if not os.path.isfile(path): continue
@@ -60,18 +60,34 @@ with torch.no_grad(), ctx:
         num_batches = 0
 
         for start_i in tqdm(range(0, len(data) - block_size - batch_size - 1, block_size)):
-            x = torch.stack( [
-                torch.from_numpy(
-                    data[i:i + block_size].astype(np.int64)
-                )
-                for i in range(start_i, start_i + batch_size)
-            ])
-            y = torch.stack([
-                torch.from_numpy(
-                    data[i + 1: i + 1 + block_size].astype(np.int64)
-                )
-                for i in range(start_i, start_i + batch_size)
-            ])
+            x, y = None, None
+            if causality == "causal":
+                x = torch.stack( [
+                    torch.from_numpy(
+                        data[i:i + block_size].astype(np.int64)
+                    )
+                    for i in range(start_i, start_i + batch_size)
+                ])
+                y = torch.stack([
+                    torch.from_numpy(
+                        data[i + 1: i + 1 + block_size].astype(np.int64)
+                    )
+                    for i in range(start_i, start_i + batch_size)
+                ])
+            elif causality == "anticausal":
+                x = torch.stack([
+                    torch.from_numpy(
+                        data[i + 1: i + 1 + block_size][::-1].astype(np.int64)
+                    )
+                    for i in range(start_i, start_i + batch_size)
+                ])
+                y = torch.stack( [
+                    torch.from_numpy(
+                        data[i:i + block_size][::-1].astype(np.int64)
+                    )
+                    for i in range(start_i, start_i + batch_size)
+                ])
+
             x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
             _, loss = model(x, y)
             print(loss)
