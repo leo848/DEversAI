@@ -133,7 +133,7 @@ def get_batch(split):
     # https://stackoverflow.com/questions/45132940/numpy-memmap-memory-usage-want-to-iterate-once/61472122#61472122
     data = np.memmap(os.path.join(data_dir, finetune_name, f"{split}.bin"), dtype=np.dtype(">u2"), mode='r')
     if len(access_indices[split]) < batch_size:
-        access_indices[split] = range(0, len(data)-block_size-batch_size-1)
+        access_indices[split] = list(range(0, len(data)-block_size-batch_size-1))
         random.shuffle(access_indices[split])
         epoch[split] += 1
         if split == "train":
