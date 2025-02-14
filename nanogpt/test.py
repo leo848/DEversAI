@@ -13,9 +13,12 @@ from tqdm import tqdm
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
 seed = random.randint(0, int(1e10))
 print(f"Using seed {seed}")
+
 causality = "causal"
-file = "wikipedia-shard-00012.bin"
+ckpt_value = 100000
+files = ["wikipedia-shard-00002.bin", "wikipedia-shard-00012.bin", "wikipedia-shard-00022.bin"]
 device = 'cuda:2' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
+
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
 compile = True # use PyTorch 2.0 to compile the model to be faster
 batch_size = 64
@@ -32,7 +35,7 @@ device_type = 'cuda' if 'cuda' in device else 'cpu' # for later use in torch.aut
 ptdtype = {'float32': torch.float32, 'bfloat16': torch.bfloat16, 'float16': torch.float16}[dtype]
 ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=device_type, dtype=ptdtype)
 
-ckpt_path = f"/output/{causality}1/ckpt_300000.pt"
+ckpt_path = f"/output/{causality}1/ckpt_{ckpt_value}.pt"
 checkpoint = torch.load(ckpt_path, map_location=device, weights_only=True)
 gptconf = GPTConfig(**checkpoint['model_args'])
 model = GPT(gptconf)
@@ -51,7 +54,7 @@ if compile:
 # run generation
 with torch.no_grad(), ctx:
     directory = "/data/tokenized-corpus/val"
-    for file in [file]:
+    for file in files:
         path = os.path.join(directory, file)
         if not os.path.isfile(path): continue
         data = np.memmap(path, dtype=np.dtype(">u2"), mode="r")
