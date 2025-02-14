@@ -16,9 +16,10 @@ print(f"Using seed {seed}")
 
 causality = "causal"
 ckpt_value = 100000
-files = ["wikipedia-shard-00002.bin", "wikipedia-shard-00012.bin", "wikipedia-shard-00022.bin"]
+file_prefix = "oscar-2301"
 device = 'cuda:2' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 
+files = [f"{file_prefix}-shard-00002.bin", f"{file_prefix}-wikipedia-shard-00012.bin", f"{file_prefix}-shard-00022.bin"]
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
 compile = True # use PyTorch 2.0 to compile the model to be faster
 batch_size = 64
