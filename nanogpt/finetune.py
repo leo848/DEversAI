@@ -36,15 +36,18 @@ from model import GPTConfig, GPT
 # default config values designed to train a gpt2 (124M) on OpenWebText
 # I/O
 out_dir = '/output'
+
+input_model = "causal1"
 finetune_name = "gesetze-tokenized"
+init_from_resume_checkpoint = 300_000
+
 eval_interval = 50
 log_interval = 1
-checkpoint_interval = 2500
-eval_iters = 200
+checkpoint_interval = 50
+eval_iters = 100
 eval_only = False # if True, script exits right after the first eval
 always_save_checkpoint = True # if True, always save a checkpoint after each eval
 init_from = 'resume' # 'scratch' or 'resume' or 'gpt2*'
-init_from_resume_checkpoint = 300_000
 # data
 dataset = 'custom'
 gradient_accumulation_steps = 6 * 8 # used to simulate larger batch sizes
@@ -58,7 +61,6 @@ dropout = 0.3 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
 learning_rate = 6e-5 # max learning rate
-max_iters = 300_000 # total number of training iterations
 weight_decay = 1e-1
 beta1 = 0.9
 beta2 = 0.95
@@ -163,7 +165,7 @@ model_args = dict(n_layer=n_layer, n_head=n_head, n_embd=n_embd, block_size=bloc
 if init_from == 'resume':
     print(f"Resuming training from {out_dir}")
     # resume training from a checkpoint.
-    ckpt_path = os.path.join(out_dir, f'ckpt_{init_from_resume_checkpoint}.pt')
+    ckpt_path = os.path.join(out_dir, f'{input_model}/ckpt_{init_from_resume_checkpoint}.pt')
     checkpoint = torch.load(ckpt_path, map_location=device)
     checkpoint_model_args = checkpoint['model_args']
     # force these config attributes to be equal otherwise we can't even resume training
