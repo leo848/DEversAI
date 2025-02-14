@@ -90,10 +90,9 @@ with torch.no_grad(), ctx:
 
             x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
             _, loss = model(x, y)
-            print(loss)
-            total_loss += loss
+            total_loss += loss.item()
             num_batches += 1
 
         loss = total_loss / num_batches
-        print(f"\nNLL Loss {file}: {loss:.5}")
+        print(f"\nNLL Loss {file}: {loss}")
 
