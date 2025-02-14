@@ -13,7 +13,7 @@ from tqdm import tqdm
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
 seed = random.randint(0, int(1e10))
 print(f"Using seed {seed}")
-device = 'cuda:5' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
+device = 'cuda:2' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
 compile = True # use PyTorch 2.0 to compile the model to be faster
 causality = "causal"
@@ -50,7 +50,7 @@ if compile:
 # run generation
 with torch.no_grad(), ctx:
     directory = "/data/val"
-    file = "wikipedia-shard-00022.bin"
+    file = "wikipedia-shard-00002.bin"
     for file in [file]:
         path = os.path.join(directory, file)
         if not os.path.isfile(path): continue
