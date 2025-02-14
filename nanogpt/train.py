@@ -119,7 +119,7 @@ ptdtype = {'float32': torch.float32, 'bfloat16': torch.bfloat16, 'float16': torc
 ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=device_type, dtype=ptdtype)
 
 # poor man's data loader
-data_dir = "/data/"
+data_dir = "/data/tokenized_corpus"
 calls_per_file = 32
 
 last_file: dict[str, Optional[str]] = {"train": None, "val": None}
