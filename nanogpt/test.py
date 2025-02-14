@@ -60,8 +60,18 @@ with torch.no_grad(), ctx:
         num_batches = 0
 
         for start_i in tqdm(range(0, len(data) - block_size - batch_size - 1, block_size)):
-            x = torch.stack([torch.from_numpy(data[i:i + block_size].astype(np.int64)) for i in range(start_i, start_i + batch_size)])
-            y = torch.stack([torch.from_numpy(data[i + 1: i + 1 + block_size].astype(np.int64)) for i in range(start_i + 1, start_i + 1 + batch_size)])
+            x = torch.stack( [
+                torch.from_numpy(
+                    data[i:i + block_size].astype(np.int64)
+                )
+                for i in range(start_i, start_i + batch_size)
+            ])
+            y = torch.stack([
+                torch.from_numpy(
+                    data[i + 1: i + 1 + block_size].astype(np.int64)
+                )
+                for i in range(start_i, start_i + batch_size)
+            ])
             x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
             _, loss = model(x, y)
             print(loss)
