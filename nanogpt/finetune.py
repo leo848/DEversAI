@@ -37,14 +37,14 @@ from model import GPTConfig, GPT
 # I/O
 out_dir = '/output'
 
-input_model = "causal1"
+input_model = "anticausal1"
 finetune_name = "gesetze-tokenized"
 init_from_resume_checkpoint = 300_000
 
-eval_interval = 50
+eval_interval = 25
 log_interval = 1
 checkpoint_interval = 50
-eval_iters = 100
+eval_iters = 200
 eval_only = False # if True, script exits right after the first eval
 always_save_checkpoint = True # if True, always save a checkpoint after each eval
 init_from = 'resume' # 'scratch' or 'resume' or 'gpt2*'
@@ -61,7 +61,7 @@ dropout = 0.1 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
 learning_rate = 6e-5 # max learning rate
-max_iters = 305_000
+max_iters = 302_000
 weight_decay = 1e-1
 beta1 = 0.9
 beta2 = 0.95
@@ -224,7 +224,7 @@ def estimate_loss():
         for k in range(eval_iters):
             X, Y = get_batch(split)
             with ctx:
-                logits, loss = model(X, Y)
+                _, loss = model(X, Y)
             losses[k] = loss.item()
         out[split] = losses.mean()
     model.train()
@@ -261,6 +261,7 @@ while True:
     if iter_num % eval_interval == 0 and master_process:
         losses = estimate_loss()
         writer.add_scalar("Finetune/Loss/val", losses["val"], iter_num)
+        writer.add_scalar("Finetune/Train/val", losses["train"], iter_num)
         print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
         if (losses['val'] < best_val_loss or always_save_checkpoint) and iter_num % checkpoint_interval == 0:
             best_val_loss = losses['val']
@@ -315,7 +316,7 @@ while True:
         if local_iter_num >= 5: # let the training loop settle a bit
             mfu = raw_model.estimate_mfu(batch_size * gradient_accumulation_steps, dt)
             running_mfu = mfu if running_mfu == -1.0 else 0.9*running_mfu + 0.1*mfu
-        writer.add_scalar("Finetune/Loss/train", lossf, iter_num)
+        # writer.add_scalar("Finetune/Loss/train", lossf, iter_num)
         print(f"iter {iter_num}: loss {lossf:.4f}, time {dt*1000:.2f}ms, mfu {running_mfu*100:.2f}%")
     iter_num += 1
     local_iter_num += 1
