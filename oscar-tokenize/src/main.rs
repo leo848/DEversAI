@@ -9,27 +9,33 @@ use std::{
     env::args,
     fs::{self, File, OpenOptions},
     io::{BufReader, BufWriter, Read, Seek, SeekFrom, Write},
-    path::PathBuf,
+    path::{Path, PathBuf},
     time::Instant,
 };
 
-use indicatif::{ParallelProgressIterator, ProgressStyle};
+use indicatif::{ParallelProgressIterator, ProgressIterator, ProgressStyle};
 use itertools::{chain, Itertools};
 use oscar_tokenize::{
     dataset::InMemoryDataset, BpeState, Dataset, EtaScheduler, Token, TokenHistogram, TrainConfig,
 };
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use regex::Regex;
-
 use rusqlite::{params, Connection};
 
-#[allow(dead_code)]
 pub fn main() {
+    tokenize_gesetze();
+}
+
+#[allow(dead_code)]
+pub fn find_token_examples() {
     const EXAMPLE_COUNT: usize = 100;
     const TOKENS_CONTEXT: usize = 100;
     const MAX_TRIES: usize = EXAMPLE_COUNT + 20;
 
-    let paths = std::env::args().skip(1).map(PathBuf::from).collect::<Vec<_>>();
+    let paths = std::env::args()
+        .skip(1)
+        .map(PathBuf::from)
+        .collect::<Vec<_>>();
 
     let bpe_state = BpeState::synced_with_file("/vocab/german-complete.vocab");
 
@@ -152,8 +158,7 @@ pub fn main() {
         .expect("Failed to prepare insert statement");
 
     for (token_id, examples) in token_examples {
-        let examples_json =
-            serde_json::to_string(&examples).expect("Failed to serialize examples");
+        let examples_json = serde_json::to_string(&examples).expect("Failed to serialize examples");
         stmt.execute(params![token_id, examples_json])
             .expect("Failed to insert token examples");
     }
@@ -220,6 +225,40 @@ fn count_tokens() {
     }
     direct_histogram_file.flush().expect("IO-Fehler");
     transitive_histogram_file.flush().expect("IO-Fehler");
+}
+
+#[allow(dead_code)]
+fn tokenize_gesetze() {
+    let bpe_state = BpeState::synced_with_file("/vocab/german-complete.vocab");
+    let input_paths = Path::new("/data/gesetze-raw/")
+        .read_dir()
+        .expect("directory should exist")
+        .collect_vec();
+    let output_path = "/data/gesetze-tokenized/shard.bin";
+    let output_file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(false)
+        .truncate(true)
+        .open(output_path)
+        .expect("Failed to open output file");
+    let mut output_writer = BufWriter::new(output_file);
+
+    for path in input_paths.into_iter().progress_with_style({
+        ProgressStyle::default_bar()
+            .template("Tokenizing der Gesetze: [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
+            .expect("Template-Fehler")
+    }) {
+        let mut buffer = Vec::with_capacity(1_000_000);
+        let path = path.expect("failed to read path").path();
+        let mut file = File::open(path).expect("failed to open file");
+        file.read_to_end(&mut buffer).expect("failed to read file");
+        let tokens = bpe_state.tokenizer().tokenize_bytes(&buffer);
+        for token in tokens {
+            output_writer.write_all(&token.into_inner().to_be_bytes()).expect("Could not write to file");
+        }
+        output_writer.write_all(&0xffu16.to_be_bytes()).expect("Could not write to file");
+    }
 }
 
 #[allow(dead_code)]
