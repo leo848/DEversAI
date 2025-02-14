@@ -11,15 +11,14 @@ import torch
 import random
 from model import GPTConfig, GPT
 from torch.nn import functional as F
-from torchinfo import summary
 
 # -----------------------------------------------------------------------------
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
-model_name = "anticausal1.pt"
+model_name = "ckpt_300700.pt"
 out_dir = 'output' # ignored if init_from is not 'resume'
 start = "\n\nRezept: Griechischer Salat\n\nZutaten:\n" # or "<|endoftext|>" or etc. Can also specify a file, use as: "FILE:prompt.txt"
 num_samples = 10 # number of samples to draw
-max_new_tokens = 750 # number of tokens generated in each sample
+max_new_tokens = 250 # number of tokens generated in each sample
 temperature = 0.8 # 1.0 = no change, < 1.0 = less random, > 1.0 = more random, in predictions
 top_k = 200 # retain only the top_k most likely tokens, clamp others to have 0 probability
 seed = random.randint(0, int(1e10))
@@ -27,8 +26,8 @@ print(f"Using seed {seed}")
 device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
 compile = False # use PyTorch 2.0 to compile the model to be faster
-causality = "anticausal" # 'causal' or 'anticausal'
-show_probs = True
+causality = "causal" # 'causal' or 'anticausal'
+show_probs = False
 
 exec(open('configurator.py').read()) # overrides from command line or config file
 # -----------------------------------------------------------------------------
@@ -120,11 +119,7 @@ def decode(tokens, return_bytes=False):
     if return_bytes:
         return token_bytes
     else:
-        string = token_bytes.decode(encoding="utf-8", errors="replace")
-        if causality == "anticausal":
-            return string
-        else:
-            return string
+        return token_bytes.decode(encoding="utf-8", errors="replace")
 
 # encode the beginning of the prompt
 prompt_input = start
@@ -136,6 +131,8 @@ while prompt_input:
     else:
         prompt_input = eval_input
     start_ids = encode(prompt_input)
+    if causality == "anticausal":
+        start_ids = [0xFF] + start_ids
 
     x = (torch.tensor(start_ids, dtype=torch.long, device=device)[None, ...])
 

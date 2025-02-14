@@ -57,7 +57,7 @@ block_size = 1024
 n_layer = 12
 n_head = 12
 n_embd = 768
-dropout = 0.3 # for pretraining 0 is good, for finetuning try 0.1+
+dropout = 0.1 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
 learning_rate = 6e-5 # max learning rate
@@ -123,7 +123,7 @@ ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=
 
 data_dir = "/data/"
 calls_per_file = 32
-index = {"train": 0, "val": 0}
+access_indices = {"train": [], "val": []}
 epoch = {"train": 1, "val": 1}
 
 def get_batch(split):
@@ -132,12 +132,13 @@ def get_batch(split):
     # We recreate np.memmap every batch to avoid a memory leak, as per
     # https://stackoverflow.com/questions/45132940/numpy-memmap-memory-usage-want-to-iterate-once/61472122#61472122
     data = np.memmap(os.path.join(data_dir, finetune_name, f"{split}.bin"), dtype=np.dtype(">u2"), mode='r')
-    if index[split] > len(data) - batch_size - block_size - 1:
-        index[split] = 0
+    if len(access_indices[split]) < batch_size:
+            access_indices[split] = range(0, len(data)-block_size-batch_size-1)
+            random.shuffle(access_indices[split])
         epoch[split] += 1
         if split == "train":
             print("train epoch", epoch[split])
-    ix = list(range(index[split], index[split] + batch_size))
+    ix = list(access_indices[split].pop() for _ in range(batch_size))
     if causality == "causal":
         x = torch.stack([torch.from_numpy((data[i:i+block_size]).astype(np.int64)) for i in ix])
         y = torch.stack([torch.from_numpy((data[i+1:i+1+block_size]).astype(np.int64)) for i in ix])
