@@ -151,7 +151,6 @@ def get_batch(split):
         x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
     else:
         x, y = x.to(device), y.to(device)
-    index[split] += batch_size
     return x, y
 
 if master_process:
