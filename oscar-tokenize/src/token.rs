@@ -97,7 +97,6 @@ impl Tokenizer {
                 }
             }
             tokens = new_tokens;
-            println!("merge rule {} done", result.index());
         }
 
         tokens
