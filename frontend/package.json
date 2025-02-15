@@ -34,7 +34,7 @@
 		"typescript": "^5.7.2",
 		"typescript-eslint": "^8.18.1",
 		"vite": "^5.4.11",
-		"vitest": "^2.1.8"
+		"vitest": "^2.1.9"
 	},
 	"dependencies": {
 		"@deck.gl/core": "^9.1.0",
