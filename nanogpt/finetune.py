@@ -30,6 +30,7 @@ from model import GPTConfig, GPT
 # I/O
 out_dir = '/output'
 
+model_name = "anticausal1-laws1"
 input_model = "anticausal1"
 finetune_name = "gesetze-tokenized"
 init_from_resume_checkpoint = 300_000
@@ -105,7 +106,7 @@ tokens_per_iter = gradient_accumulation_steps * ddp_world_size * batch_size * bl
 print(f"tokens per iteration will be: {tokens_per_iter:,}")
 
 if master_process:
-    os.makedirs(out_dir, exist_ok=True)
+    os.makedirs(os.path.join(out_dir, model_name), exist_ok=True)
 torch.manual_seed(1337 * 420 + seed_offset)
 torch.backends.cuda.matmul.allow_tf32 = True # allow tf32 on matmul
 torch.backends.cudnn.allow_tf32 = True # allow tf32 on cudnn
@@ -270,7 +271,7 @@ while True:
                     'config': config,
                 }
                 print(f"saving checkpoint to {out_dir}")
-                torch.save(checkpoint, os.path.join(out_dir, f'ckpt_{iter_num}.pt'))
+                torch.save(checkpoint, os.path.join(out_dir, model_name, f'ckpt_{iter_num}.pt'))
     if iter_num == 0 and eval_only:
         break
 
