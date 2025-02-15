@@ -253,7 +253,7 @@ fn tokenize_plenarprotokolle() {
         })
         .flat_map(|path| {
             let path = path.expect("failed to read path").path();
-            let text = xml::extract_text(&path).expect("Could not extract text");
+            let text = xml::extract_text(&path).unwrap_or_default();
             let mut tokens = bpe_state.tokenizer().tokenize_bytes(&text.as_bytes());
             tokens.push(Token::new(0xff));
             tokens
