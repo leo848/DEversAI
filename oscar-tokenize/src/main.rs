@@ -16,14 +16,14 @@ use std::{
 use indicatif::{ParallelProgressIterator, ProgressStyle};
 use itertools::{chain, Itertools};
 use oscar_tokenize::{
-    dataset::InMemoryDataset, BpeState, Dataset, EtaScheduler, Token, TokenHistogram, TrainConfig,
+    dataset::InMemoryDataset, BpeState, Dataset, EtaScheduler, Token, TokenHistogram, TrainConfig, xml,
 };
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use regex::Regex;
 use rusqlite::{params, Connection};
 
 pub fn main() {
-    tokenize_gesetze();
+    tokenize_plenarprotokolle();
 }
 
 #[allow(dead_code)]
@@ -225,6 +225,46 @@ fn count_tokens() {
     }
     direct_histogram_file.flush().expect("IO-Fehler");
     transitive_histogram_file.flush().expect("IO-Fehler");
+}
+
+#[allow(dead_code)]
+fn tokenize_plenarprotokolle() {
+    let bpe_state = BpeState::synced_with_file("/vocab/german-complete.vocab");
+    let input_paths = Path::new("/data/plenarprotokolle-raw/")
+        .read_dir()
+        .expect("directory should exist")
+        .collect_vec();
+    let output_path = "/data/plenarprotokolle-tokenized/shard.bin";
+    let output_file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(false)
+        .truncate(true)
+        .open(output_path)
+        .expect("Failed to open output file");
+    let mut output_writer = BufWriter::new(output_file);
+
+    let tokens = input_paths
+        .into_par_iter()
+        .progress_with_style({
+        ProgressStyle::default_bar()
+            .template("Tokenizing der Plenarprotokolle: [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
+            .expect("Template-Fehler")
+        })
+        .flat_map(|path| {
+            let path = path.expect("failed to read path").path();
+            let text = xml::extract_text(&path).expect("Could not extract text");
+            let mut tokens = bpe_state.tokenizer().tokenize_bytes(&text.as_bytes());
+            tokens.push(Token::new(0xff));
+            tokens
+        })
+        .collect::<Vec<_>>();
+
+    for token in tokens {
+        output_writer
+            .write_all(&token.into_inner().to_be_bytes())
+            .expect("Could not write to file");
+    }
 }
 
 #[allow(dead_code)]

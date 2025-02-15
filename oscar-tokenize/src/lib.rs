@@ -12,6 +12,7 @@ mod count;
 pub mod dataset;
 mod histogram;
 mod token;
+pub mod xml;
 
 pub use bpe_state::{BpeState, MergeRule};
 pub use config::{EtaScheduler, TrainConfig};

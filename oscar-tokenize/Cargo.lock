@@ -852,6 +852,7 @@ dependencies = [
  "itertools",
  "num_cpus",
  "progress_bar",
+ "quick-xml",
  "rayon",
  "regex",
  "rusqlite",
@@ -901,6 +902,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94320ad982441d1294a56ba407d963c09fad89c70def47288603350b88cd6b94"
 dependencies = [
  "lazy_static",
+]
+
+[[package]]
+name = "quick-xml"
+version = "0.37.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "165859e9e55f79d67b96c5d96f4e88b6f2695a1972849c15a6a3f5c59fc2c003"
+dependencies = [
+ "memchr",
 ]
 
 [[package]]
