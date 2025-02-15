@@ -126,7 +126,9 @@ def get_batch(split):
     # https://stackoverflow.com/questions/45132940/numpy-memmap-memory-usage-want-to-iterate-once/61472122#61472122
     data = np.memmap(os.path.join(data_dir, finetune_name, f"{split}.bin"), dtype=np.dtype(">u2"), mode='r')
     if len(access_indices[split]) < batch_size:
-        access_indices[split] = list(range(0, len(data)-block_size-batch_size-1))
+        start_idx = int(len(data) * ddp_rank / ddp_world_size)
+        end_idx = int(len(data) * (ddp_rank + 1) / ddp_world_size)
+        access_indices[split] = list(range(start_idx, end_idx-block_size-batch_size-1))
         random.shuffle(access_indices[split])
         epoch[split] += 1
         if split == "train":
@@ -147,7 +149,7 @@ def get_batch(split):
     return x, y
 
 if master_process:
-    writer = SummaryWriter()
+    writer = SummaryWriter(comment=finetune_name)
 
 # init these up here, can override if init_from='resume' (i.e. from a checkpoint)
 iter_num = 0
@@ -254,7 +256,7 @@ while True:
     if iter_num % eval_interval == 0 and master_process:
         losses = estimate_loss()
         writer.add_scalar("Finetune/Loss/val", losses["val"], iter_num)
-        writer.add_scalar("Finetune/Train/val", losses["train"], iter_num)
+        writer.add_scalar("Finetune/Loss/train", losses["train"], iter_num)
         print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
         if (losses['val'] < best_val_loss or always_save_checkpoint) and iter_num % checkpoint_interval == 0:
             best_val_loss = losses['val']
