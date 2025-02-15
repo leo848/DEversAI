@@ -32,12 +32,12 @@ out_dir = '/output'
 
 model_name = "anticausal1-laws1"
 input_model = "anticausal1"
-finetune_name = "gesetze-tokenized"
+finetune_name = "plenarprotokolle-tokenized"
 init_from_resume_checkpoint = 300_000
 
-eval_interval = 25
+eval_interval = 50
 log_interval = 1
-checkpoint_interval = 50
+checkpoint_interval = 200
 eval_iters = 200
 eval_only = False # if True, script exits right after the first eval
 always_save_checkpoint = True # if True, always save a checkpoint after each eval
@@ -55,7 +55,7 @@ dropout = 0.1 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
 learning_rate = 6e-5 # max learning rate
-max_iters = 302_000
+max_iters = 305_000
 weight_decay = 1e-1
 beta1 = 0.9
 beta2 = 0.95
@@ -150,7 +150,7 @@ def get_batch(split):
     return x, y
 
 if master_process:
-    writer = SummaryWriter(comment=finetune_name)
+    writer = SummaryWriter(comment=f" {model_name}")
 
 # init these up here, can override if init_from='resume' (i.e. from a checkpoint)
 iter_num = 0
