@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Deck, COORDINATE_SYSTEM, OrbitView } from '@deck.gl/core';
+	import { Deck, COORDINATE_SYSTEM, OrbitView, LinearInterpolator, LightingEffect, AmbientLight, PointLight } from '@deck.gl/core';
 	import { PointCloudLayer } from '@deck.gl/layers';
 	import Token from '$lib/components/Token.svelte';
 
@@ -8,7 +8,10 @@
 	import { goto } from '$app/navigation';
 	import { Color } from '$lib/util/color';
 	import type { Tuple } from '$lib/util/array';
+	import { euclideanDist } from '$lib/util/math';
 	import { Tween } from 'svelte/motion';
+	import type { Writable } from "svelte/store";
+	import { urlNullableNumberStore } from "$lib/state/urlState.svelte";
 
 	let {
 		points,
@@ -28,6 +31,10 @@
 	let scatterplotElt: HTMLCanvasElement | undefined = $state();
 	let deck: Deck<OrbitView> | undefined; // Reference to the deck.gl instance
 
+	let selectedId: Writable<number | null> = urlNullableNumberStore("id");
+	let justSelected = $state(false);
+	let translate = $state([0, 0, 0] satisfies Tuple<3, number>)
+
 	const tokenColors = new Tween(
 		points.map(({ id }) => coloring(id)),
 		{
@@ -45,30 +52,96 @@
 		tokenColors.target = points.map(({ id }) => coloring(id));
 	});
 
+	const initialViewState = {
+		target: [0, 0, 0] satisfies Tuple<3, number>,
+		zoom: initialZoom,
+		rotationOrbit: 0,
+		rotationX: 0,
+	};
 	onMount(() => {
 		const view = new OrbitView({
 			id: 'view',
-			controller: true
+			controller: {
+				scrollZoom: {
+					smooth: true,
+				},
+				doubleClickZoom: false,
+			},
 		});
 
 		deck = new Deck({
-			initialViewState: {
-				target: [0, 0, 0],
-				zoom: initialZoom
-			},
+			initialViewState,
 			canvas: scatterplotElt,
-			views: view
+			views: view,
+			effects: [
+				new LightingEffect({
+					ambientLight: new AmbientLight({
+						color: [255, 255, 255],
+						intensity: 1.0,
+					}),
+				})
+			]
 		});
+
+		scatterplotElt!.addEventListener('click', evt => {
+			if (!justSelected) $selectedId = null;
+		})
 	});
+
+	function select(tokenId: number, incremental: null | { type: "rotate" | "revert", rotation: number }  = null) {
+		if (!deck) return;
+		let duration = 3000;
+		if (incremental == null) {
+			$selectedId = tokenId;
+			justSelected = true;
+			let {position} = points[tokenId]
+			duration = Math.sqrt(euclideanDist(translate, position)) * 1000;
+			for (let i = 0; i < 3; i++) {
+				translate[i] = position[i];
+			}
+			setTimeout(() => justSelected = false, 200);
+		}
+		const newViewState = {
+			rotationOrbit: (incremental?.rotation ?? 360) + 20,
+			target: [0, 0, 0] satisfies Tuple<3, number>,
+			zoom: 8,
+			transitionDuration: duration,
+			transitionInterpolator: new LinearInterpolator(['zoom', 'target', 'rotationOrbit', 'rotationX']),
+			onTransitionEnd: () => {
+				let rotation = (incremental?.rotation ?? 0) + 20 
+				if ($selectedId != null) {
+					select(tokenId, { type: "rotate", rotation });
+				} else if (incremental?.type != "revert") {
+					select(tokenId, { type: "revert", rotation })
+				}
+			}
+		}
+		deck.setProps({
+			initialViewState: newViewState,
+		});
+	}
 
 	$effect(() => {
 		if (!deck) return;
 
 		const layer = new PointCloudLayer({
 			id: 'PointCloudLayer',
-			data: points,
-			getColor: (d) => tokenColors.current[d.id].rgb(),
+			data: points.map(p => ({
+				...p,
+				position: p.position.map((comp, i) => comp - translate[i])
+			})),
+			getColor: 
+				$selectedId == null
+					? (d) => tokenColors.current[d.id].rgb()
+					: (d) => d.id == $selectedId
+						? [255, 0, 0]
+						: tokenColors.current[d.id].saturate(-2).rgb(),
 			getPosition: (d) => d.position,
+			material: {
+				ambient: 0.8,
+				shinyness: 60,
+				diffuse: 0.5,
+			},
 			pointSize: pointSize / 100,
 			sizeUnits: 'meters',
 			coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
@@ -86,14 +159,15 @@
 				const { clientX, clientY } = evt.srcEvent as MouseEvent;
 				tooltipStyle = `display:block; left: ${clientX}px; top: ${clientY}px`;
 			},
-			onClick: (object) => {
-				if (!object.picked) {
-					return;
-				}
-				goto(`/token/${object.object.id}`);
+			onDragStart: (object, e) => {
+				$selectedId = null;
+			},
+			onClick: (object, e) => {
+				// goto(`/token/${object.object.id}`);
+				select(object.object.id);
 			},
 			updateTriggers: {
-				getColor: [tokenColors.current]
+				getColor: [tokenColors.current, $selectedId]
 			},
 			transitions: {
 				getPosition: {
@@ -112,7 +186,6 @@
 
 <div class="h-full w-full">
 	<canvas id="scatterplot-canvas" bind:this={scatterplotElt}></canvas>
-	<!-- Tooltip -->
 	{#if tooltipContent}
 		<div class="tooltip rounded-xl text-xl" style={tooltipStyle}>
 			<Token noTransition token={vocabulary.tokens[tooltipContent.id]} />

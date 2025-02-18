@@ -20,3 +20,27 @@ export function urlStringStore(key: string, options?: { default?: string }): Wri
 		}
 	);
 }
+
+function writableDerived<I, O>(
+	base: Writable<I>,
+	convert: (value: I) => O,
+	reflect: (value: O) => I,
+): Writable<O> {
+	const { subscribe, set: baseSet, update: baseUpdate } = base;
+	return {
+		subscribe: (run, invalidate?) =>
+			subscribe((value: I) => run(convert(value)), invalidate),
+		set: (newValue: O) => baseSet(reflect(newValue)),
+		update: (updater: (current: O) => O) =>
+			baseUpdate((current: I) => reflect(updater(convert(current)))),
+	};
+}
+
+export function urlNullableNumberStore(key: string): Writable<null | number> {
+	const inner = urlStringStore(key, { default: "" });
+	return writableDerived(
+		inner,
+		string => (Number.isFinite(+string) && string) ? +string : null,
+		num => num == null ? "" : num.toString(),
+	)
+}
