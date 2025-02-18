@@ -85,6 +85,7 @@
 		'Kategorie',
 		'^20\\d\\d ?$',
 		'^[IVXLCM]+$',
+		'mann|frau',
 	];
 	let interestingPlaceholder =
 		interestingPlaceholders[Math.floor(Math.random() * interestingPlaceholders.length)];
