@@ -23,7 +23,11 @@ export function shuffleArray<T>(arr: T[]): T[] {
 	return array;
 }
 
-export function sortByKey<T, K = T>(arr: T[], key: (element: T) => K, { reverse }: { reverse: boolean } = { reverse: false }): T[] {
+export function sortByKey<T, K = T>(
+	arr: T[],
+	key: (element: T) => K,
+	{ reverse }: { reverse: boolean } = { reverse: false }
+): T[] {
 	let reverseFactor = reverse ? -1 : 1;
 	return arr.slice().sort((a, b) => {
 		const keyA = key(a);

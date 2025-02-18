@@ -100,7 +100,7 @@
 				{#each sortByKey(data.examples, (examples) => examples
 						.map((example) => example.length)
 						.reduce((a, b) => a + b)) as [exampleL, exampleR]}
-					<div class="even:bg-gray-100 p-2">
+					<div class="p-2 even:bg-gray-100">
 						<span>{exampleL}</span><span class="font-bold">{token.toString()}</span><span
 							>{exampleR}</span
 						>

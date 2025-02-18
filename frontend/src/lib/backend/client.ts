@@ -47,7 +47,7 @@ export class Client {
 	}
 
 	async getTokenEmbeddings(modelName: string): Promise<TokenEmbeddings> {
-		const cached = this.embeddingCache[modelName]
+		const cached = this.embeddingCache[modelName];
 		if (cached != null) {
 			return cached;
 		}

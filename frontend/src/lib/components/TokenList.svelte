@@ -2,8 +2,8 @@
 	import type { Vocabulary } from '$lib/tokenizing/vocabulary';
 	import { Token } from '$lib/tokenizing/token';
 	import TokenComponent from '$lib/components/Token.svelte';
-	import { sortByKey } from "$lib/util/array";
-	import { leftPad } from "$lib/util/string";
+	import { sortByKey } from '$lib/util/array';
+	import { leftPad } from '$lib/util/string';
 	import { flip } from 'svelte/animate';
 
 	const {
@@ -35,19 +35,21 @@
 		})()
 	);
 
-	let sortKey = $state("tokenID");
-	let sortDirection = $state("ascending");
+	let sortKey = $state('tokenID');
+	let sortDirection = $state('ascending');
 
 	const sortKeys = {
 		tokenID: (token) => token.id(),
-		byteValue: (token) => [...token.value].map(v => leftPad(v.toString(), "0", "3")).join("-"),
-		byteCount: (token) => token.value.length,
-	}
+		byteValue: (token) => [...token.value].map((v) => leftPad(v.toString(), '0', '3')).join('-'),
+		byteCount: (token) => token.value.length
+	};
 
 	let tokensExist = $derived(tokens == null ? vocabulary.tokens : tokens);
 	let resultingTokens = $derived(tokensExist.filter((token) => searchRegex.test(token.toString())));
 	let shownTokens = $derived(
-		sortByKey(resultingTokens, sortKeys[sortKey] ?? sortKeys.tokenID, { reverse: sortDirection == "descending" }).slice((pageNumber - 1) * tokensPerPage, pageNumber * tokensPerPage)
+		sortByKey(resultingTokens, sortKeys[sortKey] ?? sortKeys.tokenID, {
+			reverse: sortDirection == 'descending'
+		}).slice((pageNumber - 1) * tokensPerPage, pageNumber * tokensPerPage)
 	);
 
 	let pageAmount = $derived(Math.ceil(resultingTokens.length / tokensPerPage));
@@ -68,8 +70,23 @@
 		})()
 	);
 
-	const interestingPlaceholders = ["\\d{4}", "^[a-z]+$", "^[A-Z]+$", "[Ss]uch", "orsch", "^[0-9]+$", "spiel", "[a-z][A-Z]", "CDU|SPD|FDP", "[Dd]eutsch", "ismus", "Kategorie", "^20\\d\\d ?$"];
-	let interestingPlaceholder = interestingPlaceholders[Math.floor(Math.random() * interestingPlaceholders.length)];
+	const interestingPlaceholders = [
+		'\\d{4}',
+		'^[a-z]+$',
+		'^[A-Z]+$',
+		'[Ss]uch',
+		'orsch',
+		'^[0-9]+$',
+		'spiel',
+		'[a-z][A-Z]',
+		'CDU|SPD|FDP',
+		'[Dd]eutsch',
+		'ismus',
+		'Kategorie',
+		'^20\\d\\d ?$'
+	];
+	let interestingPlaceholder =
+		interestingPlaceholders[Math.floor(Math.random() * interestingPlaceholders.length)];
 </script>
 
 <div class="flex flex-col gap-8">
