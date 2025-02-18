@@ -93,14 +93,14 @@
 		</div>
 	</BorderSection>
 	<BorderSection title="Beispiele" open={false} innerClass="overflow-scroll max-h-[32rem]">
-		<div class="grid grid-cols-1 gap-4 overflow-hidden">
+		<div class="grid grid-cols-1 overflow-hidden">
 			{#await tokenData}
-				Loading examples...
+				Beispiele werden geladen...
 			{:then data}
 				{#each sortByKey(data.examples, (examples) => examples
 						.map((example) => example.length)
 						.reduce((a, b) => a + b)) as [exampleL, exampleR]}
-					<div>
+					<div class="even:bg-gray-100 p-2">
 						<span>{exampleL}</span><span class="font-bold">{token.toString()}</span><span
 							>{exampleR}</span
 						>
