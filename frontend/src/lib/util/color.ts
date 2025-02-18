@@ -1,5 +1,5 @@
 import type { Tuple } from './array';
-import chroma from "chroma-js";
+import chroma from 'chroma-js';
 import { leftPad } from './string';
 import { assert } from './typed';
 
@@ -45,7 +45,7 @@ export class Color {
 
 	saturate(f: number) {
 		let chromaColor = this.chroma().saturate(f);
-		return new Color(...chromaColor.rgb().map((c: number) => c / 255) as Tuple<3, number>)
+		return new Color(...(chromaColor.rgb().map((c: number) => c / 255) as Tuple<3, number>));
 	}
 
 	toString() {

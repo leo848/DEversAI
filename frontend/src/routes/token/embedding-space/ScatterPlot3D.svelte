@@ -1,6 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Deck, COORDINATE_SYSTEM, OrbitView, LinearInterpolator, LightingEffect, AmbientLight, PointLight } from '@deck.gl/core';
+	import {
+		Deck,
+		COORDINATE_SYSTEM,
+		OrbitView,
+		LinearInterpolator,
+		LightingEffect,
+		AmbientLight,
+		PointLight
+	} from '@deck.gl/core';
 	import { PointCloudLayer } from '@deck.gl/layers';
 	import Token from '$lib/components/Token.svelte';
 
@@ -10,8 +18,8 @@
 	import type { Tuple } from '$lib/util/array';
 	import { euclideanDist } from '$lib/util/math';
 	import { Tween } from 'svelte/motion';
-	import type { Writable } from "svelte/store";
-	import { urlNullableNumberStore } from "$lib/state/urlState.svelte";
+	import type { Writable } from 'svelte/store';
+	import { urlNullableNumberStore } from '$lib/state/urlState.svelte';
 
 	let {
 		points,
@@ -31,9 +39,9 @@
 	let scatterplotElt: HTMLCanvasElement | undefined = $state();
 	let deck: Deck<OrbitView> | undefined; // Reference to the deck.gl instance
 
-	let selectedId: Writable<number | null> = urlNullableNumberStore("id");
+	let selectedId: Writable<number | null> = urlNullableNumberStore('id');
 	let justSelected = $state(false);
-	let translate = $state([0, 0, 0] satisfies Tuple<3, number>)
+	let translate = $state([0, 0, 0] satisfies Tuple<3, number>);
 
 	const tokenColors = new Tween(
 		points.map(({ id }) => coloring(id)),
@@ -56,17 +64,17 @@
 		target: [0, 0, 0] satisfies Tuple<3, number>,
 		zoom: initialZoom,
 		rotationOrbit: 0,
-		rotationX: 0,
+		rotationX: 0
 	};
 	onMount(() => {
 		const view = new OrbitView({
 			id: 'view',
 			controller: {
 				scrollZoom: {
-					smooth: true,
+					smooth: true
 				},
-				doubleClickZoom: false,
-			},
+				doubleClickZoom: false
+			}
 		});
 
 		deck = new Deck({
@@ -77,47 +85,53 @@
 				new LightingEffect({
 					ambientLight: new AmbientLight({
 						color: [255, 255, 255],
-						intensity: 1.0,
-					}),
+						intensity: 1.0
+					})
 				})
 			]
 		});
 
-		scatterplotElt!.addEventListener('click', evt => {
+		scatterplotElt!.addEventListener('click', (evt) => {
 			if (!justSelected) $selectedId = null;
-		})
+		});
 	});
 
-	function select(tokenId: number, incremental: null | { type: "rotate" | "revert", rotation: number }  = null) {
+	function select(
+		tokenId: number,
+		incremental: null | { type: 'rotate'; rotation: number } = null
+	) {
 		if (!deck) return;
-		let duration = 3000;
+		let duration = 200;
 		if (incremental == null) {
 			$selectedId = tokenId;
 			justSelected = true;
-			let {position} = points[tokenId]
+			let { position } = points[tokenId];
 			duration = Math.sqrt(euclideanDist(translate, position)) * 1000;
 			for (let i = 0; i < 3; i++) {
 				translate[i] = position[i];
 			}
-			setTimeout(() => justSelected = false, 200);
+			setTimeout(() => (justSelected = false), 200);
 		}
 		const newViewState = {
-			rotationOrbit: (incremental?.rotation ?? 360) + 20,
+			rotationOrbit: (incremental?.rotation ?? 360) + 2,
 			target: [0, 0, 0] satisfies Tuple<3, number>,
 			zoom: 8,
 			transitionDuration: duration,
-			transitionInterpolator: new LinearInterpolator(['zoom', 'target', 'rotationOrbit', 'rotationX']),
+			transitionInterpolator: new LinearInterpolator([
+				'zoom',
+				'target',
+				'rotationOrbit',
+				'rotationX'
+			]),
 			onTransitionEnd: () => {
-				let rotation = (incremental?.rotation ?? 0) + 20 
+				let rotation = (incremental?.rotation ?? 0) + 2;
 				if ($selectedId != null) {
-					select(tokenId, { type: "rotate", rotation });
-				} else if (incremental?.type != "revert") {
-					select(tokenId, { type: "revert", rotation })
+					select(tokenId, { type: 'rotate', rotation });
 				}
 			}
-		}
+		};
 		deck.setProps({
-			initialViewState: newViewState,
+			initialViewState: newViewState
 		});
 	}
 
@@ -126,21 +140,20 @@
 
 		const layer = new PointCloudLayer({
 			id: 'PointCloudLayer',
-			data: points.map(p => ({
+			data: points.map((p) => ({
 				...p,
 				position: p.position.map((comp, i) => comp - translate[i])
 			})),
-			getColor: 
+			getColor:
 				$selectedId == null
 					? (d) => tokenColors.current[d.id].rgb()
-					: (d) => d.id == $selectedId
-						? [255, 0, 0]
-						: tokenColors.current[d.id].saturate(-2).rgb(),
+					: (d) =>
+							d.id == $selectedId ? [255, 0, 0] : tokenColors.current[d.id].saturate(-2).rgb(),
 			getPosition: (d) => d.position,
 			material: {
 				ambient: 0.8,
 				shinyness: 60,
-				diffuse: 0.5,
+				diffuse: 0.5
 			},
 			pointSize: pointSize / 100,
 			sizeUnits: 'meters',

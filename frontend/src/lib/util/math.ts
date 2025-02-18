@@ -19,7 +19,7 @@ export const clamp =
 		n <= min ? min : n >= max ? max : n;
 
 export function euclideanDist(a: number[], b: number[]): number {
-	let [a1, a2] = [a, b].map(array => array.slice());
+	let [a1, a2] = [a, b].map((array) => array.slice());
 	let shorterArray = a1.length >= a2.length ? a1 : a2;
 	while (a1.length != a2.length) {
 		shorterArray.push(0);
