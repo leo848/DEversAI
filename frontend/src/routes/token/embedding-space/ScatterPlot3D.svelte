@@ -7,7 +7,6 @@
 		LinearInterpolator,
 		LightingEffect,
 		AmbientLight,
-		PointLight
 	} from '@deck.gl/core';
 	import { PointCloudLayer } from '@deck.gl/layers';
 	import Token from '$lib/components/Token.svelte';
@@ -15,7 +14,6 @@
 	import vocabulary from '$lib/tokenizing/german50000';
 	import { Color } from '$lib/util/color';
 	import type { Tuple } from '$lib/util/array';
-	import { euclideanDist } from '$lib/util/math';
 	import { Tween } from 'svelte/motion';
 	import type { Writable } from 'svelte/store';
 	import { urlNullableNumberStore } from '$lib/state/urlState.svelte';
@@ -40,7 +38,6 @@
 
 	let selectedId: Writable<number | null> = urlNullableNumberStore('id');
 	let justSelected = $state(false);
-	let translate = $state([0, 0, 0] satisfies Tuple<3, number>);
 
 	const tokenColors = new Tween(
 		points.map(({ id }) => coloring(id)),
@@ -107,18 +104,14 @@
 		if (incremental == null) {
 			$selectedId = tokenId;
 			justSelected = true;
-			let { position } = points[tokenId];
-			duration = Math.max(0.1, Math.sqrt(euclideanDist(translate, position))) * 1000;
-			for (let i = 0; i < 3; i++) {
-				translate[i] = position[i];
-			}
+			duration = 1000;
 			setTimeout(() => (justSelected = false), 200);
 		}
 		let transitionEnded = false;
 		const newViewState = {
 			rotationOrbit: (incremental?.rotation ?? 1) + 2,
 			rotationX: 40,
-			target: [0, 0, 0] satisfies Tuple<3, number>,
+			target: points[tokenId].position,
 			zoom: 9,
 			transitionDuration: duration,
 			transitionInterpolator: new LinearInterpolator([
@@ -141,7 +134,7 @@
 		if (incremental == null) {
 			setTimeout(() => {
 				if (!transitionEnded) newViewState.onTransitionEnd();
-			}, 500);
+			}, 1100);
 		}
 	}
 
@@ -154,10 +147,7 @@
 
 		const layer = new PointCloudLayer({
 			id: 'PointCloudLayer',
-			data: points.map((p) => ({
-				...p,
-				position: p.position.map((comp, i) => comp - translate[i])
-			})),
+			data: points,
 			getColor:
 				$selectedId == null
 					? (d) => tokenColors.current[d.id].rgb()
@@ -182,16 +172,16 @@
 				tooltipContent = {
 					id: object.object.id,
 					position: object.object.position
-						.map((pos: number, i: number) => (pos + translate[i]).toFixed(2))
+						.map((pos: number) => pos.toFixed(2))
 						.join(', ')
 				};
 				const { clientX, clientY } = evt.srcEvent as MouseEvent;
 				tooltipStyle = `display:block; left: ${clientX}px; top: ${clientY}px`;
 			},
-			onDragStart: (object, e) => {
+			onDragStart: () => {
 				$selectedId = null;
 			},
-			onClick: (object, e) => {
+			onClick: (object) => {
 				// goto(`/token/${object.object.id}`);
 				select(object.object.id);
 			},
