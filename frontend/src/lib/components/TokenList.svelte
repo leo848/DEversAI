@@ -83,7 +83,8 @@
 		'[Dd]eutsch',
 		'ismus',
 		'Kategorie',
-		'^20\\d\\d ?$'
+		'^20\\d\\d ?$',
+		'^[IVXLCM]+$',
 	];
 	let interestingPlaceholder =
 		interestingPlaceholders[Math.floor(Math.random() * interestingPlaceholders.length)];
