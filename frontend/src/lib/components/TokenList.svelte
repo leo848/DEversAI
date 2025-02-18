@@ -38,7 +38,7 @@
 	let sortKey = $state('tokenID');
 	let sortDirection = $state('ascending');
 
-	const sortKeys: Record<string, (token: Token) => (string | number)> = {
+	const sortKeys: Record<string, (token: Token) => string | number> = {
 		tokenID: (token) => token.id(),
 		byteValue: (token) => [...token.value].map((v) => leftPad(v.toString(), '0', 3)).join('-'),
 		byteCount: (token) => token.value.length
@@ -85,7 +85,7 @@
 		'Kategorie',
 		'^20\\d\\d ?$',
 		'^[IVXLCM]+$',
-		'mann|frau',
+		'mann|frau'
 	];
 	let interestingPlaceholder =
 		interestingPlaceholders[Math.floor(Math.random() * interestingPlaceholders.length)];

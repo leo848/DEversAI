@@ -100,10 +100,20 @@
 				{#each sortByKey(data.examples, (examples) => examples
 						.map((example) => example.length)
 						.reduce((a, b) => a + b)) as [exampleL, exampleR]}
-					<div class="p-2 even:bg-gray-100">
-						<span>{exampleL}</span><span class="font-bold">{token.toString()}</span><span
-							>{exampleR}</span
+					<div class="group/item flex flex-row gap-2 rounded p-2 even:bg-gray-100">
+						<div>
+							<span>{exampleL}</span><span class="font-bold">{token.toString()}</span><span
+								>{exampleR}</span
+							>
+						</div>
+						<div class="grow"></div>
+						<div
+							class="h-8 w-8 rounded bg-fire-300 opacity-10 transition-all group-hover/item:opacity-100"
 						>
+							<a href={`/tokenize?i=${encodeURIComponent(exampleL + token.toString() + exampleR)}`}>
+								<Icon icon="mdi:set-split" height="2em" />
+							</a>
+						</div>
 					</div>
 				{:else}
 					<div class="text-gray-500 font-italic">(keine)</div>

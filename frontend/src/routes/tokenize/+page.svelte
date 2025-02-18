@@ -3,15 +3,16 @@
 	import TokenComponent from '$lib/components/Token.svelte';
 	import vocabulary from '$lib/tokenizing/german50000';
 	import type { Token } from '$lib/tokenizing/token';
+	import { urlStringStore } from '$lib/state/urlState.svelte';
 
-	let string = $state(
-		'Gib oben den Text ein, unten im Ausgabefeld erscheint dann die Token-Repräsentation.'
-	);
+	let string = urlStringStore('i', {
+		default: 'Gib oben den Text ein, unten im Ausgabefeld erscheint dann die Token-Repräsentation.'
+	});
 
 	let lastAppliedMergeRule = $state(vocabulary.mergeRules.length + 256);
 
-	let byteCount = $derived(new TextEncoder().encode(string).length);
-	let tokens = $derived(vocabulary.tokenize(string, { lastAppliedMergeRule }));
+	let byteCount = $derived(new TextEncoder().encode($string).length);
+	let tokens = $derived(vocabulary.tokenize($string, { lastAppliedMergeRule }));
 
 	let hoveredTokenIndex: null | number = $state(null);
 
@@ -38,21 +39,21 @@
 			<BorderSection title="Eingabe">
 				<textarea
 					class="w-full rounded-xl border-2 border-gray-200 p-4 text-2xl transition-all focus:border-gray-500"
-					bind:value={string}
+					bind:value={$string}
 				>
 				</textarea>
 			</BorderSection>
 		</div>
 		<div class="col-span-4 row-span-3 flex flex-col gap-8">
 			<BorderSection title="Statistiken">
-				{#if string.length > 0}
+				{#if $string.length > 0}
 					<ul class="grid grid-cols-3 gap-4">
 						<BorderSection innerClass="flex flex-col align-center items-center">
 							<div class="text-2xl">{byteCount}</div>
 							<div>Bytes</div>
 						</BorderSection>
 						<BorderSection innerClass="flex flex-col align-center items-center">
-							<div class="text-2xl">{string.split(/\s/).length}</div>
+							<div class="text-2xl">{$string.split(/\s/).length}</div>
 							<div>Wörter</div>
 						</BorderSection>
 						<BorderSection innerClass="flex flex-col align-center items-center">
@@ -67,7 +68,7 @@
 						</BorderSection>
 						<BorderSection innerClass="flex flex-col align-center items-center">
 							<div class="text-2xl">
-								{(tokens.length / string.split(/\s/).length).toFixed(2)}
+								{(tokens.length / $string.split(/\s/).length).toFixed(2)}
 							</div>
 							<div>Tokens / Wort</div>
 						</BorderSection>
