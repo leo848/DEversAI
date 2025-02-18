@@ -63,7 +63,7 @@
 	const initialViewState = {
 		target: [0, 0, 0] satisfies Tuple<3, number>,
 		zoom: initialZoom,
-		rotationOrbit: 0,
+		rotationOrbit: -1,
 		rotationX: 0
 	};
 	onMount(() => {
@@ -94,28 +94,33 @@
 		scatterplotElt!.addEventListener('click', (evt) => {
 			if (!justSelected) $selectedId = null;
 		});
+
+		if ($selectedId != null) {
+			let id = $selectedId;
+			select(id);
+			setTimeout(() => select(id), 100);
+		}
 	});
 
-	function select(
-		tokenId: number,
-		incremental: null | { type: 'rotate'; rotation: number } = null
-	) {
+	function select(tokenId: number, incremental: null | { rotation: number } = null) {
 		if (!deck) return;
 		let duration = 200;
 		if (incremental == null) {
 			$selectedId = tokenId;
 			justSelected = true;
 			let { position } = points[tokenId];
-			duration = Math.sqrt(euclideanDist(translate, position)) * 1000;
+			duration = Math.max(0.1, Math.sqrt(euclideanDist(translate, position))) * 1000;
 			for (let i = 0; i < 3; i++) {
 				translate[i] = position[i];
 			}
 			setTimeout(() => (justSelected = false), 200);
 		}
+		let transitionEnded = false;
 		const newViewState = {
-			rotationOrbit: (incremental?.rotation ?? 360) + 2,
+			rotationOrbit: (incremental?.rotation ?? 1) + 2,
+			rotationX: 40,
 			target: [0, 0, 0] satisfies Tuple<3, number>,
-			zoom: 8,
+			zoom: 9,
 			transitionDuration: duration,
 			transitionInterpolator: new LinearInterpolator([
 				'zoom',
@@ -124,19 +129,29 @@
 				'rotationX'
 			]),
 			onTransitionEnd: () => {
+				transitionEnded = true;
 				let rotation = (incremental?.rotation ?? 0) + 2;
 				if ($selectedId != null) {
-					select(tokenId, { type: 'rotate', rotation });
+					select(tokenId, { rotation });
 				}
 			}
 		};
 		deck.setProps({
 			initialViewState: newViewState
 		});
+		if (incremental == null) {
+			setTimeout(() => {
+				if (!transitionEnded) newViewState.onTransitionEnd();
+			}, 500);
+		}
 	}
 
 	$effect(() => {
 		if (!deck) return;
+
+		if ($selectedId != null) {
+			select($selectedId);
+		}
 
 		const layer = new PointCloudLayer({
 			id: 'PointCloudLayer',
@@ -167,7 +182,9 @@
 				}
 				tooltipContent = {
 					id: object.object.id,
-					position: object.object.position.map((pos: number) => pos.toFixed(2)).join(', ')
+					position: object.object.position
+						.map((pos: number, i: number) => (pos + translate[i]).toFixed(2))
+						.join(', ')
 				};
 				const { clientX, clientY } = evt.srcEvent as MouseEvent;
 				tooltipStyle = `display:block; left: ${clientX}px; top: ${clientY}px`;

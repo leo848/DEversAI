@@ -123,4 +123,11 @@
 			{/await}
 		</div>
 	</BorderSection>
+	<BorderSection title="Embedding">
+		<div class="flex flex-row">
+			<a class="rounded bg-gray-100 p-2" href={`/token/embedding-space?id=${tokenIndex}`}>
+				Embedding-Raum
+			</a>
+		</div>
+	</BorderSection>
 </div>
