@@ -38,9 +38,9 @@
 	let sortKey = $state('tokenID');
 	let sortDirection = $state('ascending');
 
-	const sortKeys = {
+	const sortKeys: Record<string, (token: Token) => (string | number)> = {
 		tokenID: (token) => token.id(),
-		byteValue: (token) => [...token.value].map((v) => leftPad(v.toString(), '0', '3')).join('-'),
+		byteValue: (token) => [...token.value].map((v) => leftPad(v.toString(), '0', 3)).join('-'),
 		byteCount: (token) => token.value.length
 	};
 
