@@ -12,7 +12,9 @@
 	import { slide } from 'svelte/transition';
 
 	const client = new Client();
-	let modelName = $state('anticausal1') as 'anticausal1' | 'causal1';
+	let modelDirectionality = $state('anticausal1') as 'anticausal1' | 'causal1';
+	let modelFinetune = $state('') as '' | 'laws1' | 'plenar1';
+	let modelName = $derived(modelDirectionality + (modelFinetune ? ("-" + modelFinetune) : ""));
 
 	const embeddingData = $derived(client.getTokenEmbeddings(modelName));
 
@@ -282,18 +284,24 @@
 				</button>
 				<button
 					class="align-center rounded border border-gray-200 p-3 text-center transition-all hover:bg-gray-100 active:bg-gray-100"
-					class:bg-gray-100={modelName == 'causal1'}
-					onclick={() => (modelName = 'causal1')}
+					class:bg-gray-100={modelDirectionality == 'causal1'}
+					onclick={() => (modelDirectionality = 'causal1')}
 				>
 					causal1
 				</button>
 				<button
 					class="align-center rounded border border-gray-200 p-3 text-center transition-all hover:bg-gray-100 active:bg-gray-100"
-					class:bg-gray-100={modelName == 'anticausal1'}
-					onclick={() => (modelName = 'anticausal1')}
+					class:bg-gray-100={modelDirectionality == 'anticausal1'}
+					onclick={() => (modelDirectionality = 'anticausal1')}
 				>
 					anticausal1
 				</button>
+				<div class="text-right self-center">Finetune</div>
+				<select bind:value={modelFinetune}>
+					<option value="">Basis</option>
+					<option value="laws1">Gesetzestexte</option>
+					<option value="plenar1">Plenarprotokolle</option>
+				</select>
 			</div>
 		</MenuEntry>
 

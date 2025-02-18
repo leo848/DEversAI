@@ -7,6 +7,7 @@ from sqlalchemy.orm import scoped_session
 import numpy as np
 import json
 from models import RequestUnion, InferenceRequest
+from validate import validate_model_name
 
 DATABASE_URL = "sqlite:///assets/token_examples.db"
 DEEP_URL = "ws://127.0.0.1:8910/ws"
@@ -53,8 +54,7 @@ def get_token_examples(token_id: int, db: scoped_session = Depends(get_db)):
 
 @app.get("/v0/tokens/{model_name}/embeddings")
 def get_embeddings(model_name: str):
-    if not model_name.isalnum():
-        raise HTTPException(401, "Model name must be alphanumeric")
+    validate_model_name(model_name)
     try:
         embeddings_3d = np.load(f"assets/embedding/3d/{model_name}.npy").tolist()
         embeddings_2d = np.load(f"assets/embedding/2d/{model_name}.npy").tolist()

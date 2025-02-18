@@ -1,4 +1,8 @@
 from model import GPTConfig, GPT
+import gc
+from tqdm import tqdm
+import itertools
+import bracex
 from matplotlib import pyplot as plt
 import pacmap
 import torch
@@ -19,40 +23,36 @@ assert init_from == "resume"
 
 exec(open('configurator.py').read()) # overrides from command line or config file
 
-ckpt_path = os.path.join(out_dir, model_name)
-checkpoint = torch.load(ckpt_path, map_location=device, weights_only=True)
-gptconf = GPTConfig(**checkpoint['model_args'])
-model = GPT(gptconf)
-state_dict = checkpoint['model']
-unwanted_prefix = '_orig_mod.'
-for k,v in list(state_dict.items()):
-    if k.startswith(unwanted_prefix):
-        state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
-model.load_state_dict(state_dict)
+for model_name in tqdm(bracex.expand("{anti,}causal1-{plenar,laws}1.pt")):
+    print(model_name)
+    ckpt_path = os.path.join(out_dir, model_name)
+    checkpoint = torch.load(ckpt_path, map_location=device, weights_only=True)
+    gptconf = GPTConfig(**checkpoint['model_args'])
+    model = GPT(gptconf)
+    state_dict = checkpoint['model']
+    unwanted_prefix = '_orig_mod.'
+    for k,v in list(state_dict.items()):
+        if k.startswith(unwanted_prefix):
+            state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
+    model.load_state_dict(state_dict)
 
-model.eval()
+    model.eval()
 
 
-tokens = torch.tensor(np.arange(0, 50256))
+    tokens = torch.tensor(np.arange(0, 50256))
 
 
-data = model.transformer.wpe(torch.tensor(np.arange(0, 1024))).detach().clone().transpose(0, 1).numpy()
+    data = model.transformer.wte(tokens).detach().clone().numpy()
 
-def mad(row):
-    total_differences = 0
-    for i in range(len(row)-1):
-        total_differences += abs(row[i] - row[i+1])
-    return (mad := total_differences / len(row))
+    for dim in [2, 3]:
+        embedding = pacmap.PaCMAP(n_components=dim, n_neighbors=None, num_iters=900, verbose=True)
 
-mads = [mad(row) for row in data]
+        data_transformed = embedding.fit_transform(data)
 
-# np.save("output/anticausal1-wpe.npy", data)
+        np.save(f"output/{model_name}-embedding-{dim}d.npy", data_transformed)
 
-# print(data)
+        gc.collect()
 
-# embedding = pacmap.PaCMAP(n_components=2, n_neighbors=None, num_iters=900, verbose=True)
-
-# data_transformed = embedding.fit_transform(data)
-
-# np.save("output/causal1-embedding-2d.npy", data_transformed)
-
+def extract_wpe(model):
+    data = model.transformer.wpe(torch.tensor(np.arange(0, 1024))).detach().clone().transpose(0, 1).numpy()
+    # np.save(f"output/{model_name}-embedding-{dim}d.npy", data_transformed)
