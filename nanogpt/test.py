@@ -100,6 +100,9 @@ for causality in ["causal", "anticausal"]:
             except Exception as e:
                 print(f"Exception: {e}")
             losses_numpy = np.array(losses)
-            np.save(f"{causality}1-{file_prefix}-losses.npy", losses_numpy)
+            mean = np.mean(losses_numpy)
+            filename = f"{causality}1-{file_prefix}-losses.npy"
+            np.save(filename, losses_numpy)
+            print(f"Saved {len(losses_numpy)} loss entries (mean {mean}) to {filename}")
 
 
