@@ -101,7 +101,7 @@ for causality in ["causal", "anticausal"]:
                 print(f"Exception: {e}")
             losses_numpy = np.array(losses)
             mean = np.mean(losses_numpy)
-            filename = f"{causality}1-{file_prefix}-losses.npy"
+            filename = f"/output/{causality}1/{file_prefix}-losses.npy"
             np.save(filename, losses_numpy)
             print(f"Saved {len(losses_numpy)} loss entries (mean {mean}) to {filename}")
 
