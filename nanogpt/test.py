@@ -14,95 +14,96 @@ init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g.
 seed = random.randint(0, int(1e10))
 print(f"Using seed {seed}")
 
+causality = "causal"
 ckpt_value = 300000
-for causality in ["causal", "anticausal"]:
-    for file_prefix in ["oscar-2301", "wikipedia"]:
-        device = 'cuda:2' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
+device = 'cuda:2' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 
-        files = [f"{file_prefix}-shard-00002.bin", f"{file_prefix}-shard-00012.bin", f"{file_prefix}-shard-00022.bin"]
-        dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
-        compile = True # use PyTorch 2.0 to compile the model to be faster
-        batch_size = 64
-        block_size = 1024
+for file_prefix in ["oscar-2301", "wikipedia"]:
 
-        exec(open('configurator.py').read()) # overrides from command line or config file
-        # -----------------------------------------------------------------------------
+    files = [f"{file_prefix}-shard-00002.bin", f"{file_prefix}-shard-00012.bin", f"{file_prefix}-shard-00022.bin"]
+    dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
+    compile = True # use PyTorch 2.0 to compile the model to be faster
+    batch_size = 64
+    block_size = 1024
 
-        torch.manual_seed(seed)
-        torch.cuda.manual_seed(seed)
-        torch.backends.cuda.matmul.allow_tf32 = True # allow tf32 on matmul
-        torch.backends.cudnn.allow_tf32 = True # allow tf32 on cudnn
-        device_type = 'cuda' if 'cuda' in device else 'cpu' # for later use in torch.autocast
-        ptdtype = {'float32': torch.float32, 'bfloat16': torch.bfloat16, 'float16': torch.float16}[dtype]
-        ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=device_type, dtype=ptdtype)
+    exec(open('configurator.py').read()) # overrides from command line or config file
+    # -----------------------------------------------------------------------------
 
-        ckpt_path = f"/output/{causality}1/ckpt_{ckpt_value}.pt"
-        checkpoint = torch.load(ckpt_path, map_location=device, weights_only=True)
-        gptconf = GPTConfig(**checkpoint['model_args'])
-        model = GPT(gptconf)
-        state_dict = checkpoint['model']
-        unwanted_prefix = '_orig_mod.'
-        for k,v in list(state_dict.items()):
-            if k.startswith(unwanted_prefix):
-                state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
-        model.load_state_dict(state_dict)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cuda.matmul.allow_tf32 = True # allow tf32 on matmul
+    torch.backends.cudnn.allow_tf32 = True # allow tf32 on cudnn
+    device_type = 'cuda' if 'cuda' in device else 'cpu' # for later use in torch.autocast
+    ptdtype = {'float32': torch.float32, 'bfloat16': torch.bfloat16, 'float16': torch.float16}[dtype]
+    ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=device_type, dtype=ptdtype)
 
-        model.eval()
-        model.to(device)
-        if compile:
-            model = torch.compile(model) # requires PyTorch 2.0 (optional)
+    ckpt_path = f"/output/{causality}1/ckpt_{ckpt_value}.pt"
+    checkpoint = torch.load(ckpt_path, map_location=device, weights_only=True)
+    gptconf = GPTConfig(**checkpoint['model_args'])
+    model = GPT(gptconf)
+    state_dict = checkpoint['model']
+    unwanted_prefix = '_orig_mod.'
+    for k,v in list(state_dict.items()):
+        if k.startswith(unwanted_prefix):
+            state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
+    model.load_state_dict(state_dict)
 
-        # run generation
-        with torch.no_grad(), ctx:
-            directory = "/data/tokenized-corpus/val"
-            losses = []
-            try:
-                for file in files:
-                    path = os.path.join(directory, file)
-                    if not os.path.isfile(path): continue
-                    data = np.memmap(path, dtype=np.dtype(">u2"), mode="r")
+    model.eval()
+    model.to(device)
+    if compile:
+        model = torch.compile(model) # requires PyTorch 2.0 (optional)
 
-                    total_loss = 0
-                    num_batches = 0
+    # run generation
+    with torch.no_grad(), ctx:
+        directory = "/data/tokenized-corpus/val"
+        losses = []
+        try:
+            for file in files:
+                path = os.path.join(directory, file)
+                if not os.path.isfile(path): continue
+                data = np.memmap(path, dtype=np.dtype(">u2"), mode="r")
 
-                    for start_i in tqdm(range(0, len(data) - block_size - batch_size - 1, block_size)):
-                        x, y = None, None
-                        if causality == "causal":
-                            x = torch.stack( [
-                                torch.from_numpy(
-                                    data[i:i + block_size].astype(np.int64)
-                                )
-                                for i in range(start_i, start_i + batch_size)
-                            ])
-                            y = torch.stack([
-                                torch.from_numpy(
-                                    data[i + 1: i + 1 + block_size].astype(np.int64)
-                                )
-                                for i in range(start_i, start_i + batch_size)
-                            ])
-                        elif causality == "anticausal":
-                            x = torch.stack([
-                                torch.from_numpy(
-                                    data[i + 1: i + 1 + block_size][::-1].astype(np.int64)
-                                )
-                                for i in range(start_i, start_i + batch_size)
-                            ])
-                            y = torch.stack( [
-                                torch.from_numpy(
-                                    data[i:i + block_size][::-1].astype(np.int64)
-                                )
-                                for i in range(start_i, start_i + batch_size)
-                            ])
+                total_loss = 0
+                num_batches = 0
 
-                        x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
-                        _, loss = model(x, y)
-                        losses.append(loss)
-            except Exception as e:
-                print(f"Exception: {e}")
-            losses_numpy = np.array(losses)
-            mean = np.mean(losses_numpy)
-            filename = f"/output/{causality}1/{file_prefix}-losses.npy"
-            np.save(filename, losses_numpy)
-            print(f"Saved {len(losses_numpy)} loss entries (mean {mean}) to {filename}")
+                for start_i in tqdm(range(0, len(data) - block_size - batch_size - 1, block_size)):
+                    x, y = None, None
+                    if causality == "causal":
+                        x = torch.stack( [
+                            torch.from_numpy(
+                                data[i:i + block_size].astype(np.int64)
+                            )
+                            for i in range(start_i, start_i + batch_size)
+                        ])
+                        y = torch.stack([
+                            torch.from_numpy(
+                                data[i + 1: i + 1 + block_size].astype(np.int64)
+                            )
+                            for i in range(start_i, start_i + batch_size)
+                        ])
+                    elif causality == "anticausal":
+                        x = torch.stack([
+                            torch.from_numpy(
+                                data[i + 1: i + 1 + block_size][::-1].astype(np.int64)
+                            )
+                            for i in range(start_i, start_i + batch_size)
+                        ])
+                        y = torch.stack( [
+                            torch.from_numpy(
+                                data[i:i + block_size][::-1].astype(np.int64)
+                            )
+                            for i in range(start_i, start_i + batch_size)
+                        ])
+
+                    x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
+                    _, loss = model(x, y)
+                    losses.append(loss.item())
+        except Exception as e:
+            print(f"Exception: {e}")
+        losses_numpy = np.array(losses)
+        mean = np.mean(losses_numpy)
+        filename = f"/output/{causality}1/{file_prefix}-losses.npy"
+        np.save(filename, losses_numpy)
+        print(f"Saved {len(losses_numpy)} loss entries (mean {mean}) to {filename}")
 
 
