@@ -57,7 +57,7 @@ with torch.no_grad(), ctx:
     losses = []
     try:
         path = os.path.join(directory, file)
-        if not os.path.isfile(path): continue
+        if not os.path.isfile(path): exit(1)
         data = np.memmap(path, dtype=np.dtype(">u2"), mode="r")
 
         total_loss = 0
