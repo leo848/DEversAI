@@ -46,7 +46,8 @@ async def model_logits(
     model = MODELS[model_id]
     model.eval()
 
-    idx = torch.tensor([request.token_input], dtype=torch.long).to(model.device)
+    device = next(model.parameters()).device
+    idx = torch.tensor([request.token_input], dtype=torch.long).to(device)
 
     with torch.no_grad():
         logits, _ = model.forward(idx)
