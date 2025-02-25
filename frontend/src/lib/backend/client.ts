@@ -1,5 +1,5 @@
 import type { Token } from '$lib/tokenizing/token';
-import { TokenEmbeddings, TokenInfo } from './types';
+import { LogitsResponse, TokenEmbeddings, TokenInfo } from './types';
 
 const pathUtils = {
 	join: function (...paths: string[]) {
@@ -60,6 +60,23 @@ export class Client {
 			return tokenEmbeddings.data;
 		} else {
 			return Promise.reject('Could not parse response: ' + tokenEmbeddings.error);
+		}
+	}
+
+	async modelLogits(modelName: string, tokens: Token[]): Promise<LogitsResponse> {
+		const apiPath = pathUtils.join(this.base, 'model', modelName, 'logits');
+		const response = await fetch(apiPath, {
+			method: "POST",
+			body: JSON.stringify({
+				token_input: tokens.map(t => t.id())
+			})
+		});
+		const json = await response.json();
+		const logitsResponse = await LogitsResponse.safeParseAsync(json);
+		if (logitsResponse.success) {
+			return logitsResponse.data;
+		} else {
+			return Promise.reject("Could not parse response: " + logitsResponse.error);
 		}
 	}
 }
