@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field
 class BaseRequest(BaseModel):
     request_id: str
 
-
 class InferenceRequest(BaseRequest):
     type: Literal["autoregressiveInference"]
     model_id: str
@@ -22,3 +21,6 @@ class InferenceResponse(BaseModel):
     type: Literal["autoregressiveInference"]
     request_id: str
     tokens: list[int]
+
+class LogitsRequest(BaseModel):
+    token_input: list[int]
