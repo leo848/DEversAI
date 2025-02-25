@@ -14,7 +14,7 @@
 	const client = new Client();
 	let modelDirectionality = $state('anticausal1') as 'anticausal1' | 'causal1';
 	let modelFinetune = $state('') as '' | 'laws1' | 'plenar1';
-	let modelName = $derived(modelDirectionality + (modelFinetune ? ("-" + modelFinetune) : ""));
+	let modelName = $derived(modelDirectionality + (modelFinetune ? '-' + modelFinetune : ''));
 
 	const embeddingData = $derived(client.getTokenEmbeddings(modelName));
 
@@ -296,7 +296,7 @@
 				>
 					anticausal1
 				</button>
-				<div class="text-right self-center">Finetune</div>
+				<div class="self-center text-right">Finetune</div>
 				<select bind:value={modelFinetune}>
 					<option value="">Basis</option>
 					<option value="laws1">Gesetzestexte</option>

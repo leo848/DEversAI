@@ -6,7 +6,7 @@
 		OrbitView,
 		LinearInterpolator,
 		LightingEffect,
-		AmbientLight,
+		AmbientLight
 	} from '@deck.gl/core';
 	import { PointCloudLayer } from '@deck.gl/layers';
 	import Token from '$lib/components/Token.svelte';
@@ -171,9 +171,7 @@
 				}
 				tooltipContent = {
 					id: object.object.id,
-					position: object.object.position
-						.map((pos: number) => pos.toFixed(2))
-						.join(', ')
+					position: object.object.position.map((pos: number) => pos.toFixed(2)).join(', ')
 				};
 				const { clientX, clientY } = evt.srcEvent as MouseEvent;
 				tooltipStyle = `display:block; left: ${clientX}px; top: ${clientY}px`;

@@ -14,6 +14,6 @@ export const TokenEmbeddings = z.object({
 export type TokenEmbeddings = z.infer<typeof TokenEmbeddings>;
 
 export const LogitsResponse = z.object({
-	logits: z.array(z.number().finite()),
-})
+	logits: z.array(z.number().finite())
+});
 export type LogitsResponse = z.infer<typeof LogitsResponse>;

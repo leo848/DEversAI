@@ -25,10 +25,10 @@ export class Client {
 		this.embeddingCache = {};
 		if (base) {
 			this.base = base;
-		} else if (import.meta.env.DEV) {
-			this.base = 'http://127.0.0.1:8000/v0';
 		} else if (import.meta.env.PROD) {
 			this.base = 'https://deversai.uber.space/v0';
+		} else if (import.meta.env.DEV) {
+			this.base = 'http://127.0.0.1:8000/v0';
 		} else {
 			throw new RangeError('invalid vite value');
 		}
@@ -54,6 +54,7 @@ export class Client {
 		const apiPath = pathUtils.join(this.base, 'tokens', modelName, 'embeddings');
 		const response = await fetch(apiPath);
 		const json = await response.json();
+		console.log(json);
 		const tokenEmbeddings = await TokenEmbeddings.safeParseAsync(json);
 		if (tokenEmbeddings.success) {
 			this.embeddingCache[modelName] = tokenEmbeddings.data;
@@ -66,9 +67,12 @@ export class Client {
 	async modelLogits(modelName: string, tokens: Token[]): Promise<LogitsResponse> {
 		const apiPath = pathUtils.join(this.base, 'model', modelName, 'logits');
 		const response = await fetch(apiPath, {
-			method: "POST",
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
 			body: JSON.stringify({
-				token_input: tokens.map(t => t.id())
+				token_input: tokens.map((t) => t.id())
 			})
 		});
 		const json = await response.json();
@@ -76,7 +80,7 @@ export class Client {
 		if (logitsResponse.success) {
 			return logitsResponse.data;
 		} else {
-			return Promise.reject("Could not parse response: " + logitsResponse.error);
+			return Promise.reject('Could not parse response: ' + logitsResponse.error);
 		}
 	}
 }

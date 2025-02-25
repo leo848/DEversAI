@@ -9,6 +9,7 @@
 	import BorderSection from '$lib/components/BorderSection.svelte';
 	import { Client } from '$lib/backend/client';
 	import { sortByKey } from '$lib/util/array';
+	import TopLogits from '$lib/components/TopLogits.svelte';
 
 	const tokenIndex = $derived(+$page.params.id);
 	const token = $derived(vocabulary.tokens[tokenIndex]);
@@ -21,6 +22,11 @@
 	const client = new Client();
 
 	const tokenData = $derived(client.getTokenInfo(token));
+
+	const predictions = $derived({
+		causal1: client.modelLogits('causal1', [token]),
+		anticausal1: client.modelLogits('anticausal1', [token])
+	});
 
 	function setTokenIndex(newTokenIndex: number) {
 		if (newTokenIndex != tokenIndex) {
@@ -123,11 +129,39 @@
 			{/await}
 		</div>
 	</BorderSection>
-	<BorderSection title="Embedding">
-		<div class="flex flex-row">
-			<a class="rounded bg-gray-100 p-2" href={`/token/embedding-space?id=${tokenIndex}`}>
-				Embedding-Raum
-			</a>
-		</div>
-	</BorderSection>
+	<div class="grid grid-cols-2 gap-8">
+		<BorderSection title="Embedding">
+			<div class="flex flex-row">
+				<a class="rounded bg-gray-100 p-2" href={`/token/embedding-space?id=${tokenIndex}`}>
+					Embedding-Raum
+				</a>
+			</div>
+		</BorderSection>
+		<BorderSection title="Vorhersagen">
+			<div class="grid grid-cols-2 gap-4">
+				<div>
+					<div>anticausal1</div>
+					{#await predictions.anticausal1}
+						Lade <pre>anticausal1</pre>
+						...
+					{:then logitsResponse}
+						<TopLogits {logitsResponse} />
+					{:catch error}
+						<div>{error}</div>
+					{/await}
+				</div>
+				<div>
+					<div>causal1</div>
+					{#await predictions.causal1}
+						Lade <pre>causal1</pre>
+						...
+					{:then logitsResponse}
+						<TopLogits {logitsResponse} />
+					{:catch error}
+						<div>{error}</div>
+					{/await}
+				</div>
+			</div>
+		</BorderSection>
+	</div>
 </div>
