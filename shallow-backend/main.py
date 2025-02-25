@@ -1,16 +1,18 @@
-import re
 from fastapi import FastAPI, HTTPException, Depends, WebSocket
+from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import scoped_session
 import numpy as np
 import json
-from models import RequestUnion, InferenceRequest
+import requests
+from models import LogitsRequest, RequestUnion, InferenceRequest
 from validate import validate_model_name
 
 DATABASE_URL = "sqlite:///assets/token_examples.db"
-DEEP_URL = "ws://127.0.0.1:8910/ws"
+DEEP_URL_WS = "ws://127.0.0.1:8910/ws"
+DEEP_URL_HTTP = "http://127.0.0.1:8910/"
 
 engine: Engine = create_engine(
     DATABASE_URL, connect_args={"check_same_thread": False}, future=True
@@ -86,7 +88,7 @@ async def websocket_endpoint(client_ws: WebSocket):
                 active_clients[request_id] = client_ws  # Store client connection
                 
                 # Forward the request to Kira
-                async with websockets.connect(DEEP_URL) as kira_ws:
+                async with websockets.connect(DEEP_URL_WS) as kira_ws:
                     await kira_ws.send(message)
 
                     # Relay responses back to the correct client
@@ -102,3 +104,13 @@ async def websocket_endpoint(client_ws: WebSocket):
     finally:
         if request_id and request_id in active_clients:
             del active_clients[request_id]  # Cleanup
+
+@app.post("/v0/model/{model_name}/logits")
+async def model_logits(
+    model_name: str,
+    request: LogitsRequest
+):
+    return requests.post(
+        DEEP_URL_HTTP + "/v0/model/" + model_name + "/logits",
+        json=json.dumps(jsonable_encoder(request))
+    )
