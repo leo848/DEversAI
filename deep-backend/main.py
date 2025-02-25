@@ -53,7 +53,7 @@ async def model_logits(
         logits, _ = model.forward(idx)
 
     return LogitsResponse(
-        logits=logits.detach().clone().numpy()[0].tolist()
+        logits=logits.detach().cpu().clone().numpy()[0].tolist()
     )
 
 
