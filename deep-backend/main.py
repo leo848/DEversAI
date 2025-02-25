@@ -54,7 +54,7 @@ async def model_logits(
 
     print(logits)
     return LogitsResponse(
-        logits=logits.detach().cpu().clone().numpy().tolist()
+        logits=logits.detach()[0][0].cpu().clone().numpy().tolist()
     )
 
 
