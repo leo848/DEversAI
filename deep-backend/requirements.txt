@@ -1,3 +1,4 @@
 fastapi[standard]>=0.115.6,<0.116.0
 pydantic>=2.7.0,<3.0.0
 torch>=2.6.0
+numpy>=2.2.0
