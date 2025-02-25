@@ -28,7 +28,8 @@
 	function onscroll(evt: UIEvent) {
 		const { scrollHeight, scrollTop, clientHeight } = evt.target as HTMLDivElement;
 		if (Math.abs(scrollHeight - clientHeight - scrollTop) < 1) {
-			topElements += 1;
+			topElements *= 2;
+			topElements = Math.min(50256, topElements);
 		}
 	}
 </script>

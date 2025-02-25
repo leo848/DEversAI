@@ -25,10 +25,8 @@ export class Client {
 		this.embeddingCache = {};
 		if (base) {
 			this.base = base;
-		} else if (import.meta.env.PROD) {
+		} else if (import.meta.env.PROD || import.meta.env.DEV) {
 			this.base = 'https://deversai.uber.space/v0';
-		} else if (import.meta.env.DEV) {
-			this.base = 'http://127.0.0.1:8000/v0';
 		} else {
 			throw new RangeError('invalid vite value');
 		}
