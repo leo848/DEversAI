@@ -52,8 +52,9 @@ async def model_logits(
     with torch.no_grad():
         logits, _ = model.forward(idx)
 
+    print(logits)
     return LogitsResponse(
-        logits=logits.detach().cpu().clone().numpy()[0].tolist()
+        logits=logits.detach().cpu().clone().numpy().tolist()
     )
 
 
