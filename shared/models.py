@@ -24,3 +24,6 @@ class InferenceResponse(BaseModel):
 
 class LogitsRequest(BaseModel):
     token_input: list[int]
+
+class LogitsResponse(BaseModel):
+    logits: list[float]

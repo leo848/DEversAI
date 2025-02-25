@@ -1,8 +1,11 @@
 from dataclasses import dataclass
 from typing import Annotated
-from fastapi import FastAPI, WebSocket
+import os
+import torch
+from fastapi import FastAPI, HTTPException, WebSocket
 import asyncio
-from models import InferenceRequest, RequestUnion, InferenceResponse, LogitsRequest
+from models import InferenceRequest, LogitsResponse, RequestUnion, InferenceResponse, LogitsRequest
+from gpt import GPT
 
 @dataclass
 class ModelLocation:
@@ -15,6 +18,18 @@ MODEL_LOCATIONS = [
     ModelLocation("causal1", 300_000, 9),
 ]
 
+MODELS = {
+    model.name:
+    GPT.load(
+        os.path.join(
+            "/output",
+            model.name,
+            f"ckpt_{model.ckpt}.pt"),
+        device=f"cuda:{model.cuda_gpu}"
+    )
+    for model in MODEL_LOCATIONS
+}
+
 app = FastAPI()
 
 @app.get("/")
@@ -26,7 +41,19 @@ async def model_logits(
     model_id: str,
     request: LogitsRequest,
 ):
-    pass
+    if model_id not in MODELS:
+        raise HTTPException(404, "Model not found")
+    model = MODELS[model_id]
+    model.eval()
+
+    idx = torch.tensor([request.token_input], dtype=torch.long).to(model.device)
+
+    with torch.no_grad():
+        logits, _ = model.forward(idx)
+
+    return LogitsResponse(
+        logits=logits.detach().clone().numpy()[0].tolist()
+    )
 
 
 @app.websocket("/ws")
