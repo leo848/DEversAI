@@ -110,7 +110,8 @@ async def model_logits(
     model_name: str,
     request: LogitsRequest
 ):
+    
     return requests.post(
         DEEP_URL_HTTP + "/model/" + model_name + "/logits",
-        json=json.dumps(jsonable_encoder(request))
+        json=jsonable_encoder(request)
     ).json()
