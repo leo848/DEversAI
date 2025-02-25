@@ -1,4 +1,4 @@
-from model import GPTConfig, GPT
+from gpt import GPTConfig, GPT
 import gc
 from tqdm import tqdm
 import itertools

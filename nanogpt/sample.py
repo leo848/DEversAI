@@ -9,7 +9,7 @@ import pickle
 from contextlib import nullcontext
 import torch
 import random
-from model import GPTConfig, GPT
+from gpt import GPTConfig, GPT
 from torch.nn import functional as F
 
 # -----------------------------------------------------------------------------

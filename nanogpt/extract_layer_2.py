@@ -1,4 +1,4 @@
-from model import GPTConfig, GPT
+from gpt import GPTConfig, GPT
 import json
 from matplotlib import pyplot as plt
 from tqdm import tqdm
