@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from typing import Annotated
-import os
-import torch
 from fastapi import FastAPI, HTTPException, WebSocket
 import asyncio
 from models import InferenceRequest, LogitsResponse, RequestUnion, InferenceResponse, LogitsRequest
 from gpt import GPT
+import os
+import torch
 
 @dataclass
 class ModelLocation:
@@ -18,45 +18,53 @@ MODEL_LOCATIONS = [
     ModelLocation("causal1", 300_000, 9),
 ]
 
-MODELS = {
-    model.name:
-    GPT.load(
-        os.path.join(
-            "/output",
-            model.name,
-            f"ckpt_{model.ckpt}.pt"),
-        device=f"cuda:{model.cuda_gpu}",
+# Load models and assign a unique CUDA Stream to each
+MODELS = {}
+STREAMS = {}
+
+for model in MODEL_LOCATIONS:
+    device = f"cuda:{model.cuda_gpu}"
+    MODELS[model.name] = GPT.load(
+        os.path.join("/output", model.name, f"ckpt_{model.ckpt}.pt"),
+        device=device,
         compile=True,
     )
-    for model in MODEL_LOCATIONS
-}
+    STREAMS[model.name] = torch.cuda.Stream(device=torch.device(device))
 
 app = FastAPI()
 
 @app.get("/")
 async def root():
-    return { "message": "Hello, world!" }
+    return {"message": "Hello, world!"}
 
-@app.post("/model/{model_id}/logits")
-async def model_logits(
-    model_id: str,
-    request: LogitsRequest,
-):
-    if model_id not in MODELS:
-        raise HTTPException(404, "Model not found")
-    model = MODELS[model_id]
-    model.eval()
-
+async def async_infer(model_name: str, input_tensor):
+    """Runs inference asynchronously using CUDA streams"""
+    model = MODELS[model_name]
+    stream = STREAMS[model_name]
     device = next(model.parameters()).device
-    idx = torch.tensor([request.token_input], dtype=torch.long).to(device)
+
+    input_tensor = input_tensor.to(device)
 
     with torch.no_grad():
-        logits, _ = model.forward(idx)
+        with torch.cuda.stream(stream): 
+            logits, _ = model.forward(input_tensor)
+    
+    stream.synchronize()
+    
+    return logits.detach().cpu().numpy().tolist()
 
-    return LogitsResponse(
-        logits=logits.detach()[0][0].cpu().clone().numpy().tolist()
-    )
+@app.post("/model/{model_id}/logits")
+async def model_logits(model_id: str, request: LogitsRequest):
+    if model_id not in MODELS:
+        raise HTTPException(404, "Model not found")
 
+    # Prepare input tensor
+    idx = torch.tensor([request.token_input], dtype=torch.long)
+
+    # Run inference asynchronously
+    logits = await async_infer(model_id, idx)
+
+    return LogitsResponse(logits=logits[0][0])  # Adjust indexing based on model output
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
