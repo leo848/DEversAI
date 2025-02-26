@@ -12,6 +12,7 @@
 	import { slide } from 'svelte/transition';
 	import { urlNullableNumberStore } from '$lib/state/urlState.svelte';
 	import type { Writable } from 'svelte/store';
+	import TokenComponent from '$lib/components/Token.svelte';
 
 	const client = new Client();
 	let modelDirectionality = $state('anticausal1') as 'anticausal1' | 'causal1';
@@ -271,6 +272,13 @@
 	<div
 		class="selection absolute flex h-svh w-[300px] flex-col gap-4 overflow-scroll p-4 2xl:w-[400px]"
 	>
+		{#if $selectedId != null}
+			<MenuEntry title="Ausgewähltes Token">
+				<!--<div class="italic opacity-50">Kein Token ausgewählt</div>-->
+				<TokenComponent size="lg" token={vocabulary.tokens[$selectedId]} />
+			</MenuEntry>
+		{/if}
+
 		<MenuEntry title="Ansicht">
 			<div class="grid grid-cols-2 gap-4">
 				<button

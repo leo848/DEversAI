@@ -1,14 +1,17 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import type { Snippet } from 'svelte';
-	import { slide } from 'svelte/transition';
+	import { scale, slide } from 'svelte/transition';
 
 	const { title, children }: { title: string; children: Snippet } = $props();
 
 	let open = $state(true);
 </script>
 
-<div class="entry flex flex-col rounded-xl border border-gray-300 p-4">
+<div
+	class="entry flex flex-col rounded-xl border border-gray-300 p-4"
+	transition:slide={{ axis: 'y' }}
+>
 	<button
 		class="block flex flex-row items-center gap-2 text-xl font-bold"
 		class:mb-4={open}

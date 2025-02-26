@@ -17,7 +17,7 @@
 		token: Token;
 		rawString?: boolean;
 		bold?: 'hover' | boolean;
-		size?: 'md' | 'xl';
+		size?: 'md' | 'lg' | 'xl';
 		showIndex?: boolean;
 		noTransition?: boolean;
 		noPad?: boolean;
@@ -40,10 +40,10 @@
 	const stringRepr = $derived(rawString ? token.toString() : token.toStringDebug());
 
 	const style = $derived({
-		border: { md: 'border-2', xl: 'border-4' }[size],
-		textSize: { md: '', xl: 'text-6xl' }[size],
-		rounding: { md: 'rounded-lg', xl: 'rounded-xl' }[size],
-		padding: noPad ? '' : { md: 'p-1', xl: 'p-4' }[size],
+		border: { md: 'border-2', lg: 'border-2', xl: 'border-4' }[size],
+		textSize: { md: '', lg: 'text-3xl', xl: 'text-6xl' }[size],
+		rounding: { md: 'rounded-lg', lg: 'rounded-lg', xl: 'rounded-xl' }[size],
+		padding: noPad ? '' : { md: 'p-1', lg: 'p-2', xl: 'p-4' }[size],
 		bgColor: {
 			gray: 'bg-gray-100',
 			blue: 'bg-blue-200',
