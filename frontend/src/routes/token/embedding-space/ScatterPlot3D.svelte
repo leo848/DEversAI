@@ -37,6 +37,7 @@
 	let deck: Deck<OrbitView> | undefined; // Reference to the deck.gl instance
 
 	let justSelected = $state(false);
+	let lastRotationOrbit = -1;
 
 	const tokenColors = new Tween(
 		points.map(({ id }) => coloring(id)),
@@ -83,10 +84,15 @@
 						intensity: 1.0
 					})
 				})
-			]
+			],
+			onViewStateChange(params) {
+				if (params.viewState.rotationOrbit != null) {
+					lastRotationOrbit = params.viewState.rotationOrbit;
+				}
+			}
 		});
 
-		scatterplotElt!.addEventListener('click', (evt) => {
+		scatterplotElt!.addEventListener('click', () => {
 			if (!justSelected) selectedId = null;
 		});
 
@@ -108,7 +114,7 @@
 		}
 		let transitionEnded = false;
 		const newViewState = {
-			rotationOrbit: (incremental?.rotation ?? 1) + 2,
+			rotationOrbit: (incremental?.rotation ?? lastRotationOrbit) + 2,
 			rotationX: 40,
 			target: points[tokenId].position,
 			zoom: 9,
@@ -121,7 +127,7 @@
 			]),
 			onTransitionEnd: () => {
 				transitionEnded = true;
-				let rotation = (incremental?.rotation ?? 0) + 2;
+				let rotation = (incremental?.rotation ?? lastRotationOrbit) + 2;
 				if (selectedId != null) {
 					select(tokenId, { rotation });
 				}
