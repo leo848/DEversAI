@@ -1,13 +1,16 @@
 <script lang="ts">
 	import type { LogitsResponse } from '$lib/backend/types';
 	import vocabulary from '$lib/tokenizing/german50000';
+	import type { Token } from '$lib/tokenizing/token';
 	import { sortByKey } from '$lib/util/array';
-	import Token from './Token.svelte';
+	import TokenComponent from './Token.svelte';
 
 	const {
-		logitsResponse
+		logitsResponse,
+		ontokenclick = undefined
 	}: {
 		logitsResponse: LogitsResponse;
+		ontokenclick?: (token: Token) => void | undefined;
 	} = $props();
 
 	const allTokens = $derived.by(() => {
@@ -43,7 +46,7 @@
 		{#each shownTokens as token, i}
 			<div>#{i + 1}</div>
 			<div class="col-span-3">
-				<Token {token} />
+				<TokenComponent {token} onclick={ontokenclick ? () => ontokenclick(token) : undefined} />
 			</div>
 			<div>{logitsResponse.logits[token.id()].toFixed(2)}</div>
 			<div>{(probs[token.id()] * 100).toFixed(2)}%</div>
