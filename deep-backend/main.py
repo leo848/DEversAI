@@ -25,7 +25,8 @@ MODELS = {
             "/output",
             model.name,
             f"ckpt_{model.ckpt}.pt"),
-        device=f"cuda:{model.cuda_gpu}"
+        device=f"cuda:{model.cuda_gpu}",
+        compile=True,
     )
     for model in MODEL_LOCATIONS
 }

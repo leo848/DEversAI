@@ -121,7 +121,7 @@ class GPTConfig:
 class GPT(nn.Module):
 
     @staticmethod
-    def load(ckpt_path: str, device="cuda") -> "GPT":
+    def load(ckpt_path: str, device="cuda", compile=False) -> "GPT":
         torch.backends.cuda.matmul.allow_tf32 = True # allow tf32 on matmul
         torch.backends.cudnn.allow_tf32 = True # allow tf32 on cudnn
         ctx = torch.amp.autocast(device_type="cuda", dtype=torch.bfloat16)
@@ -137,6 +137,8 @@ class GPT(nn.Module):
         model.load_state_dict(state_dict)
         model.to(device)
         model.config.ctx = ctx
+        if compile:
+            model = torch.compile(model)
         return model
 
 
