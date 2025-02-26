@@ -15,17 +15,17 @@
 	import { Color } from '$lib/util/color';
 	import type { Tuple } from '$lib/util/array';
 	import { Tween } from 'svelte/motion';
-	import type { Writable } from 'svelte/store';
-	import { urlNullableNumberStore } from '$lib/state/urlState.svelte';
 
 	let {
 		points,
 		coloring,
+		selectedId = $bindable(),
 		pointSize = 2,
 		initialZoom = 8
 	}: {
 		points: { id: number; position: Tuple<3, number> }[];
 		coloring: (id: number) => Color;
+		selectedId: null | number;
 		pointSize?: number;
 		initialZoom?: number;
 	} = $props();
@@ -36,7 +36,6 @@
 	let scatterplotElt: HTMLCanvasElement | undefined = $state();
 	let deck: Deck<OrbitView> | undefined; // Reference to the deck.gl instance
 
-	let selectedId: Writable<number | null> = urlNullableNumberStore('id');
 	let justSelected = $state(false);
 
 	const tokenColors = new Tween(
@@ -88,11 +87,11 @@
 		});
 
 		scatterplotElt!.addEventListener('click', (evt) => {
-			if (!justSelected) $selectedId = null;
+			if (!justSelected) selectedId = null;
 		});
 
-		if ($selectedId != null) {
-			let id = $selectedId;
+		if (selectedId != null) {
+			let id = selectedId;
 			select(id);
 			setTimeout(() => select(id), 100);
 		}
@@ -102,7 +101,7 @@
 		if (!deck) return;
 		let duration = 200;
 		if (incremental == null) {
-			$selectedId = tokenId;
+			selectedId = tokenId;
 			justSelected = true;
 			duration = 1000;
 			setTimeout(() => (justSelected = false), 200);
@@ -123,7 +122,7 @@
 			onTransitionEnd: () => {
 				transitionEnded = true;
 				let rotation = (incremental?.rotation ?? 0) + 2;
-				if ($selectedId != null) {
+				if (selectedId != null) {
 					select(tokenId, { rotation });
 				}
 			}
@@ -141,18 +140,18 @@
 	$effect(() => {
 		if (!deck) return;
 
-		if ($selectedId != null) {
-			select($selectedId);
+		if (selectedId != null) {
+			select(selectedId);
 		}
 
 		const layer = new PointCloudLayer({
 			id: 'PointCloudLayer',
 			data: points,
 			getColor:
-				$selectedId == null
+				selectedId == null
 					? (d) => tokenColors.current[d.id].rgb()
 					: (d) =>
-							d.id == $selectedId ? [255, 0, 0] : tokenColors.current[d.id].saturate(-2).rgb(),
+							d.id == selectedId ? [255, 0, 0] : tokenColors.current[d.id].saturate(-2).rgb(),
 			getPosition: (d) => d.position,
 			material: {
 				ambient: 0.8,
@@ -177,14 +176,14 @@
 				tooltipStyle = `display:block; left: ${clientX}px; top: ${clientY}px`;
 			},
 			onDragStart: () => {
-				$selectedId = null;
+				selectedId = null;
 			},
 			onClick: (object) => {
 				// goto(`/token/${object.object.id}`);
 				select(object.object.id);
 			},
 			updateTriggers: {
-				getColor: [tokenColors.current, $selectedId]
+				getColor: [tokenColors.current, selectedId]
 			},
 			transitions: {
 				getPosition: {

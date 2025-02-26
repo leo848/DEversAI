@@ -10,6 +10,8 @@
 	import Histogram from '$lib/components/Histogram.svelte';
 	import MenuEntry from './MenuEntry.svelte';
 	import { slide } from 'svelte/transition';
+	import { urlNullableNumberStore } from '$lib/state/urlState.svelte';
+	import type { Writable } from 'svelte/store';
 
 	const client = new Client();
 	let modelDirectionality = $state('anticausal1') as 'anticausal1' | 'causal1';
@@ -31,6 +33,8 @@
 	const toData2D = (data: Tuple<2, number>[]) => {
 		return toData(data.map(([x, y]) => [x, y, 0]));
 	};
+
+	let selectedId: Writable<number | null> = urlNullableNumberStore('id');
 
 	type MetricInput = { id: number; token: Token };
 	type Metric = (input: MetricInput) => number;
@@ -257,6 +261,7 @@
 		<ScatterPlot3D
 			points={dimensionality == '3d' ? toData(object.embeddings3D) : toData2D(object.embeddings2D)}
 			{pointSize}
+			bind:selectedId={$selectedId}
 			coloring={(id) => paintOption.paint({ id, token: vocabulary.tokens[id] })}
 			initialZoom={5}
 		/>
