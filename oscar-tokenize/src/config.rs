@@ -1,5 +1,7 @@
 use std::{fmt::Debug, ops::Range, sync::Arc};
 
+use regex::bytes::{self, RegexSet};
+
 use crate::Count;
 
 #[derive(Debug, Clone)]
@@ -7,6 +9,7 @@ pub struct TrainConfig {
     pub eta: EtaScheduler,
     pub max_token_length: Option<usize>,
     pub target_vocab_size: usize,
+    pub forbidden_patterns: bytes::RegexSet,
 }
 
 impl Default for TrainConfig {
@@ -15,6 +18,7 @@ impl Default for TrainConfig {
             eta: EtaScheduler::constant(0.5),
             max_token_length: None,
             target_vocab_size: 50_000,
+            forbidden_patterns: RegexSet::empty(),
         }
     }
 }

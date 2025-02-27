@@ -19,11 +19,12 @@ use oscar_tokenize::{
     dataset::InMemoryDataset, BpeState, Dataset, EtaScheduler, Token, TokenHistogram, TrainConfig, xml,
 };
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
-use regex::Regex;
+use regex::bytes::RegexSet;
 use rusqlite::{params, Connection};
 
 pub fn main() {
-    tokenize_plenarprotokolle();
+    let mut bpe_state = BpeState::synced_with_file("/vocab/fineweb2.vocab");
+    train_vocabulary(&mut bpe_state);
 }
 
 #[allow(dead_code)]
@@ -351,7 +352,7 @@ fn reduce_vocab_size() {
 
     dbg!(bpe_state.additional_vocab_size());
 
-    let space_regex = Regex::new(r"\s").expect("Could not build regex");
+    let space_regex = regex::Regex::new(r"\s").expect("Could not build regex");
 
     let blacklist: &[&[u8]] = &[
         b"Cookies",
@@ -414,9 +415,7 @@ fn train_vocabulary(bpe_state: &mut BpeState) {
     println!();
 
     let paths = chain!(
-        (256..512).map(|i| format!("/data/oscar-2301-shard-{i:05}.bin")),
-        (0..23).map(|i| format!("/data/wikipedia-shard-{i:05}.bin")),
-        (0..23).map(|i| format!("/data/wikipedia-shard-{i:05}.bin")),
+        (0..64).map(|i| format!("/data/fw2-raw/fw2-shard-{i:05}.bin")),
     )
     .map(PathBuf::from)
     .collect_vec();
@@ -425,10 +424,19 @@ fn train_vocabulary(bpe_state: &mut BpeState) {
     let mut dataset =
         InMemoryDataset::load_from_shards(&paths.iter().collect_vec(), &bpe_state.tokenizer());
 
+    let pattern_punctuation = r#"([.,!?:;"/])"#;
+    let letter = r"([A-Za-z])|(\xc3(\xa4|\xb6|\xbc|\x84|\x96|\x9c|\x9f))";
     let config = TrainConfig {
-        eta: EtaScheduler::piecewise_linear_two(0.3, [0.8, 0.8, 0.9]),
+        eta: EtaScheduler::piecewise_linear_two(0.3, [0.8, 0.8, 0.95]),
         max_token_length: None,
         target_vocab_size: 60_000,
+        forbidden_patterns: RegexSet::new([
+            r"(?-u)\xff",
+            &format!(r"(?-u){pattern_punctuation}\s*{letter}"),
+            &format!(r"(?-u){letter}\s*{pattern_punctuation}"),
+            &format!(r"(?-u)^\s"),
+            &format!(r"(?-u)\s"),
+        ]).expect("Invalid pattern encountered"),
     };
 
     let start_time = Instant::now();

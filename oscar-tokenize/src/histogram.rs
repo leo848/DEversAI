@@ -1,3 +1,4 @@
+use itertools::chain;
 use std::{
     collections::{HashMap, HashSet},
     fmt::Display,
@@ -9,7 +10,7 @@ use std::{
 use dashmap::DashMap;
 use itertools::Itertools;
 
-use crate::{BpeState, Count, Token};
+use crate::{BpeState, Count, Token, TrainConfig};
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct TokenHistogram {
@@ -82,31 +83,41 @@ impl TokenHistogram {
         string
     }
 
-    pub fn merges_to_add(&self, eta: f64) -> impl Iterator<Item = (Token, Token)> + '_ {
+    pub fn merges_to_add<'a>(&'a self, tokens: Vec<Vec<u8>>, config: &'a TrainConfig, t: f64) -> impl Iterator<Item = (Token, Token)> + 'a {
         #[derive(Default)]
         struct State {
             top_count: Option<NonZeroU64>,
             disallowed_tokens_left: HashSet<Token>,
             disallowed_tokens_right: HashSet<Token>,
         }
+        let eta = config.eta.for_t(t);
         self.token_pairs
             .iter()
             .sorted_by_key(|&(_, count)| count.by_key_desc())
             .scan(
                 State::default(),
-                |state, (&(token_left, token_right), &count)| {
+                move |state, (&(token_left, token_right), &count)| {
                     if state.top_count.is_none() {
                         state.top_count = NonZeroU64::new(count.into_inner());
                     }
+                    let merged_bytes = chain(tokens[token_left.index()].clone(), tokens[token_right.index()].clone()).collect_vec();
+                    if config.max_token_length.is_some_and(|max_len| merged_bytes.len() > max_len) {
+                        return Some(None);
+                    }
+                    if config.forbidden_patterns.is_match(&merged_bytes) {
+                        return None;
+                    }
+
+                    // Direction is correct: a token must not end with the start token,
+                    state.disallowed_tokens_left.insert(token_right);
+                    // or start with the end token.
+                    state.disallowed_tokens_right.insert(token_left);
+
                     if state.disallowed_tokens_left.contains(&token_left)
                         || state.disallowed_tokens_right.contains(&token_right)
                     {
                         Some(None)
                     } else {
-                        // Direction is correct: a token must not end with the start token,
-                        state.disallowed_tokens_left.insert(token_right);
-                        // or start with the end token.
-                        state.disallowed_tokens_right.insert(token_left);
                         Some(Some((
                             token_left,
                             token_right,
