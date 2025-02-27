@@ -108,13 +108,13 @@ impl TokenHistogram {
                         eprintln!("merge {display} prevented by: {regexes}");
                         return Some(None);
                     }
+                    let maybe_outdated = state.disallowed_tokens_left.contains(&token_left) || state.disallowed_tokens_right.contains(&token_right);
                     // Direction is correct: a token must not end with the start token,
                     state.disallowed_tokens_left.insert(token_right);
                     // or start with the end token.
                     state.disallowed_tokens_right.insert(token_left);
 
-                    if state.disallowed_tokens_left.contains(&token_left)
-                        || state.disallowed_tokens_right.contains(&token_right)
+                    if maybe_outdated
                     {
                         Some(None)
                     } else {
