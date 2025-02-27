@@ -97,15 +97,15 @@ impl TokenHistogram {
             .scan(
                 State::default(),
                 move |state, (&(token_left, token_right), &count)| {
-                    if state.top_count.is_none() {
-                        state.top_count = NonZeroU64::new(count.into_inner());
-                    }
                     let merged_bytes = chain(tokens[token_left.index()].clone(), tokens[token_right.index()].clone()).collect_vec();
                     if config.max_token_length.is_some_and(|max_len| merged_bytes.len() > max_len) {
                         return Some(None);
                     }
                     if config.forbidden_patterns.is_match(&merged_bytes) {
-                        return None;
+                        return Some(None);
+                    }
+                    if state.top_count.is_none() {
+                        state.top_count = NonZeroU64::new(count.into_inner());
                     }
 
                     // Direction is correct: a token must not end with the start token,
