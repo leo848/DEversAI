@@ -415,7 +415,7 @@ fn train_vocabulary(bpe_state: &mut BpeState) {
     println!();
 
     let paths = chain!(
-        (0..64).map(|i| format!("/data/fw2-raw/fw2-shard-{i:05}.bin")),
+        (0..64).map(|i| format!("/data/fw2-raw/train/fw2-shard-{i:05}.bin")),
     )
     .map(PathBuf::from)
     .collect_vec();
