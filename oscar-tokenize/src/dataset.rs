@@ -54,11 +54,11 @@ pub trait Dataset {
                     histogram.register_pair(token_left, token_right);
                     histogram.register(token_left);
                 });
+                progress_bar.inc(1);
                 histogram
             })
             .reduce(TokenHistogram::new, |mut acc, h| {
                 acc += h;
-                progress_bar.inc(1);
                 acc
             });
         progress_bar.finish();
