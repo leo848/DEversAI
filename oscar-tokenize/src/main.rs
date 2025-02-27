@@ -429,13 +429,14 @@ fn train_vocabulary(bpe_state: &mut BpeState) {
     let config = TrainConfig {
         eta: EtaScheduler::piecewise_linear_two(0.3, [0.8, 0.8, 0.95]),
         max_token_length: None,
-        target_vocab_size: 60_000,
+        target_vocab_size: 55_000,
         forbidden_patterns: RegexSet::new([
-            r"(?-u)\xff",
+            &format!(r"(?-u)\xff"),
             &format!(r"(?-u){pattern_punctuation}\s*{letter}"),
             &format!(r"(?-u){letter}\s*{pattern_punctuation}"),
             &format!(r"(?-u)^\s"),
             &format!(r"(?-u)\s"),
+            &format!(r"(?-u){letter}\s+{letter}"),
         ]).expect("Invalid pattern encountered"),
     };
 
