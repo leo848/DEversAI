@@ -108,10 +108,6 @@ impl TokenHistogram {
                         eprintln!("merge {display} prevented by: {regexes}");
                         return Some(None);
                     }
-                    if state.top_count.is_none() {
-                        state.top_count = NonZeroU64::new(count.into_inner());
-                    }
-
                     // Direction is correct: a token must not end with the start token,
                     state.disallowed_tokens_left.insert(token_right);
                     // or start with the end token.
@@ -122,6 +118,10 @@ impl TokenHistogram {
                     {
                         Some(None)
                     } else {
+                        if state.top_count.is_none() {
+                            state.top_count = NonZeroU64::new(count.into_inner());
+                        }
+
                         Some(Some((
                             token_left,
                             token_right,
