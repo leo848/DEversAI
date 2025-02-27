@@ -1,4 +1,5 @@
 use itertools::chain;
+use regex::bytes::Regex;
 use std::{
     collections::{HashMap, HashSet},
     fmt::Display,
@@ -102,6 +103,9 @@ impl TokenHistogram {
                         return Some(None);
                     }
                     if config.forbidden_patterns.is_match(&merged_bytes) {
+                        let regexes = config.forbidden_patterns.patterns().iter().map(|p| (p, Regex::new(&p).expect("invalid pattern"))).filter(|(_p, regex)| regex.is_match(&merged_bytes)).map(|(p, _regex)| p).join(" ");
+                        let display = String::from_utf8_lossy(&merged_bytes);
+                        eprintln!("merge {display} prevented by: {regexes}");
                         return Some(None);
                     }
                     if state.top_count.is_none() {
