@@ -436,7 +436,9 @@ fn train_vocabulary(bpe_state: &mut BpeState) {
             &format!(r"(?-u){letter}\s*{pattern_punctuation}"),
             &format!(r"(?-u)^\s"),
             &format!(r"(?-u)\s"),
-            &format!(r"(?-u){letter}\s+{letter}"),
+            &format!(r"(?-u){letter}\s+{letter}$"),
+            &format!(r"(?-u)^{letter}{{1,2}}\s+{letter}+"),
+            &format!(r"(?-u){letter}+\s+{letter}{{1,2}}$"),
         ]).expect("Invalid pattern encountered"),
     };
 
