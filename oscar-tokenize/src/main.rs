@@ -427,7 +427,7 @@ fn train_vocabulary(bpe_state: &mut BpeState) {
     let pattern_punctuation = r#"([.,!?:;"/])"#;
     let letter = r"(([A-Za-z])|(\xc3(\xa4|\xb6|\xbc|\x84|\x96|\x9c|\x9f)))";
     let config = TrainConfig {
-        eta: EtaScheduler::piecewise_linear_two(0.3, [0.8, 0.8, 0.95]),
+        eta: EtaScheduler::piecewise_linear_two(0.3, [0.8, 0.8, 0.9]),
         max_token_length: None,
         target_vocab_size: 55_000,
         forbidden_patterns: RegexSet::new([
