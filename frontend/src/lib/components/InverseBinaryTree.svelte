@@ -16,6 +16,9 @@
 		onClick?: (d: TokenHistory) => void;
 	} = $props();
 
+	const fontSize = 20;
+	const fontBold = false;
+
 	let d3Wrapper: HTMLElement;
 	let svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
 	let linkGroup: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -35,7 +38,7 @@
 			.attr('width', width)
 			.attr(
 				'style',
-				'max-width: 100%; height: auto; font: 15px Fira Code, ui-monospace, monospace'
+				`max-width: 100%; height: auto; font: ${fontSize}px Fira Code, ui-monospace, monospace; font-weight: ${fontBold ? "bold" : "regular"}`
 			);
 
 		linkGroup = svg
@@ -70,7 +73,7 @@
 		});
 
 		const height = dy * (root.height + 2);
-		const scaleX = (d: Data) => remap([x0, x1], [20, width - 20])(d.x!);
+		const scaleX = (d: Data) => remap([x0, x1], [fontSize, width - fontSize])(d.x!);
 		const scaleY = (d: Data) => -d.y! + height - dy;
 
 		svg.attr('viewBox', [0, 0, width, height]);
@@ -133,12 +136,12 @@
 			.append('rect')
 			.attr('fill', (d) => (d.children ? '#fc6' : '#fc8'))
 			.attr('stroke', (d) => (d.children ? '#ca4' : '#c86'))
-			.attr('width', (d) => Math.max(25, d.data.name.length * 10 + 10))
-			.attr('height', 25)
-			.attr('x', (d) => -Math.max(25, d.data.name.length * 10 + 10) / 2)
-			.attr('y', -12.5)
-			.attr('rx', 12.5)
-			.attr('ry', 12.5);
+			.attr('width', (d) => Math.max(fontSize, d.data.name.length * fontSize / 2 + fontSize))
+			.attr('height', fontSize * 1.2)
+			.attr('x', (d) => -Math.max(fontSize, (d.data.name.length * fontSize / 2 + fontSize)) / 2)
+			.attr('y', -fontSize * 1.2 / 2)
+			.attr('rx', fontSize * 1.2 / 2)
+			.attr('ry', fontSize * 1.2 / 2);
 
 		nodeEnter
 			.append('text')
