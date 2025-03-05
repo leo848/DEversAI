@@ -23,8 +23,7 @@ use regex::bytes::RegexSet;
 use rusqlite::{params, Connection};
 
 pub fn main() {
-    let mut bpe_state = BpeState::synced_with_file("/vocab/fineweb2.vocab");
-    train_vocabulary(&mut bpe_state);
+    reduce_vocab_size();
 }
 
 #[allow(dead_code)]
@@ -348,18 +347,18 @@ fn tokenize_corpora() {
 
 #[allow(dead_code)]
 fn reduce_vocab_size() {
-    let mut bpe_state = BpeState::synced_with_file("/output/german-complete.vocab");
+    let mut bpe_state = BpeState::synced_with_file("./output/fineweb2.vocab");
 
     dbg!(bpe_state.additional_vocab_size());
+
 
     let space_regex = regex::Regex::new(r"\s").expect("Could not build regex");
 
     let blacklist: &[&[u8]] = &[
-        b"Cookies",
-        b"Google",
-        b"Facebook",
-        "Datenschutzerklärung".as_bytes(),
-        b"Website ",
+        b"\n",
+        b"casino",
+        b"Casino",
+        b"||",
     ];
 
     let word_count = |token: Token| {
@@ -369,7 +368,8 @@ fn reduce_vocab_size() {
             .count()
     };
 
-    let sixteen_bytes = |token| bpe_state.at_token(token).len() >= 16;
+
+    let twentyone_bytes = |token| bpe_state.at_token(token).len() >= 21;
     let three_words = |token| word_count(token) >= 3;
     let in_blacklist = |token| {
         blacklist.iter().any(|&term| {
@@ -379,17 +379,18 @@ fn reduce_vocab_size() {
                 .any(|window| window == term)
         })
     };
-    let two_words_at_end = |token: Token| token.index() >= 40530 && word_count(token) >= 2;
+    // let two_words_at_end = |token: Token| token.index() >= 40530 && word_count(token) >= 2;
 
     let tokens_removed = bpe_state
         .tokens()
         .iter()
         .copied()
         .filter(|&token| {
-            sixteen_bytes(token)
+            (token.into_inner() > 256) &&
+                (twentyone_bytes(token)
                 || three_words(token)
-                || in_blacklist(token)
-                || two_words_at_end(token)
+                || in_blacklist(token))
+                // || two_words_at_end(token)
         })
         .sorted_by_key(|token| usize::MAX - token.index());
 
@@ -398,6 +399,11 @@ fn reduce_vocab_size() {
     for token in tokens_removed {
         bpe_state.remove_token_unsynced(token);
     }
+    dbg!(bpe_state.additional_vocab_size());
+    while bpe_state.additional_vocab_size() > 50_000 {
+        bpe_state.remove_token_unsynced(*bpe_state.tokens().last().unwrap());
+    }
+    dbg!("syncing");
     bpe_state.sync();
 
     for token in bpe_state.tokens() {

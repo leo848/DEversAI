@@ -1,6 +1,6 @@
 <script lang="ts">
 	import TokenList from '$lib/components/TokenList.svelte';
-	import vocabulary from '$lib/tokenizing/german50000';
+	import vocabulary from '$lib/tokenizing/fineweb2';
 	import { page } from '$app/state';
 
 	let pageNumber = $derived(Number(page.url.searchParams.get('p') ?? 1));

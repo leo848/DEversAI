@@ -15,7 +15,7 @@ def main():
         if len(parts) != 3:
             sys.exit("Error: Each line must contain exactly three numbers.")
         try:
-            nums = [int(x) for x in parts]
+            nums = [int(x) for x in parts[:2]]
         except Exception as e:
             sys.exit("Error: Non-integer value encountered.")
         for num in nums:
