@@ -1,6 +1,6 @@
 import { Token } from './token';
 import { assert } from '$lib/util/typed';
-import { chunks, chunksExact } from '$lib/util/array';
+import { chunksExact } from '$lib/util/array';
 import { LinkedList } from '$lib/util/linkedList';
 
 export interface BiSplit<T = Token> {
