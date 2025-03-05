@@ -15,14 +15,14 @@ from torch.nn import functional as F
 
 # -----------------------------------------------------------------------------
 num_samples = 10 # number of samples to draw
-max_new_tokens = 150 # number of tokens generated in each sample
+max_new_tokens = 300 # number of tokens generated in each sample
 temperature = 0.8 # 1.0 = no change, < 1.0 = less random, > 1.0 = more random, in predictions
 top_k = 200 # retain only the top_k most likely tokens, clamp others to have 0 probability
 seed = random.randint(0, int(1e10))
 print(f"Using seed {seed}")
 device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 
-model_name = "anticausal1.pt"
+model_name = "anticausal1-plenar1.pt"
 compile = False # use PyTorch 2.0 to compile the model to be faster
 causality = "anticausal" if "anticausal" in model_name else "causal" # 'causal' or 'anticausal'
 show_probs = False
@@ -57,10 +57,10 @@ while prompt_input:
     with torch.no_grad():
         if show_probs:
             logits, loss = model.forward(x)
-            probs = F.softmax(logits, dim=-1)
-            v, i = torch.topk(probs, 10)
-            print(v)
-            print(i)
+            probs = F.softmax(logits / temperature, dim=-1)
+            v, i = torch.topk(probs, 20)
+            for prob, token_id in zip(v[0][0], i[0][0]):
+                print(f"{prob:.3f} {vocab.decode([int(token_id)])}")
         elif causality == 'causal':
             gen = model.generate_generator(x, max_new_tokens, temperature=temperature, top_k=top_k)
             print()
