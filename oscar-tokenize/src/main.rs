@@ -23,7 +23,7 @@ use regex::bytes::RegexSet;
 use rusqlite::{params, Connection};
 
 pub fn main() {
-    reduce_vocab_size();
+    tokenize_corpora();
 }
 
 #[allow(dead_code)]
@@ -311,11 +311,11 @@ fn tokenize_gesetze() {
 
 #[allow(dead_code)]
 fn tokenize_corpora() {
-    let bpe_state = BpeState::synced_with_file("/vocab/german-complete.vocab");
+    let bpe_state = BpeState::synced_with_file("/vocab/fineweb2.vocab");
 
     let paths = chain!(
-        (0..23).map(|i| format!("wikipedia-shard-{i:05}.bin")),
-        (0..600).map(|i| format!("oscar-2301-shard-{i:05}.bin")),
+        (0..300).map(|i| format!("train/wikipedia-shard-{i:05}.bin")),
+        (0..30).map(|i| format!("val/oscar-2301-shard-{i:05}.bin")),
     )
     .map(PathBuf::from)
     .collect_vec();
@@ -328,9 +328,8 @@ fn tokenize_corpora() {
                     .expect("Template-Fehler")
         })
         .for_each(|path| {
-
-        let input_path = format!("/input/{}", path.display());
-        let output_path = format!("/output/{}", path.display());
+            let input_path = format!("/data/fw2-raw/{}", path.display());
+            let output_path = format!("/data/fw2-tokenized/{}", path.display());
 
             let file = fs::read(input_path).expect("Failed to read file");
             let tokens = bpe_state.tokenizer().tokenize_bytes(&file);
