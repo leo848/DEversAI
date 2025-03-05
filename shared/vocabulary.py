@@ -162,7 +162,7 @@ class Vocabulary:
         merged_value = left.value + right.value
         return Token(index, merged_value, self)
 
-    def tokenize(self, input_str: str, last_applied_merge_rule: Optional[int] = None) -> List[Token]:
+    def encode(self, input_str: str, last_applied_merge_rule: Optional[int] = None) -> List[Token]:
         inf = len(self.tokens) * 2
         if last_applied_merge_rule is None:
             last_applied_merge_rule = +inf
@@ -206,3 +206,13 @@ class Vocabulary:
             for id_ in token_ids
             if id_ < +inf
         ]
+
+    def decode_bytes(self, token_ids: list[int]) -> bytes:
+        return b''.join(
+            self.tokens[id_].value
+            for id_ in token_ids
+        )
+
+    def decode(self, token_ids: list[int]) -> str:
+        return self.decode_bytes(token_ids).decode(errors="ignore")
+
