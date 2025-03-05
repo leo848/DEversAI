@@ -137,7 +137,7 @@ class Vocabulary:
         for line in lines:
             if not line.strip():
                 continue
-            parts = list(map(int, line.split()))
+            parts = list(map(int, line.strip().split()))
             if len(parts) != 3:
                 raise ValueError(f'Invalid line: {line}')
             left, right, rule_id = parts
@@ -146,6 +146,11 @@ class Vocabulary:
             merge_rules.append((left, right))
             current_id += 1
         return cls(merge_rules)
+
+    @classmethod
+    def load(cls, filename: str) -> "Vocabulary":
+        with open(filename, "r") as f:
+            return cls.from_vocab_file(f.read())
 
     def mint_byte_token(self) -> Token:
         index = len(self.tokens)
