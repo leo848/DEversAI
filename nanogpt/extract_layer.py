@@ -23,7 +23,7 @@ assert init_from == "resume"
 
 exec(open('configurator.py').read()) # overrides from command line or config file
 
-for model_name in tqdm(bracex.expand("{anti,}causal1-{plenar,laws}1.pt")):
+for model_name in tqdm(bracex.expand("{anti,}causal1{,-plenar1,-laws1}.pt")):
     print(model_name)
     ckpt_path = os.path.join(out_dir, model_name)
     checkpoint = torch.load(ckpt_path, map_location=device, weights_only=True)
@@ -44,10 +44,13 @@ for model_name in tqdm(bracex.expand("{anti,}causal1-{plenar,laws}1.pt")):
 
     data = model.transformer.wte(tokens).detach().clone().numpy()
 
-    for dim in [2, 3]:
-        embedding = pacmap.PaCMAP(n_components=dim, n_neighbors=None, num_iters=900, verbose=True)
+    for dim in [2, 3, 768]:
+        if dim != 768:
+            embedding = pacmap.PaCMAP(n_components=dim, n_neighbors=None, num_iters=900, verbose=True)
 
-        data_transformed = embedding.fit_transform(data)
+            data_transformed = embedding.fit_transform(data)
+        else:
+            data_transformed = data
 
         np.save(f"output/{model_name}-embedding-{dim}d.npy", data_transformed)
 
@@ -55,4 +58,4 @@ for model_name in tqdm(bracex.expand("{anti,}causal1-{plenar,laws}1.pt")):
 
 def extract_wpe(model):
     data = model.transformer.wpe(torch.tensor(np.arange(0, 1024))).detach().clone().transpose(0, 1).numpy()
-    # np.save(f"output/{model_name}-embedding-{dim}d.npy", data_transformed)
+    np.save(f"output/{model_name}-embedding-{dim}d.npy", data_transformed)
