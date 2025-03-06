@@ -1,8 +1,6 @@
-use quick_xml::events::Event;
-use quick_xml::Reader;
-use std::fs::File;
-use std::io::BufReader;
-use std::path::Path;
+use std::{fs::File, io::BufReader, path::Path};
+
+use quick_xml::{events::Event, Reader};
 
 pub fn extract_text(file_path: &impl AsRef<Path>) -> Option<String> {
     let file = File::open(file_path).ok()?;

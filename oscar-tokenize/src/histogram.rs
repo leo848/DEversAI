@@ -1,5 +1,3 @@
-use itertools::chain;
-use regex::bytes::Regex;
 use std::{
     collections::{HashMap, HashSet},
     fmt::Display,
@@ -9,7 +7,8 @@ use std::{
 };
 
 use dashmap::DashMap;
-use itertools::Itertools;
+use itertools::{chain, Itertools};
+use regex::bytes::Regex;
 
 use crate::{BpeState, Count, Token, TrainConfig};
 
@@ -84,7 +83,12 @@ impl TokenHistogram {
         string
     }
 
-    pub fn merges_to_add<'a>(&'a self, tokens: Vec<Vec<u8>>, config: &'a TrainConfig, t: f64) -> impl Iterator<Item = (Token, Token)> + 'a {
+    pub fn merges_to_add<'a>(
+        &'a self,
+        tokens: Vec<Vec<u8>>,
+        config: &'a TrainConfig,
+        t: f64,
+    ) -> impl Iterator<Item = (Token, Token)> + 'a {
         #[derive(Default)]
         struct State {
             top_count: Option<NonZeroU64>,
@@ -98,24 +102,38 @@ impl TokenHistogram {
             .scan(
                 State::default(),
                 move |state, (&(token_left, token_right), &count)| {
-                    let merged_bytes = chain(tokens[token_left.index()].clone(), tokens[token_right.index()].clone()).collect_vec();
-                    if config.max_token_length.is_some_and(|max_len| merged_bytes.len() > max_len) {
+                    let merged_bytes = chain(
+                        tokens[token_left.index()].clone(),
+                        tokens[token_right.index()].clone(),
+                    )
+                    .collect_vec();
+                    if config
+                        .max_token_length
+                        .is_some_and(|max_len| merged_bytes.len() > max_len)
+                    {
                         return Some(None);
                     }
                     if config.forbidden_patterns.is_match(&merged_bytes) {
-                        let regexes = config.forbidden_patterns.patterns().iter().map(|p| (p, Regex::new(&p).expect("invalid pattern"))).filter(|(_p, regex)| regex.is_match(&merged_bytes)).map(|(p, _regex)| p).join(" ");
+                        let regexes = config
+                            .forbidden_patterns
+                            .patterns()
+                            .iter()
+                            .map(|p| (p, Regex::new(&p).expect("invalid pattern")))
+                            .filter(|(_p, regex)| regex.is_match(&merged_bytes))
+                            .map(|(p, _regex)| p)
+                            .join(" ");
                         let display = String::from_utf8_lossy(&merged_bytes);
                         eprintln!("merge {display} prevented by: {regexes}");
                         return Some(None);
                     }
-                    let maybe_outdated = state.disallowed_tokens_left.contains(&token_left) || state.disallowed_tokens_right.contains(&token_right);
+                    let maybe_outdated = state.disallowed_tokens_left.contains(&token_left)
+                        || state.disallowed_tokens_right.contains(&token_right);
                     // Direction is correct: a token must not end with the start token,
                     state.disallowed_tokens_left.insert(token_right);
                     // or start with the end token.
                     state.disallowed_tokens_right.insert(token_left);
 
-                    if maybe_outdated
-                    {
+                    if maybe_outdated {
                         Some(None)
                     } else {
                         if state.top_count.is_none() {

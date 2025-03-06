@@ -67,7 +67,11 @@ pub trait Dataset {
         println!("{}", total_histogram.display_with_state(state));
 
         let merges_to_add = total_histogram.merges_to_add(
-            state.tokens().iter().map(|&token| state.at_token(token).to_owned()).collect_vec(),
+            state
+                .tokens()
+                .iter()
+                .map(|&token| state.at_token(token).to_owned())
+                .collect_vec(),
             config,
             state.additional_vocab_size() as f64 / config.target_vocab_size as f64,
         );

@@ -4,7 +4,6 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::unnecessary_wraps)]
 
-use indicatif::ProgressIterator;
 use std::{
     collections::BTreeSet,
     env::args,
@@ -14,10 +13,11 @@ use std::{
     time::Instant,
 };
 
-use indicatif::{ParallelProgressIterator, ProgressStyle};
+use indicatif::{ParallelProgressIterator, ProgressIterator, ProgressStyle};
 use itertools::{chain, Itertools};
 use oscar_tokenize::{
-    dataset::InMemoryDataset, BpeState, Dataset, EtaScheduler, Token, TokenHistogram, TrainConfig, xml,
+    dataset::InMemoryDataset, xml, BpeState, Dataset, EtaScheduler, Token, TokenHistogram,
+    TrainConfig,
 };
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use regex::bytes::RegexSet;
@@ -248,10 +248,10 @@ fn tokenize_plenarprotokolle() {
     let tokens = input_paths
         .into_par_iter()
         .progress_with_style({
-        ProgressStyle::default_bar()
-            .template("Tokenizing der Plenarprotokolle: [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
-            .expect("Template-Fehler")
-        })
+    ProgressStyle::default_bar()
+        .template("Tokenizing der Plenarprotokolle: [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
+        .expect("Template-Fehler")
+    })
         .flat_map(|path| {
             let path = path.expect("failed to read path").path();
             let Some(text) = xml::extract_text(&path) else { return vec![] };
@@ -338,7 +338,12 @@ fn tokenize_corpora() {
         // Split the file into chunks.
         let chunks: Vec<_> = file.split(|&byte| byte == 0xff).collect();
         let chunks_len = chunks.len();
-        for (i, chunk) in chunks.into_iter().progress().enumerate() {
+        for (i, chunk) in chunks.into_iter().progress_with_style({
+            ProgressStyle::default_bar()
+                .template("chunks: [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
+                .expect("Template-Fehler")
+            })
+            .enumerate() {
             let tokens = bpe_state.tokenizer().tokenize_bytes(chunk);
 
             for token in tokens {
@@ -363,15 +368,9 @@ fn reduce_vocab_size() {
 
     dbg!(bpe_state.additional_vocab_size());
 
-
     let space_regex = regex::Regex::new(r"\s").expect("Could not build regex");
 
-    let blacklist: &[&[u8]] = &[
-        b"\n",
-        b"casino",
-        b"Casino",
-        b"||",
-    ];
+    let blacklist: &[&[u8]] = &[b"\n", b"casino", b"Casino", b"||"];
 
     let word_count = |token: Token| {
         space_regex
@@ -379,7 +378,6 @@ fn reduce_vocab_size() {
             .filter(|m| m.len() != 0)
             .count()
     };
-
 
     let twentyone_bytes = |token| bpe_state.at_token(token).len() >= 21;
     let three_words = |token| word_count(token) >= 3;
@@ -398,11 +396,9 @@ fn reduce_vocab_size() {
         .iter()
         .copied()
         .filter(|&token| {
-            (token.into_inner() > 256) &&
-                (twentyone_bytes(token)
-                || three_words(token)
-                || in_blacklist(token))
-                // || two_words_at_end(token)
+            (token.into_inner() > 256)
+                && (twentyone_bytes(token) || three_words(token) || in_blacklist(token))
+            // || two_words_at_end(token)
         })
         .sorted_by_key(|token| usize::MAX - token.index());
 
@@ -432,11 +428,9 @@ fn train_vocabulary(bpe_state: &mut BpeState) {
     }
     println!();
 
-    let paths = chain!(
-        (100..150).map(|i| format!("/data/fw2-raw/train/fw2-shard-{i:05}.bin")),
-    )
-    .map(PathBuf::from)
-    .collect_vec();
+    let paths = chain!((100..150).map(|i| format!("/data/fw2-raw/train/fw2-shard-{i:05}.bin")),)
+        .map(PathBuf::from)
+        .collect_vec();
 
     println!("Loading dataset from {} shards.", paths.len());
     let mut dataset =
@@ -456,7 +450,8 @@ fn train_vocabulary(bpe_state: &mut BpeState) {
             &format!(r"(?-u){letter}\s+{letter}$"),
             &format!(r"(?-u)^{letter}{{1,2}}\s+{letter}+"),
             &format!(r"(?-u){letter}+\s+{letter}{{1,2}}$"),
-        ]).expect("Invalid pattern encountered"),
+        ])
+        .expect("Invalid pattern encountered"),
     };
 
     let start_time = Instant::now();
