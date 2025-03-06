@@ -373,7 +373,7 @@ fn fix_tokenized_files() {
         .collect();
     paths.into_iter().progress().for_each(|path| {
         let input_path = format!("/data/fw2-tokenized/{}", path.display());
-        let output_path = format!("/data/fw2-fixed/{}", path.display());
+        let output_path = format!("/data/fw2-tokenized/{}", path.display());
         println!("Processing file: {}", input_path);
         let file_data = match fs::read(&input_path) {
             Ok(data) => data,
