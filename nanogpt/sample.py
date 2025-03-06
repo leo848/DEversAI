@@ -15,18 +15,20 @@ from torch.nn import functional as F
 
 # -----------------------------------------------------------------------------
 num_samples = 10 # number of samples to draw
-max_new_tokens = 300 # number of tokens generated in each sample
+max_new_tokens = 100 # number of tokens generated in each sample
 temperature = 0.8 # 1.0 = no change, < 1.0 = less random, > 1.0 = more random, in predictions
-top_k = 200 # retain only the top_k most likely tokens, clamp others to have 0 probability
+top_k = 10 # retain only the top_k most likely tokens, clamp others to have 0 probability
 seed = random.randint(0, int(1e10))
 print(f"Using seed {seed}")
 device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 
-model_name = "anticausal1.pt"
+model_name = "causal1.pt"
 compile = False # use PyTorch 2.0 to compile the model to be faster
 causality = "anticausal" if "anticausal" in model_name else "causal" # 'causal' or 'anticausal'
-show_probs = True
-show_probs_tries = 3
+show_probs = False
+show_probs_tries = 1
+
+show_token_generation_probs = True
 
 exec(open('configurator.py').read()) # overrides from command line or config file
 # -----------------------------------------------------------------------------
@@ -58,8 +60,9 @@ while prompt_input:
     with torch.no_grad():
         if show_probs:
             if show_probs_tries == 1:
-                logits, loss = model.forward(x)
-                probs = F.softmax(logits / temperature, dim=-1)
+                logits, loss = model(x)
+                logits = logits[:, -1, :] / temperature
+                probs = F.softmax(logits, dim=-1)
                 v, i = torch.topk(probs, 20)
                 for prob, token_id in zip(v[0][0], i[0][0]):
                     print(f"{prob:.3f} {vocab.decode([int(token_id)])}")
@@ -67,22 +70,44 @@ while prompt_input:
                 token_tries = [(x[0].tolist(), 1.0)]
                 done = []
                 while token_tries:
-                    print(token_tries)
                     (cur_x, cur_prob) = token_tries[0]
                     token_tries = token_tries[1:]
 
-                    if len(cur_x) >= show_probs_tries:
+                    if cur_prob < 0.0001:
+                        continue
+
+                    if len(cur_x) >= len(x[0]) + show_probs_tries:
                         done.append((cur_x, cur_prob))
                         continue
 
-                    logits, loss = model.forward(
+                    logits, loss = model(
                         torch.tensor(cur_x, dtype=torch.long, device=device)[None, ...]
                     )
-                    probs = F.softmax(logits / temperature, dim=-1)
+                    logits = logits[:, -1, :] / temperature
+                    probs = F.softmax(logits, dim=-1)
                     v, i = torch.topk(probs, 3)
                     for prob, token_id in zip(v[0][0], i[0][0]):
-                        token_tries.append((cur_x + [token_id], float(prob) * cur_prob))
-                print(done)
+                        token_tries.append((cur_x + [int(token_id)], float(prob) * cur_prob))
+                for (tokens, prob) in sorted(done, key=lambda p: -p[1]):
+                    decoded = vocab.decode(tokens, reverse=causality=="anticausal")
+                    print(f"{prob:.3f} {decoded}")
+        elif show_token_generation_probs:
+            idx = x
+            res = []
+            for _ in range(max_new_tokens):
+                logits, _ = model(idx)
+                logits = logits[:, -1, :] / temperature
+                if top_k is not None:
+                    v, _ = torch.topk(logits, min(top_k, logits.size(-1)))
+                    logits[logits < v[:, [-1]]] = -float('Inf')
+                probs = F.softmax(logits, dim=-1)
+                idx_next = torch.multinomial(probs, num_samples=1)
+                prob = probs[0][idx_next]
+                res.append((float(prob), idx_next[0]))
+                idx = torch.cat((idx, idx_next), dim=1)
+            idx = idx[0][len(x):].tolist()
+            for prob, token_id in res:
+                print(f"{prob:.3f}", vocab.decode([int(token_id)]).replace("\n", "␤").replace(" ", "⎵"))
 
         elif causality == 'causal':
             gen = model.generate_generator(x, max_new_tokens, temperature=temperature, top_k=top_k)
