@@ -24,7 +24,7 @@ use regex::bytes::RegexSet;
 use rusqlite::{params, Connection};
 
 pub fn main() {
-    undo_fix_tokenized_files();
+    fix_tokenized_files();
 }
 
 #[allow(dead_code)]
@@ -367,7 +367,7 @@ fn tokenize_corpora() {
 fn fix_tokenized_files() {
     let paths: Vec<PathBuf> = chain!(
         (0..16).map(|i| format!("val/fw2-shard-{i:05}.bin")),
-        (200..216).map(|i| format!("train/fw2-shard-{i:05}.bin")),
+        // (200..216).map(|i| format!("train/fw2-shard-{i:05}.bin")),
     )
         .map(PathBuf::from)
         .collect();
