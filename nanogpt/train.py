@@ -34,9 +34,7 @@ from torch.distributed import init_process_group, destroy_process_group
 from gpt import GPTConfig, GPT
 
 # -----------------------------------------------------------------------------
-# default config values designed to train a gpt2 (124M) on OpenWebText
-# I/O
-out_dir = '/output'
+out_dir = '/output/anticausal-fw2'
 eval_interval = 500
 log_interval = 1
 checkpoint_interval = 2500
@@ -58,7 +56,7 @@ dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
 learning_rate = 6e-4 # max learning rate
-max_iters = 300_000 # total number of training iterations
+max_iters = 400_000 # total number of training iterations
 weight_decay = 1e-1
 beta1 = 0.9
 beta2 = 0.95
@@ -71,8 +69,7 @@ min_lr = 6e-5 # minimum learning rate, should be ~= learning_rate/10 per Chinchi
 # DDP settings
 backend = 'nccl' # 'nccl', 'gloo', etc.
 # system
-device = 'cuda:3' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1' etc., or try 'mps' on macbooks
-dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32', 'bfloat16', or 'float16', the latter will auto implement a GradScaler
+dtype = 'bfloat16' # 'float32', 'bfloat16', or 'float16', the latter will auto implement a GradScaler
 compile = True # use PyTorch 2.0 to compile the model to be faster
 
 # deversai
@@ -87,7 +84,7 @@ config = {k: globals()[k] for k in config_keys} # will be useful for logging
 # various inits, derived attributes, I/O setup
 ddp = int(os.environ.get('RANK', -1)) != -1 # is this a ddp run?
 if ddp:
-    gpus_to_use_now = [3, 7, 8, 9]
+    gpus_to_use_now = [0, 1, 2, 4]
     init_process_group(backend=backend)
     ddp_rank = int(os.environ['RANK'])
     ddp_local_rank = gpus_to_use_now[int(os.environ['LOCAL_RANK'])]
@@ -118,31 +115,57 @@ device_type = 'cuda' if 'cuda' in device else 'cpu' # for later use in torch.aut
 ptdtype = {'float32': torch.float32, 'bfloat16': torch.bfloat16, 'float16': torch.float16}[dtype]
 ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=device_type, dtype=ptdtype)
 
-# poor man's data loader
-data_dir = "/data/tokenized_corpus"
-calls_per_file = 32
+# data loading
+data_dir = "/data/fw2-tokenized"
 
-last_file: dict[str, Optional[str]] = {"train": None, "val": None}
-calls_remaining = {"train": 0, "val": 0}
-def get_batch(split):
-    global calls_remaining
-    global last_file
+def get_all_data_files(split):
+    assert split in {"train", "val"}
+    files = os.listdir(os.path.join(data_dir, split))
+    random.shuffle(files)
+    return files
+
+data_epoch = {split: 0 for split in ("train", "val")}
+data_file_stack = {split: [] for split in ("train", "val")}
+data_ix_stack = {split: [] for split in ("train", "val")}
+
+def get_estimated_epoch(split: str):
+    return len(data_file_stack[split]) / len(get_all_data_files(split))
+
+def get_batch(split: str):
     assert split in {"train", "val"}
     assert causality in {"causal", "anticausal"}
     # We recreate np.memmap every batch to avoid a memory leak, as per
     # https://stackoverflow.com/questions/45132940/numpy-memmap-memory-usage-want-to-iterate-once/61472122#61472122
-    if calls_remaining[split] <= 0 or last_file[split] == None:
-        calls_remaining[split] = calls_per_file
-        if random.random() < 0.3:
-            last_file[split] = random.choice(glob.glob(os.path.join(data_dir, split) + "/wikipedia*"))
-        else:
-            last_file[split] = random.choice(glob.glob(os.path.join(data_dir, split) + "/oscar*"))
-        file: str = cast(str, last_file[split])
-    else:
-        file: str = cast(str, last_file[split])
-        calls_remaining[split] -= 1
-    data = np.memmap(os.path.join(data_dir, split, file), dtype=np.dtype(">u2"), mode='r')
-    ix = torch.randint(len(data) - block_size, (batch_size,))
+    if len(data_file_stack[split]) == 0:
+        data_epoch[split] += 1
+        if master_process:
+            print(f"{split} epoch {data_epoch[split]}")
+        data_file_stack[split] = get_all_data_files(split)
+        data_ix_stack[split] = [-1]
+    filename = cast(str, data_file_stack[split][-1])
+    data = np.memmap(
+        os.path.join(data_dir, split, filename),
+        dtype=np.dtype(">u2"),
+        mode='r'
+    )
+
+    if len(data_ix_stack[split]) == 1 and data_ix_stack[split][0] == -1: # sentinel
+        indices = list(range(
+            len(data) * ddp_rank // ddp_world_size,
+            len(data) * (ddp_rank + 1) // ddp_world_size - block_size,
+        ))
+        random.shuffle(indices)
+        data_ix_stack[split] = indices
+    if len(data_ix_stack[split]) < batch_size:
+        data_file_stack[split].pop()
+        data_ix_stack[split] = [-1]
+        return get_batch(split)
+
+    ix = [
+        data_ix_stack[split].pop()
+        for _ in range(batch_size)
+    ]
+
     if causality == "causal":
         x = torch.stack([torch.from_numpy((data[i:i+block_size]).astype(np.int64)) for i in ix])
         y = torch.stack([torch.from_numpy((data[i+1:i+1+block_size]).astype(np.int64)) for i in ix])
@@ -158,11 +181,7 @@ def get_batch(split):
     return x, y
 
 if master_process:
-    if init_from == "resume":
-        kwargs = {"log_dir": "logs/causal1", "purge_step": init_from_resume_checkpoint }
-    else:
-        kwargs = {}
-    writer = SummaryWriter(**kwargs)
+    writer = SummaryWriter(comment=out_dir.split("/")[-1])
 
 # init these up here, can override if init_from='resume' (i.e. from a checkpoint)
 iter_num = 0
@@ -346,6 +365,7 @@ while True:
         # get loss as float. note: this is a CPU-GPU sync point
         # scale up to undo the division above, approximating the true total loss (exact would have been a sum)
         lossf = loss.item() * gradient_accumulation_steps
+        estimated_epoch = get_estimated_epoch("train")
         if local_iter_num >= 5: # let the training loop settle a bit
             mfu = raw_model.estimate_mfu(batch_size * gradient_accumulation_steps, dt)
             running_mfu = mfu if running_mfu == -1.0 else 0.9*running_mfu + 0.1*mfu
@@ -353,7 +373,7 @@ while True:
         writer.add_scalar("LR", lr, iter_num)
         if running_mfu != -1.0:
             writer.add_scalar("MFU", running_mfu * 100, iter_num)
-        print(f"iter {iter_num}: loss {lossf:.4f}, time {dt*1000:.2f}ms, mfu {running_mfu*100:.2f}%")
+        print(f"iter {iter_num}: loss {lossf:.4f}, time {dt*1000:.2f}ms, mfu {running_mfu*100:.2f}%, ep {estimated_epoch:.2f}")
     iter_num += 1
     local_iter_num += 1
 
