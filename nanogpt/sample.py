@@ -22,10 +22,11 @@ seed = random.randint(0, int(1e10))
 print(f"Using seed {seed}")
 device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 
-model_name = "anticausal1-plenar1.pt"
+model_name = "anticausal1.pt"
 compile = False # use PyTorch 2.0 to compile the model to be faster
 causality = "anticausal" if "anticausal" in model_name else "causal" # 'causal' or 'anticausal'
-show_probs = False
+show_probs = True
+show_probs_tries = 3
 
 exec(open('configurator.py').read()) # overrides from command line or config file
 # -----------------------------------------------------------------------------
@@ -56,11 +57,33 @@ while prompt_input:
     # run generation
     with torch.no_grad():
         if show_probs:
-            logits, loss = model.forward(x)
-            probs = F.softmax(logits / temperature, dim=-1)
-            v, i = torch.topk(probs, 20)
-            for prob, token_id in zip(v[0][0], i[0][0]):
-                print(f"{prob:.3f} {vocab.decode([int(token_id)])}")
+            if show_probs_tries == 1:
+                logits, loss = model.forward(x)
+                probs = F.softmax(logits / temperature, dim=-1)
+                v, i = torch.topk(probs, 20)
+                for prob, token_id in zip(v[0][0], i[0][0]):
+                    print(f"{prob:.3f} {vocab.decode([int(token_id)])}")
+            else:
+                token_tries = [(x[0].tolist(), 1.0)]
+                done = []
+                while token_tries:
+                    print(token_tries)
+                    (cur_x, cur_prob) = token_tries[0]
+                    token_tries = token_tries[1:]
+
+                    if len(cur_x) >= show_probs_tries:
+                        done.append((cur_x, cur_prob))
+                        continue
+
+                    logits, loss = model.forward(
+                        torch.tensor(cur_x, dtype=torch.long, device=device)[None, ...]
+                    )
+                    probs = F.softmax(logits / temperature, dim=-1)
+                    v, i = torch.topk(probs, 3)
+                    for prob, token_id in zip(v[0][0], i[0][0]):
+                        token_tries.append((cur_x + [token_id], float(prob) * cur_prob))
+                print(done)
+
         elif causality == 'causal':
             gen = model.generate_generator(x, max_new_tokens, temperature=temperature, top_k=top_k)
             print()

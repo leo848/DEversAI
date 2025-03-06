@@ -4,6 +4,7 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::unnecessary_wraps)]
 
+use indicatif::ProgressIterator;
 use std::{
     collections::BTreeSet,
     env::args,
@@ -314,34 +315,46 @@ fn tokenize_corpora() {
     let bpe_state = BpeState::synced_with_file("/vocab/fineweb2.vocab");
 
     let paths = chain!(
-        (0..300).map(|i| format!("train/fw2-shard-{i:05}.bin")),
-        (0..30).map(|i| format!("val/fw2-shard-{i:05}.bin")),
+        (200..216).rev().map(|i| format!("train/fw2-shard-{i:05}.bin")),
+        // (0..30).map(|i| format!("val/fw2-shard-{i:05}.bin")),
     )
     .map(PathBuf::from)
     .collect_vec();
 
-    paths
-        .into_par_iter()
-        .progress_with_style({
-                ProgressStyle::default_bar()
-                    .template("Tokenizing der Korpora: [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
-                    .expect("Template-Fehler")
-        })
-        .for_each(|path| {
-            let input_path = format!("/data/fw2-raw/{}", path.display());
-            let output_path = format!("/data/fw2-tokenized/{}", path.display());
+    paths.into_par_iter().for_each(|path| {
+        let input_path = format!("/data/fw2-raw/{}", path.display());
+        let output_path = format!("/data/fw2-tokenized/{}", path.display());
+        let file = fs::read(&input_path).expect("Failed to read file");
 
-            let file = fs::read(input_path).expect("Failed to read file");
-            let tokens = bpe_state.tokenizer().tokenize_bytes(&file);
+        // Open the output file once for this input file.
+        let output_file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(&output_path)
+            .expect("Failed to open output file");
+        let mut output_writer = BufWriter::new(output_file);
 
-            let output_file = OpenOptions::new().write(true).create(true).append(false).truncate(true).open(output_path).expect("Failed to open output file");
-            let mut output_writer = BufWriter::new(output_file);
+        // Split the file into chunks.
+        let chunks: Vec<_> = file.split(|&byte| byte == 0xff).collect();
+        let chunks_len = chunks.len();
+        for (i, chunk) in chunks.into_iter().progress().enumerate() {
+            let tokens = bpe_state.tokenizer().tokenize_bytes(chunk);
 
             for token in tokens {
-                output_writer.write_all(&token.into_inner().to_be_bytes()).expect("Could not write to file");
+                output_writer
+                    .write_all(&token.into_inner().to_be_bytes())
+                    .expect("Could not write token to file");
             }
-            output_writer.flush().expect("Could not flush to file");
-        });
+            // Write the separator between chunks, except after the last one.
+            if i < chunks_len - 1 {
+                output_writer
+                    .write_all(&[0xff])
+                    .expect("Could not write separator to file");
+            }
+        }
+        output_writer.flush().expect("Could not flush to file");
+    });
 }
 
 #[allow(dead_code)]
