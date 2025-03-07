@@ -71,6 +71,13 @@ class Token:
     def __repr__(self) -> str:
         return f'Token({self.index}, {self.value})'
 
+    def debug_str(self) -> str:
+        return (
+            self.display_string
+                .replace("\n", "\\n")
+                .replace(" ", "⎵")
+        )
+
     def history_tree(self) -> dict:
         assert self.vocab is not None, 'No vocabulary for token'
         if self.composition is None:
