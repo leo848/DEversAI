@@ -34,7 +34,7 @@ from torch.distributed import init_process_group, destroy_process_group
 from gpt import GPTConfig, GPT
 
 # -----------------------------------------------------------------------------
-out_dir = '/output/anticausal-fw2'
+out_dir = '/output/causal-fw2'
 eval_interval = 500
 log_interval = 1
 checkpoint_interval = 2500
@@ -73,7 +73,7 @@ dtype = 'bfloat16' # 'float32', 'bfloat16', or 'float16', the latter will auto i
 compile = True # use PyTorch 2.0 to compile the model to be faster
 
 # deversai
-causality = "causal" # 'causal' or 'anticausal'
+causality = "anticausal" # 'causal' or 'anticausal'
 
 # -----------------------------------------------------------------------------
 config_keys = [k for k,v in globals().items() if not k.startswith('_') and isinstance(v, (int, float, bool, str))]
