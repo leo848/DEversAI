@@ -20,7 +20,7 @@ seed = random.randint(0, int(1e10))
 print(f"Using seed {seed}")
 device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 
-model_name = "causal1.pt"
+model_name = "causal-fw2-ckpt27500.pt"
 compile = False # use PyTorch 2.0 to compile the model to be faster
 causality = "anticausal" if "anticausal" in model_name else "causal" # 'causal' or 'anticausal'
 
@@ -30,7 +30,7 @@ show_probs_tries = 1
 
 show_token_generation_probs = False
 
-show_samples_json = True
+show_samples_json = False
 
 exec(open('configurator.py').read()) # overrides from command line or config file
 # -----------------------------------------------------------------------------
@@ -43,7 +43,7 @@ model = GPT.load(os.path.join("output", model_name))
 if compile:
     model = torch.compile(model) # requires PyTorch 2.0 (optional)
 
-vocab = Vocabulary.load("german-complete.vocab")
+vocab = Vocabulary.load("fineweb2.vocab")
 
 # encode the beginning of the prompt
 prompt_input = True
