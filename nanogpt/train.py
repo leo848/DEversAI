@@ -34,7 +34,7 @@ from torch.distributed import init_process_group, destroy_process_group
 from gpt import GPTConfig, GPT
 
 # -----------------------------------------------------------------------------
-out_dir = '/output/anticausal-fw2'
+out_dir = '/output/causal-fw2'
 eval_interval = 500
 log_interval = 1
 checkpoint_interval = 2500
@@ -73,7 +73,7 @@ dtype = 'bfloat16' # 'float32', 'bfloat16', or 'float16', the latter will auto i
 compile = True # use PyTorch 2.0 to compile the model to be faster
 
 # deversai
-causality = "anticausal" # 'causal' or 'anticausal'
+causality = "causal" # 'causal' or 'anticausal'
 
 # -----------------------------------------------------------------------------
 config_keys = [k for k,v in globals().items() if not k.startswith('_') and isinstance(v, (int, float, bool, str))]
@@ -84,7 +84,7 @@ config = {k: globals()[k] for k in config_keys} # will be useful for logging
 # various inits, derived attributes, I/O setup
 ddp = int(os.environ.get('RANK', -1)) != -1 # is this a ddp run?
 if ddp:
-    gpus_to_use_now = [0, 1, 2, 5]
+    gpus_to_use_now = [6, 7, 8, 9]
     init_process_group(backend=backend)
     ddp_rank = int(os.environ['RANK'])
     ddp_local_rank = gpus_to_use_now[int(os.environ['LOCAL_RANK'])]
