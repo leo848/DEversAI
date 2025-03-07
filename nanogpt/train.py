@@ -34,7 +34,7 @@ from torch.distributed import init_process_group, destroy_process_group
 from gpt import GPTConfig, GPT
 
 # -----------------------------------------------------------------------------
-out_dir = '/output/causal-fw2'
+out_dir = '/output/anticausal-fw2'
 eval_interval = 500
 log_interval = 1
 checkpoint_interval = 2500
