@@ -2,22 +2,20 @@
 Sample from a trained model
 """
 import os
-import sys
+from tqdm import tqdm
 from ast import literal_eval
-from more_itertools import windowed
-import pickle
-from contextlib import nullcontext
 import torch
 import random
-from gpt import GPTConfig, GPT
+import json
+from gpt import GPT
 from vocabulary import Vocabulary
 from torch.nn import functional as F
 
 # -----------------------------------------------------------------------------
-num_samples = 10 # number of samples to draw
-max_new_tokens = 100 # number of tokens generated in each sample
+num_samples = 64 # number of samples to draw
+max_new_tokens = 200 # number of tokens generated in each sample
 temperature = 0.8 # 1.0 = no change, < 1.0 = less random, > 1.0 = more random, in predictions
-top_k = 10 # retain only the top_k most likely tokens, clamp others to have 0 probability
+top_k = 200 # retain only the top_k most likely tokens, clamp others to have 0 probability
 seed = random.randint(0, int(1e10))
 print(f"Using seed {seed}")
 device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
@@ -25,10 +23,14 @@ device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 model_name = "causal1.pt"
 compile = False # use PyTorch 2.0 to compile the model to be faster
 causality = "anticausal" if "anticausal" in model_name else "causal" # 'causal' or 'anticausal'
+
+# modes
 show_probs = False
 show_probs_tries = 1
 
-show_token_generation_probs = True
+show_token_generation_probs = False
+
+show_samples_json = True
 
 exec(open('configurator.py').read()) # overrides from command line or config file
 # -----------------------------------------------------------------------------
@@ -108,6 +110,15 @@ while prompt_input:
             idx = idx[0][len(x):].tolist()
             for prob, token_id in res:
                 print(f"{prob:.3f}", vocab.decode([int(token_id)]).replace("\n", "␤").replace(" ", "⎵"))
+        elif show_samples_json:
+            results = []
+            for _ in tqdm(range(0, num_samples, 32)):
+                x = torch.tensor([x[0].tolist()] * 32, dtype=torch.long, device=device)
+                gen = model.generate(x, max_new_tokens, temperature=temperature, top_k=top_k)
+                for item in gen:
+                    results.append(vocab.decode(item, reverse = causality == "anticausal" ))
+            with open("/tmp/show_samples.json", "w") as f:
+                json.dump(results, f)
 
         elif causality == 'causal':
             gen = model.generate_generator(x, max_new_tokens, temperature=temperature, top_k=top_k)
