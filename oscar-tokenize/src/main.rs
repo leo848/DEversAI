@@ -316,7 +316,7 @@ fn tokenize_corpora() {
 
     let paths = chain!(
         (200..216).rev().map(|i| format!("train/fw2-shard-{i:05}.bin")),
-        // (0..16).map(|i| format!("val/fw2-shard-{i:05}.bin")),
+        (0..16).map(|i| format!("val/fw2-shard-{i:05}.bin")),
     )
     .map(PathBuf::from)
     .collect_vec();

@@ -121,6 +121,7 @@ data_dir = "/data/fw2-tokenized"
 def get_all_data_files(split):
     assert split in {"train", "val"}
     files = os.listdir(os.path.join(data_dir, split))
+    files = [file for file in files if not "shard-002" in file]
     random.shuffle(files)
     return files
 
@@ -131,7 +132,7 @@ data_ix_stack = {split: [] for split in ("train", "val")}
 def get_estimated_epoch(split: str):
     return len(data_file_stack[split]) / len(get_all_data_files(split))
 
-def get_batch(split: str):
+def get_batch(split: str, retries=10):
     assert split in {"train", "val"}
     assert causality in {"causal", "anticausal"}
     # We recreate np.memmap every batch to avoid a memory leak, as per
@@ -142,36 +143,41 @@ def get_batch(split: str):
             print(f"{split} epoch {data_epoch[split]}")
         data_file_stack[split] = get_all_data_files(split)
         data_ix_stack[split] = [-1]
-    filename = cast(str, data_file_stack[split][-1])
-    data = np.memmap(
-        os.path.join(data_dir, split, filename),
-        dtype=np.dtype(">u2"),
-        mode='r'
-    )
+    try:
+        filename = cast(str, data_file_stack[split][-1])
+        data = np.memmap(
+            os.path.join(data_dir, split, filename),
+            dtype=np.dtype(">u2"),
+            mode='r'
+        )
 
-    if len(data_ix_stack[split]) == 1 and data_ix_stack[split][0] == -1: # sentinel
-        indices = list(range(
-            len(data) * ddp_rank // ddp_world_size,
-            len(data) * (ddp_rank + 1) // ddp_world_size - block_size,
-        ))
-        random.shuffle(indices)
-        data_ix_stack[split] = indices
-    if len(data_ix_stack[split]) < batch_size:
-        data_file_stack[split].pop()
-        data_ix_stack[split] = [-1]
-        return get_batch(split)
+        if len(data_ix_stack[split]) == 1 and data_ix_stack[split][0] == -1: # sentinel
+            indices = list(range(
+                len(data) * ddp_rank // ddp_world_size,
+                len(data) * (ddp_rank + 1) // ddp_world_size - block_size,
+            ))
+            random.shuffle(indices)
+            data_ix_stack[split] = indices
+        if len(data_ix_stack[split]) < batch_size:
+            data_file_stack[split].pop()
+            data_ix_stack[split] = [-1]
+            return get_batch(split)
 
-    ix = [
-        data_ix_stack[split].pop()
-        for _ in range(batch_size)
-    ]
+        ix = [
+            data_ix_stack[split].pop()
+            for _ in range(batch_size)
+        ]
 
-    if causality == "causal":
-        x = torch.stack([torch.from_numpy((data[i:i+block_size]).astype(np.int64)) for i in ix])
-        y = torch.stack([torch.from_numpy((data[i+1:i+1+block_size]).astype(np.int64)) for i in ix])
-    elif causality == "anticausal":
-        x = torch.stack([torch.from_numpy((data[i+1:i+1+block_size][::-1]).astype(np.int64)) for i in ix])
-        y = torch.stack([torch.from_numpy((data[i:i+block_size][::-1]).astype(np.int64)) for i in ix])
+        if causality == "causal":
+            x = torch.stack([torch.from_numpy((data[i:i+block_size]).astype(np.int64)) for i in ix])
+            y = torch.stack([torch.from_numpy((data[i+1:i+1+block_size]).astype(np.int64)) for i in ix])
+        elif causality == "anticausal":
+            x = torch.stack([torch.from_numpy((data[i+1:i+1+block_size][::-1]).astype(np.int64)) for i in ix])
+            y = torch.stack([torch.from_numpy((data[i:i+block_size][::-1]).astype(np.int64)) for i in ix])
+    except Exception:
+        if retries == 0:
+            raise
+        return get_batch(split, retries=retries-1)
 
     if device_type == 'cuda':
         # pin arrays x,y, which allows us to move them to GPU asynchronously (non_blocking=True)
