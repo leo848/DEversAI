@@ -24,7 +24,7 @@ use regex::bytes::RegexSet;
 use rusqlite::{params, Connection};
 
 pub fn main() {
-    fix_tokenized_files();
+    tokenize_corpora();
 }
 
 #[allow(dead_code)]
@@ -354,123 +354,13 @@ fn tokenize_corpora() {
             // Write the separator between chunks, except after the last one.
             if i < chunks_len - 1 {
                 output_writer
-                    .write_all(&[0x00, 0xff])
+                    .write(&u16::to_be_bytes(0xff))
                     .expect("Could not write separator to file");
             }
         }
         output_writer.flush().expect("Could not flush to file");
     });
 }
-
-
-#[allow(dead_code)]
-fn fix_tokenized_files() {
-    let paths: Vec<PathBuf> = chain!(
-        (0..16).map(|i| format!("val/fw2-shard-{i:05}.bin")),
-        // (200..216).map(|i| format!("train/fw2-shard-{i:05}.bin")),
-    )
-        .map(PathBuf::from)
-        .collect();
-    paths.into_iter().progress().for_each(|path| {
-        let input_path = format!("/data/fw2-tokenized/{}", path.display());
-        let output_path = format!("/data/fw2-tokenized/{}", path.display());
-        println!("Processing file: {}", input_path);
-        let file_data = match fs::read(&input_path) {
-            Ok(data) => data,
-            Err(e) => {
-                eprintln!("Failed to read {}: {}", input_path, e);
-                return;
-            }
-        };
-        let already_fixed = file_data.iter().enumerate().all(|(i, &byte)| {
-            if byte == 0xff {
-                i > 0 && file_data[i - 1] == 0x00
-            } else {
-                true
-            }
-        });
-        if already_fixed {
-            println!("Skipping file {} as it is already aligned", input_path);
-            return;
-        }
-        let mut fixed_data = Vec::with_capacity(file_data.len() + 10);
-        for &byte in &file_data {
-            if byte == 0xff {
-                if fixed_data.last().copied() != Some(0x00) {
-                    fixed_data.push(0x00);
-                }
-                fixed_data.push(0xff);
-            } else {
-                fixed_data.push(byte);
-            }
-        }
-        let temp_output_path = format!("{}.tmp", output_path);
-        if let Err(e) = fs::write(&temp_output_path, &fixed_data) {
-            eprintln!("Failed to write temporary file {}: {}", temp_output_path, e);
-            return;
-        }
-        if let Err(e) = fs::rename(&temp_output_path, &output_path) {
-            eprintln!("Failed to rename temporary file {} to {}: {}", temp_output_path, output_path, e);
-            return;
-        }
-        println!("Fixed file written to {}", output_path);
-    });
-}
-
-#[allow(dead_code)]
-fn undo_fix_tokenized_files() {
-    let paths: Vec<PathBuf> = chain!(
-        (0..16).map(|i| format!("val/fw2-shard-{i:05}.bin")),
-        (200..216).map(|i| format!("train/fw2-shard-{i:05}.bin")),
-    )
-        .map(PathBuf::from)
-        .collect();
-    paths.into_par_iter().progress().for_each(|path| {
-        let input_path = format!("/data/fw2-tokenized/{}", path.display());
-        let output_path = format!("/data/fw2-tokenized/{}", path.display());
-        println!("Processing file: {}", input_path);
-        let file_data = match fs::read(&input_path) {
-            Ok(data) => data,
-            Err(e) => {
-                eprintln!("Failed to read {}: {}", input_path, e);
-                return;
-            }
-        };
-        let is_fixed = file_data.iter().enumerate().all(|(i, &byte)| {
-            if byte == 0xff {
-                i > 0 && file_data[i - 1] == 0x00
-            } else {
-                true
-            }
-        });
-        if !is_fixed {
-            println!("Skipping file {} as it is already in the original flawed state", input_path);
-            return;
-        }
-        let mut unfixed_data = Vec::with_capacity(file_data.len());
-        let mut i = 0;
-        while i < file_data.len() {
-            if file_data[i] == 0x00 && i + 1 < file_data.len() && file_data[i + 1] == 0xff {
-                unfixed_data.push(0xff);
-                i += 2;
-            } else {
-                unfixed_data.push(file_data[i]);
-                i += 1;
-            }
-        }
-        let temp_output_path = format!("{}.tmp", output_path);
-        if let Err(e) = fs::write(&temp_output_path, &unfixed_data) {
-            eprintln!("Failed to write temporary file {}: {}", temp_output_path, e);
-            return;
-        }
-        if let Err(e) = fs::rename(&temp_output_path, &output_path) {
-            eprintln!("Failed to rename temporary file {} to {}: {}", temp_output_path, output_path, e);
-            return;
-        }
-        println!("Unfixed file written to {}", output_path);
-    });
-}
-
 
 #[allow(dead_code)]
 fn reduce_vocab_size() {
