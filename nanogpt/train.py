@@ -377,10 +377,10 @@ while True:
         if running_mfu != -1.0:
             writer.add_scalar("MFU", running_mfu * 100, iter_num)
         for name, layer in [
-                ("wte", model.transformer.wte),
-                ("wpe", model.transformer.wpe),
+                ("wte", model.module.transformer.wte),
+                ("wpe", model.module.transformer.wpe),
                 *[
-                    (f"h_{i}", model.transformer.h[i]) for i in config.n_layer
+                    (f"h_{i}", model.module.transformer.h[i]) for i in config.n_layer
                 ]
         ]:
             norm = torch.norm(torch.stack([torch.norm(param.grad.detach()) for param in layer.parameters()]), 2)
