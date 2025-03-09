@@ -376,9 +376,15 @@ while True:
         writer.add_scalar("LR", lr, iter_num)
         if running_mfu != -1.0:
             writer.add_scalar("MFU", running_mfu * 100, iter_num)
-        for name, param in model.named_parameters():
-            norm = torch.norm(param.grad.detach(), 2)
-            writer.add_scalar(f"GradientNorm/{param}", norm)
+        for name, layer in [
+                ("wte", model.transformer.wte),
+                ("wpe", model.transformer.wpe),
+                *[
+                    (f"h_{i}", model.transformer.h[i]) for i in config.n_layer
+                ]
+        ]:
+            norm = torch.norm(torch.stack([torch.norm(param.grad.detach()) for param in layer.parameters()]), 2)
+            writer.add_scalar(f"GradientNorm/{name}", norm)
 
         print(f"iter {iter_num}: loss {lossf:.4f}, time {dt*1000:.2f}ms, mfu {running_mfu*100:.2f}%, ep {estimated_epoch:.2f}")
 
