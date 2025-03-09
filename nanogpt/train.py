@@ -19,11 +19,10 @@ $ torchrun --nproc_per_node=8 --nnodes=2 --node_rank=1 --master_addr=123.456.123
 import os
 import time
 import math
-import glob
 import pickle
 import random
 from contextlib import nullcontext
-from typing import Optional, cast
+from typing import cast
 
 import numpy as np
 import torch
