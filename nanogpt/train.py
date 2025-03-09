@@ -156,7 +156,7 @@ def get_batch(split: str, retries=10):
                 len(data) * (ddp_rank + 1) // ddp_world_size - block_size,
             ))
             random.shuffle(indices)
-            data_ix_stack[split] = indices[:len(indices) // (block_size / 8)]
+            data_ix_stack[split] = indices[:int(len(indices) * 0.1)]
         if len(data_ix_stack[split]) < batch_size:
             data_file_stack[split].pop()
             data_ix_stack[split] = [-1]
