@@ -384,7 +384,7 @@ while True:
                 ]
         ]:
             norm = torch.norm(torch.stack([torch.norm(param.grad.detach()) for param in layer.parameters()]), 2)
-            writer.add_scalar(f"GradientNorm/{name}", norm)
+            writer.add_scalar(f"GradientNorm/{name}", norm, iter_num)
 
         print(f"iter {iter_num}: loss {lossf:.4f}, time {dt*1000:.2f}ms, mfu {running_mfu*100:.2f}%, ep {estimated_epoch:.2f}")
 
