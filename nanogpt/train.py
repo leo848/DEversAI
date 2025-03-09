@@ -35,7 +35,7 @@ from gpt import GPTConfig, GPT
 # -----------------------------------------------------------------------------
 out_dir = '/output/causal-fw2'
 eval_interval = 500
-log_interval = 1
+log_interval = 5
 checkpoint_interval = 2500
 eval_iters = 200
 eval_only = False # if True, script exits right after the first eval
@@ -378,6 +378,10 @@ while True:
         writer.add_scalar("LR", lr, iter_num)
         if running_mfu != -1.0:
             writer.add_scalar("MFU", running_mfu * 100, iter_num)
+        for name, param in model.named_parameters():
+            norm = torch.norm(param.grad.detach(), 2)
+            writer.add_scalar(f"GradientNorm/{param}", norm)
+
         print(f"iter {iter_num}: loss {lossf:.4f}, time {dt*1000:.2f}ms, mfu {running_mfu*100:.2f}%, ep {estimated_epoch:.2f}")
     iter_num += 1
     local_iter_num += 1
