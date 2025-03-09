@@ -380,7 +380,7 @@ while True:
                 ("wte", model.module.transformer.wte),
                 ("wpe", model.module.transformer.wpe),
                 *[
-                    (f"h_{i}", model.module.transformer.h[i]) for i in config["n_layer"]
+                    (f"h_{i}", model.module.transformer.h[i]) for i in range(config["n_layer"])
                 ]
         ]:
             norm = torch.norm(torch.stack([torch.norm(param.grad.detach()) for param in layer.parameters()]), 2)
