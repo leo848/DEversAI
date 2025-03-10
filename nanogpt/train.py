@@ -124,7 +124,7 @@ def get_all_data_files(split):
     random.shuffle(files)
     return files
 
-data_epoch = {split: 0 for split in ("train", "val")}
+data_epoch = {split: -1 for split in ("train", "val")}
 data_file_stack = {split: [] for split in ("train", "val")}
 data_ix_stack = {split: [] for split in ("train", "val")}
 
