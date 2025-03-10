@@ -35,7 +35,7 @@ from gpt import GPTConfig, GPT
 # -----------------------------------------------------------------------------
 out_dir = '/output/causal-fw2'
 eval_interval = 500
-log_interval = 5
+log_interval = 10
 checkpoint_interval = 2500
 eval_iters = 200
 eval_only = False # if True, script exits right after the first eval
@@ -129,7 +129,7 @@ data_file_stack = {split: [] for split in ("train", "val")}
 data_ix_stack = {split: [] for split in ("train", "val")}
 
 def get_estimated_epoch(split: str):
-    return len(data_file_stack[split]) / len(get_all_data_files(split))
+    return data_epoch[split] + (1 - len(data_file_stack[split]) / len(get_all_data_files(split)))
 
 def get_batch(split: str, retries=10):
     assert split in {"train", "val"}
@@ -141,7 +141,7 @@ def get_batch(split: str, retries=10):
         if master_process:
             print(f"{split} epoch {data_epoch[split]}")
         data_file_stack[split] = get_all_data_files(split)
-        data_ix_stack[split] = [-1]
+        data_ix_stack[split] = [-1] # sentinel
     try:
         filename = cast(str, data_file_stack[split][-1])
         data = np.memmap(
@@ -151,12 +151,14 @@ def get_batch(split: str, retries=10):
         )
 
         if len(data_ix_stack[split]) == 1 and data_ix_stack[split][0] == -1: # sentinel
+            offset = random.randint(0, block_size)
             indices = list(range(
-                len(data) * ddp_rank // ddp_world_size,
+                len(data) * ddp_rank // ddp_world_size + offset,
                 len(data) * (ddp_rank + 1) // ddp_world_size - block_size,
+                block_size,
             ))
             random.shuffle(indices)
-            data_ix_stack[split] = indices[:int(len(indices) * 0.1)]
+            data_ix_stack[split] = indices
         if len(data_ix_stack[split]) < batch_size:
             data_file_stack[split].pop()
             data_ix_stack[split] = [-1]
