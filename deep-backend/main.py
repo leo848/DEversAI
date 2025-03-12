@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import datetime
 from typing import Annotated
 from fastapi import FastAPI, HTTPException, WebSocket
 from fastapi.encoders import jsonable_encoder
@@ -86,28 +87,32 @@ async def websocket_endpoint(websocket: WebSocket):
                 input_tensor = torch.tensor([request.action.token_input]).to(device)
 
                 with torch.no_grad(), torch.cuda.stream(stream):
+                    rest_tokens = []
+                    last_send = datetime.datetime.now()
                     for token in model.generate_generator(
                         input_tensor,
                         max_new_tokens=100,
                         temperature=0.8,
                         top_k=200,
                     ):
-                        await websocket.send_json(
-                            jsonable_encoder(
-                                InferenceResponse(
-                                    type=request.action.type,
-                                    request_id=request.request_id,
-                                    tokens=[token],
-                                    done=False
+                        rest_tokens.append(token)
+                        if datetime.datetime.now() - last_send < datetime.timedelta(seconds=0.1):
+                            await websocket.send_json(
+                                jsonable_encoder(
+                                    InferenceResponse(
+                                        type=request.action.type,
+                                        request_id=request.request_id,
+                                        tokens=rest_tokens,
+                                        done=False
+                                    )
                                 )
                             )
-                        )
                 await websocket.send_json(
                     jsonable_encoder(
                         InferenceResponse(
                             type=request.action.type,
                             request_id=request.request_id,
-                            tokens=[],
+                            tokens=rest_tokens,
                             done=True
                         )
                     )
