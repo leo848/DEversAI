@@ -83,8 +83,6 @@ async def websocket_endpoint(client_ws: WebSocket):
     try:
         while True:
             message = await client_ws.receive_text()
-            await client_ws.send_text(message)
-            logger.info(f"message: {message}")
             data = json.loads(message)
             request = RequestUnion(**data)  # Auto-detect request type
             
@@ -102,7 +100,7 @@ async def websocket_endpoint(client_ws: WebSocket):
                         if response.get("request_id") == request_id:
                             await client_ws.send_text(response_text)
             else:
-                print(f"Unknown request: {request}")
+                raise Exception(f"Unknown request: {request}")
     except WebSocketDisconnect:
         pass
     except Exception as e:
