@@ -81,6 +81,7 @@ async def websocket_endpoint(client_ws: WebSocket):
     try:
         while True:
             message = await client_ws.receive_text()
+            print(message)
             data = json.loads(message)
             request = RequestUnion(**data)  # Auto-detect request type
             
