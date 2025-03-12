@@ -4,12 +4,12 @@ from pydantic import BaseModel, Field
 class BaseRequest(BaseModel):
     request_id: str
 
-class InferenceRequest(BaseRequest):
+class InferenceRequest(BaseModel):
     type: Literal["autoregressiveInference"]
     model_id: str
     token_input: list[int]
 
-class DistributionRequest(BaseRequest):
+class DistributionRequest(BaseModel):
     type: Literal["distributionInference"]
     model_id: str
     token_input: list[int]

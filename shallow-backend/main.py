@@ -84,7 +84,7 @@ async def websocket_endpoint(client_ws: WebSocket):
             data = json.loads(message)
             request = RequestUnion(**data)  # Auto-detect request type
             
-            if isinstance(request, InferenceRequest):
+            if isinstance(request.action, InferenceRequest):
                 request_id = request.request_id
                 active_clients[request_id] = client_ws  # Store client connection
                 
@@ -97,9 +97,12 @@ async def websocket_endpoint(client_ws: WebSocket):
                         response = json.loads(response_text)
                         if response.get("request_id") == request_id:
                             await client_ws.send_text(response_text)
+            else:
+                print(f"Unknown request: {request}")
 
     except Exception as e:
         print(f"WebSocket error: {e}")
+        raise
     finally:
         if request_id and request_id in active_clients:
             del active_clients[request_id]  # Cleanup
