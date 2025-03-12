@@ -6,6 +6,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import scoped_session
 import numpy as np
 import json
+import websockets
 import requests
 from models import LogitsRequest, RequestUnion, InferenceRequest
 from validate import validate_model_name
@@ -97,8 +98,6 @@ async def websocket_endpoint(client_ws: WebSocket):
                         if response.get("request_id") == request_id:
                             await client_ws.send_text(response_text)
 
-    except WebSocketDisconnect:
-        pass  # Client disconnected
     except Exception as e:
         print(f"WebSocket error: {e}")
     finally:
