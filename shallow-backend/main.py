@@ -89,19 +89,14 @@ async def websocket_endpoint(client_ws: WebSocket):
             if isinstance(request.action, InferenceRequest):
                 request_id = request.request_id
 
-                await client_ws.send_text(f"requested")
-
                 active_clients[request_id] = client_ws  # Store client connection
                 
                 # Forward the request to Kira
                 async with websockets.connect(DEEP_URL_WS) as kira_ws:
                     await kira_ws.send(message)
 
-                    await client_ws.send_text(f"connected")
-
                     # Relay responses back to the correct client
                     async for response_text in kira_ws:
-                        await client_ws.send_text(f"received")
                         response = json.loads(response_text)
                         if response.get("request_id") == request_id:
                             await client_ws.send_text(response_text)
