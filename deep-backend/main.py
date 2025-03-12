@@ -107,6 +107,7 @@ async def websocket_endpoint(websocket: WebSocket):
                                     )
                                 )
                             )
+                            rest_tokens = []
                 await websocket.send_json(
                     jsonable_encoder(
                         InferenceResponse(

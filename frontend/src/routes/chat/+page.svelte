@@ -72,7 +72,8 @@
 		<div class="w-full">
 			<div></div>
 			<textarea
-				class="w-full resize-none overflow-scroll rounded-xl border-2 border-gray-200 text-xl focus:border-gray-400"
+	   			spellcheck={false}
+				class="w-full resize-none overflow-scroll rounded-xl border-2 border-gray-200 focus:border-gray-400"
 				rows={10}
 				bind:value={inputString}
 			></textarea>
