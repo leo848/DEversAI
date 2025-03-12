@@ -85,9 +85,14 @@ async def websocket_endpoint(client_ws: WebSocket):
             message = await client_ws.receive_text()
             data = json.loads(message)
             request = RequestUnion(**data)  # Auto-detect request type
+
+            await client_ws.send_text(f"{request}")
             
             if isinstance(request.action, InferenceRequest):
                 request_id = request.request_id
+
+                await client_ws.send_text(f"{request_id}")
+
                 active_clients[request_id] = client_ws  # Store client connection
                 
                 # Forward the request to Kira
