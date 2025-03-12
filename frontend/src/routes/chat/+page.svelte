@@ -26,6 +26,18 @@
 		causal1: () => client.modelLogits('causal1', tokens.causal1)
 	});
 
+	let generate = $state({
+		causal1: async () => {
+			const gen = client.autoregressiveInference("causal1", vocabulary.tokenize(inputString));
+			console.log(gen);
+			for await (const tokens of gen) {
+				for (const token of tokens) {
+					inputString += vocabulary.tokens[token].toString();
+				}
+			}
+		}
+	})
+
 	function refreshModel(modelName: "anticausal1" | "causal1") {
 		processString[modelName] = inputString;
 		tokens[modelName] = vocabulary.tokenize(processString[modelName]);
@@ -58,11 +70,17 @@
 			{/await}
 		</div>
 		<div class="w-full">
+			<div></div>
 			<textarea
 				class="w-full resize-none overflow-scroll rounded-xl border-2 border-gray-200 text-xl focus:border-gray-400"
 				rows={10}
 				bind:value={inputString}
 			></textarea>
+			<div>
+				<button class="p-2 border border-2 border-gray-200 rounded-xl" onclick={generate.causal1}>
+					Kausale Vorhersage
+				</button>
+			</div>
 		</div>
 		<div class="min-w-200 border-2 border border-gray-200 rounded-xl p-2">
 			{#if inputString != processString.causal1}
