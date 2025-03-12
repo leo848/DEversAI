@@ -80,9 +80,24 @@ async def websocket_endpoint(websocket: WebSocket):
                 for token in test_tokens:
                     await websocket.send_json(
                         jsonable_encoder(
-                            InferenceResponse(type=request.action.type, request_id=request.request_id, tokens=[token])
+                            InferenceResponse(
+                                type=request.action.type,
+                                request_id=request.request_id,
+                                tokens=[token],
+                                done=False
+                            )
                         )
                     )
                     await asyncio.sleep(0.2)
+                await websocket.send_json(
+                    jsonable_encoder(
+                        InferenceResponse(
+                            type=request.action.type,
+                            request_id=request.request_id,
+                            tokens=[],
+                            done=True
+                        )
+                    )
+                )
     except Exception as e:
         print(f"connection closed: {e}")
