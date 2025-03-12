@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException, Depends, WebSocket
+import logging
+from fastapi import FastAPI, HTTPException, Depends, WebSocket, WebSocketDisconnect
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, text
@@ -27,6 +28,7 @@ def get_db():
         connection.close()
 
 app = FastAPI()
+logger = logging.getLogger("uvicon.error")
 
 app.add_middleware(
     CORSMiddleware,
@@ -81,7 +83,7 @@ async def websocket_endpoint(client_ws: WebSocket):
     try:
         while True:
             message = await client_ws.receive_text()
-            print(message)
+            logger.info(f"message: {message}")
             data = json.loads(message)
             request = RequestUnion(**data)  # Auto-detect request type
             
@@ -100,7 +102,8 @@ async def websocket_endpoint(client_ws: WebSocket):
                             await client_ws.send_text(response_text)
             else:
                 print(f"Unknown request: {request}")
-
+    except WebSocketDisconnect:
+        pass
     except Exception as e:
         print(f"WebSocket error: {e}")
         raise
