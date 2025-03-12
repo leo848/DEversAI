@@ -35,8 +35,17 @@
 					inputString += vocabulary.tokens[token].toString();
 				}
 			}
+		},
+		anticausal1: async () => {
+			const gen = client.autoregressiveInference("anticausal1", vocabulary.tokenize(inputString));
+			console.log(gen);
+			for await (const tokens of gen) {
+				for (const token of tokens) {
+					inputString = vocabulary.tokens[token].toString() + inputString;
+				}
+			}
 		}
-	})
+	});
 
 	function refreshModel(modelName: "anticausal1" | "causal1") {
 		processString[modelName] = inputString;
@@ -70,7 +79,11 @@
 			{/await}
 		</div>
 		<div class="w-full">
-			<div></div>
+			<div>
+				<button class="p-2 border border-2 border-gray-200 rounded-xl" onclick={generate.anticausal1}>
+					Antikausale Vorhersage
+				</button>
+			</div>
 			<textarea
 	   			spellcheck={false}
 				class="w-full resize-none overflow-scroll rounded-xl border-2 border-gray-200 focus:border-gray-400"
