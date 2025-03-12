@@ -21,6 +21,7 @@ class InferenceResponse(BaseModel):
     type: Literal["autoregressiveInference"]
     request_id: str
     tokens: list[int]
+    done: bool = False
 
 class LogitsRequest(BaseModel):
     token_input: list[int]
