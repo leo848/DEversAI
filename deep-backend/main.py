@@ -86,7 +86,12 @@ async def websocket_endpoint(websocket: WebSocket):
                 input_tensor = torch.tensor([request.action.token_input]).to(device)
 
                 with torch.no_grad(), torch.cuda.stream(stream):
-                    for token in model.generate_generator(input_tensor):
+                    for token in model.generate_generator(
+                        input_tensor,
+                        max_new_tokens=100,
+                        temperature=0.8,
+                        top_k=200,
+                    ):
                         await websocket.send_json(
                             jsonable_encoder(
                                 InferenceResponse(
