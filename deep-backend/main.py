@@ -80,7 +80,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     raise HTTPException(404, "Model not found")
 
                 model = MODELS[request.action.model_id]
-                stream = MODELS[request.action.model_id]
+                stream = STREAMS[request.action.model_id]
                 device = next(model.parameters()).device
 
                 input_tensor = torch.tensor([request.action.token_input]).to(device)
