@@ -151,11 +151,11 @@ def get_batch(split: str, retries=10):
         )
 
         if len(data_ix_stack[split]) == 1 and data_ix_stack[split][0] == -1: # sentinel
-            offset = random.randint(0, block_size)
+            offset = random.randint(0, block_size * 2)
             indices = list(range(
                 len(data) * ddp_rank // ddp_world_size + offset,
-                len(data) * (ddp_rank + 1) // ddp_world_size - block_size,
-                block_size,
+                len(data) * (ddp_rank + 1) // ddp_world_size - block_size * 2,
+                block_size * 2,
             ))
             random.shuffle(indices)
             data_ix_stack[split] = indices
