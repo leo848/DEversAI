@@ -76,19 +76,27 @@ async def websocket_endpoint(websocket: WebSocket):
             request = RequestUnion(**data)
 
             if isinstance(request.action, InferenceRequest):
-                test_tokens = [ 2574, 515, 383, 1187, 1826, 9553, 7092, 1269, 33 ]
-                for token in test_tokens:
-                    await websocket.send_json(
-                        jsonable_encoder(
-                            InferenceResponse(
-                                type=request.action.type,
-                                request_id=request.request_id,
-                                tokens=[token],
-                                done=False
+                if request.action.model_id not in MODELS:
+                    raise HTTPException(404, "Model not found")
+
+                model = MODELS[request.action.model_id]
+                stream = MODELS[request.action.model_id]
+                device = next(model.parameters()).device
+
+                input_tensor = torch.tensor([request.action.token_input]).to(device)
+
+                with torch.no_grad(), torch.cuda.stream(stream):
+                    for token in model.generate_generator(input_tensor):
+                        await websocket.send_json(
+                            jsonable_encoder(
+                                InferenceResponse(
+                                    type=request.action.type,
+                                    request_id=request.request_id,
+                                    tokens=[token],
+                                    done=False
+                                )
                             )
                         )
-                    )
-                    await asyncio.sleep(0.2)
                 await websocket.send_json(
                     jsonable_encoder(
                         InferenceResponse(
