@@ -29,7 +29,6 @@
 	let generate = $state({
 		causal1: async () => {
 			const gen = client.autoregressiveInference("causal1", vocabulary.tokenize(inputString));
-			console.log(gen);
 			for await (const tokens of gen) {
 				for (const token of tokens) {
 					inputString += vocabulary.tokens[token].toString();
@@ -37,10 +36,10 @@
 			}
 		},
 		anticausal1: async () => {
-			const gen = client.autoregressiveInference("anticausal1", vocabulary.tokenize(inputString));
-			console.log(gen);
+			const gen = client.autoregressiveInference("anticausal1", vocabulary.tokenize(inputString).toReversed());
 			for await (const tokens of gen) {
 				for (const token of tokens) {
+				console.log(vocabulary.tokens[token].toString())
 					inputString = vocabulary.tokens[token].toString() + inputString;
 				}
 			}
