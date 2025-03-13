@@ -31,6 +31,7 @@
 			const gen = client.autoregressiveInference("causal1", vocabulary.tokenize(inputString));
 			for await (const tokens of gen) {
 				for (const token of tokens) {
+					if (token == 0xff) return;
 					inputString += vocabulary.tokens[token].toString();
 				}
 			}
@@ -39,7 +40,7 @@
 			const gen = client.autoregressiveInference("anticausal1", vocabulary.tokenize(inputString).toReversed());
 			for await (const tokens of gen) {
 				for (const token of tokens) {
-				console.log(vocabulary.tokens[token].toString())
+					if (token == 0xff) return;
 					inputString = vocabulary.tokens[token].toString() + inputString;
 				}
 			}
