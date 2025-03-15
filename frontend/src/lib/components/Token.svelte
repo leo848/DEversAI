@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import type { Token } from '$lib/tokenizing/token';
-	import { scale } from 'svelte/transition';
+	import { Gradient } from '$lib/util/color';
+	import { scale as scaleAnim } from 'svelte/transition';
 
 	const {
 		token,
@@ -12,7 +13,9 @@
 		noPad = false,
 		noTransition = false,
 		color = 'gray',
-		onclick = gotoTokenPage
+		onclick = gotoTokenPage,
+		scale = 1,
+		hueValue
 	}: {
 		token: Token;
 		rawString?: boolean;
@@ -30,7 +33,9 @@
 			| 'pastelPink'
 			| 'pastelGreen'
 			| 'pastelYellow';
+		hueValue?: number;
 		onclick?: (token: Token) => void;
+		scale?: number;
 	} = $props();
 
 	function gotoTokenPage(token: Token) {
@@ -75,12 +80,18 @@
 	<a
 		href={`/token/${token.id()}`}
 		class={classList}
-		in:scale={{ duration: noTransition ? 0 : 400 }}
+		in:scaleAnim={{ duration: noTransition ? 0 : 400 }}
 		onclick={(e) => {
 			e.preventDefault();
 			onclick(token);
 		}}
+		style:color={hueValue
+			? Gradient.Viridis.sample(1 - hueValue)
+					.readable()
+					.toString()
+			: undefined}
+		style:background-color={hueValue ? Gradient.Viridis.sample(1 - hueValue).toString() : undefined}
 	>
-		<pre>{stringRepr}</pre>
+		<pre style:font-size={scale == 1 ? undefined : scale + 'em'}>{stringRepr}</pre>
 	</a>
 </div>

@@ -38,7 +38,7 @@
 			.attr('width', width)
 			.attr(
 				'style',
-				`max-width: 100%; height: auto; font: ${fontSize}px Fira Code, ui-monospace, monospace; font-weight: ${fontBold ? "bold" : "regular"}`
+				`max-width: 100%; height: auto; font: ${fontSize}px Fira Code, ui-monospace, monospace; font-weight: ${fontBold ? 'bold' : 'regular'}`
 			);
 
 		linkGroup = svg
@@ -136,12 +136,12 @@
 			.append('rect')
 			.attr('fill', (d) => (d.children ? '#fc6' : '#fc8'))
 			.attr('stroke', (d) => (d.children ? '#ca4' : '#c86'))
-			.attr('width', (d) => Math.max(fontSize, d.data.name.length * fontSize / 2 + fontSize))
+			.attr('width', (d) => Math.max(fontSize, (d.data.name.length * fontSize) / 2 + fontSize))
 			.attr('height', fontSize * 1.2)
-			.attr('x', (d) => -Math.max(fontSize, (d.data.name.length * fontSize / 2 + fontSize)) / 2)
-			.attr('y', -fontSize * 1.2 / 2)
-			.attr('rx', fontSize * 1.2 / 2)
-			.attr('ry', fontSize * 1.2 / 2);
+			.attr('x', (d) => -Math.max(fontSize, (d.data.name.length * fontSize) / 2 + fontSize) / 2)
+			.attr('y', (-fontSize * 1.2) / 2)
+			.attr('rx', (fontSize * 1.2) / 2)
+			.attr('ry', (fontSize * 1.2) / 2);
 
 		nodeEnter
 			.append('text')

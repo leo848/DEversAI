@@ -75,12 +75,12 @@ export class Vocabulary {
 	}
 
 	static fromVocabFile(content: string): Vocabulary {
-		const lines = content.split("\n");
+		const lines = content.split('\n');
 		const mergeRules: [number, number][] = [];
 		let currentId = 256;
 
 		for (const line of lines) {
-			const [left, right, id] = line.split(" ").map(str => Number(str));
+			const [left, right, id] = line.split(' ').map((str) => Number(str));
 			assert(id == currentId++);
 			mergeRules.push([left, right]);
 		}

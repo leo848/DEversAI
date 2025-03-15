@@ -1,7 +1,13 @@
 import type { Token } from '$lib/tokenizing/token';
-import {assert} from '$lib/util/typed';
-import { v4 as uuidv4 } from "uuid";
-import { InferenceRequest, InferenceResponse, LogitsResponse, TokenEmbeddings, TokenInfo } from './types';
+import { assert } from '$lib/util/typed';
+import { v4 as uuidv4 } from 'uuid';
+import {
+	InferenceRequest,
+	InferenceResponse,
+	LogitsResponse,
+	TokenEmbeddings,
+	TokenInfo
+} from './types';
 
 const pathUtils = {
 	join: function (...paths: string[]) {
@@ -30,7 +36,7 @@ export class Client {
 			this.httpsBase = `https://${base}/v0`;
 			this.wsUrl = `wss://${base}/ws`;
 		} else if (import.meta.env.PROD || import.meta.env.DEV) {
-			const base = "deversai.uber.space";
+			const base = 'deversai.uber.space';
 			this.httpsBase = `https://${base}/v0`;
 			this.wsUrl = `wss://${base}/ws`;
 		} else {
@@ -88,7 +94,7 @@ export class Client {
 		}
 	}
 
-	async* autoregressiveInference(modelName: string, tokens: Token[], controller?: AbortController) {
+	async *autoregressiveInference(modelName: string, tokens: Token[], controller?: AbortController) {
 		const ws = new WebSocket(this.wsUrl);
 		const queue: string[] = [];
 		let resolveMsg: ((value: string | PromiseLike<string>) => void) | null = null;
@@ -102,34 +108,35 @@ export class Client {
 			} else {
 				queue.push(message);
 			}
-		}
+		};
 
 		ws.onerror = (error) => {
-			console.error("WS-Fehler: ", error);
-		}
+			console.error('WS-Fehler: ', error);
+		};
 
 		ws.onclose = () => {
-			console.log("WS-Verbindung geschlossen.")
-		}
+			console.log('WS-Verbindung geschlossen.');
+		};
 
 		const request: InferenceRequest = {
 			request_id: uuidv4(),
 			action: {
-				type: "autoregressiveInference",
+				type: 'autoregressiveInference',
 				model_id: modelName,
-				token_input: tokens.map(t => t.id()),
+				token_input: tokens.map((t) => t.id())
 			}
-		}
+		};
 
 		ws.onopen = () => {
 			ws.send(JSON.stringify(request));
-		}
+		};
 
 		try {
 			while (!controller?.signal.aborted) {
-				const message = queue.length > 0
-					? queue.shift()!
-					: await new Promise<string>(resolve => resolveMsg = resolve);
+				const message =
+					queue.length > 0
+						? queue.shift()!
+						: await new Promise<string>((resolve) => (resolveMsg = resolve));
 
 				const decoded = await InferenceResponse.safeParseAsync(JSON.parse(message));
 				assert(decoded.success);

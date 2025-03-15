@@ -339,7 +339,7 @@ export class Gradient {
 
 	sample(t: number) {
 		assert(!Number.isNaN(t), 'value is nan');
-		assert(0 <= t && t <= 1, 'value not in range');
+		t = Math.min(1, Math.max(t, 0));
 		const leftIndex = Math.floor((this.stops.length - 2) * t);
 		const rightIndex = Math.floor((this.stops.length - 2) * t + 1);
 		const [leftColor, rightColor] = [leftIndex, rightIndex].map((index) => this.stops[index]);
