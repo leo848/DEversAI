@@ -9,9 +9,13 @@
 
 	const {
 		logitsResponse,
+		temperature = 1.0,
+		topK = 50256,
 		ontokenclick = undefined
 	}: {
 		logitsResponse: LogitsResponse;
+		temperature?: number;
+		topK?: number;
 		ontokenclick?: (token: Token) => void | undefined;
 	} = $props();
 
@@ -21,18 +25,27 @@
 
 	let topElements = $state(100);
 
+	const logits = $derived.by(() => {
+		return [...logitsResponse.logits]
+			.map((logit) => logit / temperature)
+			.map((logit, i) => [logit, i])
+			.toSorted(([l1, _i1], [l2, _i2]) => l2 - l1)
+			.map(([logit, i], currentI) => [currentI > topK ? -Infinity : logit, i])
+			.toSorted(([_l1, i1], [_l2, i2]) => i1 - i2)
+			.map(([logit, _i]) => logit);
+	});
 	const probs = $derived.by(() => {
-		const maxLogit = Math.max(...logitsResponse.logits);
-		const exps = logitsResponse.logits.map((logit) => Math.exp(logit - maxLogit));
+		const maxLogit = Math.max(...logits);
+		const exps = logits.map((logit) => Math.exp(logit - maxLogit));
 		const sumExps = exps.reduce((a, b) => a + b, 0);
 		return exps.map((exp) => exp / sumExps);
 	});
 
-	const shownTokens = $derived(allTokens.slice(0, topElements));
+	const shownTokens = $derived(allTokens.slice(0, Math.min(topK, topElements)));
 
 	function onscroll(evt: UIEvent) {
 		const { scrollHeight, scrollTop, clientHeight } = evt.target as HTMLDivElement;
-		if (Math.abs(scrollHeight - clientHeight - scrollTop) < 1) {
+		if (Math.abs(scrollHeight - clientHeight - scrollTop) < 1 && topElements < topK) {
 			topElements *= 2;
 			topElements = Math.min(50256, topElements);
 		}
@@ -60,7 +73,7 @@
 				<div class="col-span-3">
 					<TokenComponent {token} onclick={ontokenclick ? () => ontokenclick(token) : undefined} />
 				</div>
-				<div>{logitsResponse.logits[token.id()].toFixed(2)}</div>
+				<div>{logits[token.id()].toFixed(2)}</div>
 				<div>{(probs[token.id()] * 100).toFixed(2)}%</div>
 			{/each}
 		</div>
@@ -83,7 +96,7 @@
 								<div class="flex flex-col">
 									<div>Rang #{i + 1}</div>
 									<div class="whitespace-nowrap">
-										Logit {logitsResponse.logits[token.id()].toFixed(3)}
+										Logit {logits[token.id()].toFixed(3)}
 									</div>
 									<div class="flex flex-row gap-2 whitespace-nowrap">
 										<span>Token</span>
