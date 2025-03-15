@@ -2,6 +2,7 @@
 	import '../app.css';
 	import NavBar from '$lib/components/NavBar.svelte';
 	import DeversaiLogo from '$lib/components/DeversaiLogo.svelte';
+	import Deployment from '$lib/components/Deployment.svelte';
 
 	let { children } = $props();
 </script>
@@ -13,9 +14,14 @@
 			{@render children()}
 		</main>
 		<footer>
-			<div>
-				<hr class="border-1 mb-3 w-full border border-gray-200" />
-				<DeversaiLogo />
+			<hr class="border-1 mb-3 w-full border border-gray-200" />
+			<div class="flex flex-row">
+				<div>
+					<DeversaiLogo />
+				</div>
+				<div>
+					<Deployment />
+				</div>
 			</div>
 		</footer>
 	</div>
