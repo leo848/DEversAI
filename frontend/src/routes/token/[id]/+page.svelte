@@ -10,6 +10,8 @@
 	import { Client } from '$lib/backend/client';
 	import { sortByKey } from '$lib/util/array';
 	import TopLogits from '$lib/components/TopLogits.svelte';
+	import FullLoader from '$lib/components/FullLoader.svelte';
+	import EmergentSpinner from '$lib/components/EmergentSpinner.svelte';
 
 	const tokenIndex = $derived(+$page.params.id);
 	const token = $derived(vocabulary.tokens[tokenIndex]);
@@ -142,8 +144,7 @@
 				<div>
 					<div>anticausal1</div>
 					{#await predictions.anticausal1}
-						Lade <pre>anticausal1</pre>
-						...
+						<EmergentSpinner />
 					{:then logitsResponse}
 						<TopLogits {logitsResponse} />
 					{:catch error}
@@ -153,8 +154,7 @@
 				<div>
 					<div>causal1</div>
 					{#await predictions.causal1}
-						Lade <pre>causal1</pre>
-						...
+						<EmergentSpinner />
 					{:then logitsResponse}
 						<TopLogits {logitsResponse} />
 					{:catch error}
