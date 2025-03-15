@@ -50,7 +50,7 @@
 		</select>
 	</div>
 	{#if viewType == 'table'}
-		<div class="grid grid-cols-6 gap-y-4">
+		<div class="grid grid-cols-6">
 			<div class="font-bold">Rang</div>
 			<div class="col-span-3 font-bold">Token</div>
 			<div class="font-bold">Logit</div>
