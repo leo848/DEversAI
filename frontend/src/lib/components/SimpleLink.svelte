@@ -9,7 +9,7 @@
 	{target}
 	{tabindex}
 	on:click
-	class="underline underline-offset-2 hover:underline-offset-4 transition-all hover:text-black hover:font-bold active:text-gray-200"
+	class="underline underline-offset-2 transition-all hover:font-bold hover:text-black hover:underline-offset-4 active:text-gray-200"
 >
 	<slot>{href}</slot>
 </a>
