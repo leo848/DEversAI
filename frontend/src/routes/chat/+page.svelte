@@ -66,7 +66,7 @@
 
 	<div class="grid grid-cols-12 gap-4">
 		<div class="col-span-4"></div>
-		<div class="col-span-8 w-full">
+		<div class="col-span-8 grid w-full gap-4">
 			<div>
 				<button
 					class="rounded-xl border border-2 border-gray-200 p-2"

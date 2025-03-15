@@ -7,7 +7,7 @@
 
 <div class="flex h-full flex-row">
 	<NavBar />
-	<main class="grow">
+	<main class="mb-[10rem] grow">
 		{@render children()}
 	</main>
 </div>
