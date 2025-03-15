@@ -7,7 +7,7 @@
 
 Die Ergebnisse sind vielversprechend. Das Vorwärts-Modell liefert präzisere Vorhersagen, aber das neue Rückwärts-Modell kann auch gute Texte vom Ende aus verfassen - so bei Kochrezepten, Gesetzen und Bundestagsreden. Eigene komplexe Visualisierungen der Modellstrukturen zeigen, dass beide sprachliche Muster lernen, aber sich in Aufbau und Ausgabe unterscheiden.
 
-In der entwickelten interaktiven Webanwendung kann die KI ausprobiert und getestet werden. Die Resultate belegen, dass Textverarbeitungsrichtung einen wesentlichen Einfluss auf die Leistungsfähigkeit von KI in der Sprachverarbeitung hat.`
+In der entwickelten interaktiven Webanwendung kann die KI ausprobiert und getestet werden. Die Resultate belegen, dass Textverarbeitungsrichtung einen wesentlichen Einfluss auf die Leistungsfähigkeit von KI in der Sprachverarbeitung hat.`;
 
 	const shortDesc = $derived(showNew ? shortDescNew : shortDescOld);
 </script>
@@ -15,7 +15,7 @@ In der entwickelten interaktiven Webanwendung kann die KI ausprobiert und getest
 <div class="container min-h-[100vh] min-w-full bg-slate-100 py-8">
 	<div class="prose mx-auto rounded-xl bg-white p-8 shadow-lg">
 		<h1>{title}</h1>
-		{#each shortDesc.split("\n\n") as par}
+		{#each shortDesc.split('\n\n') as par}
 			<p>{par}</p>
 		{/each}
 	</div>

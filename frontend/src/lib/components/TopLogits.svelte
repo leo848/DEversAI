@@ -74,6 +74,7 @@
 								{token}
 								hueValue={remap([-5, 0], [0, 1])(Math.log(probs[token.id()]))}
 								scale={Math.sqrt(probs[token.id()] * 100)}
+								onclick={ontokenclick ? () => ontokenclick(token) : undefined}
 							/>
 						{/snippet}
 						{#snippet tooltip()}
@@ -86,7 +87,12 @@
 									</div>
 									<div class="flex flex-row gap-2 whitespace-nowrap">
 										<span>Token</span>
-										<TokenComponent size="md" noTransition {token} />
+										<TokenComponent
+											size="md"
+											noTransition
+											{token}
+											onclick={ontokenclick ? () => ontokenclick(token) : undefined}
+										/>
 									</div>
 									<div class="whitespace-nowrap">Token-ID {token.id()}</div>
 								</div>

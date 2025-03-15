@@ -85,48 +85,50 @@
 					Kausale Vorhersage
 				</button>
 			</div>
-		</div>
-		<div class="min-w-200 col-span-2 rounded-xl border border-2 border-gray-200 p-2">
-			{#if inputString != processString.causal1}
-				<div class="w-full p-2 text-xl" transition:slide={{ axis: 'y' }}>
-					<button class="rounded bg-fire-400 p-2" onclick={() => refreshModel('causal1')}
-						>Aktualisieren</button
-					>
+			<div class="grid grid-cols-12 gap-4">
+				<div class="min-w-200 col-span-6 rounded-xl border border-2 border-gray-200 p-2">
+					{#if inputString != processString.anticausal1}
+						<div class="w-full p-2 text-xl" transition:slide={{ axis: 'y' }}>
+							<button class="rounded bg-fire-400 p-2" onclick={() => refreshModel('anticausal1')}
+								>Aktualisieren</button
+							>
+						</div>
+					{/if}
+					{#await logitsInference.anticausal1()}
+						<EmergentSpinner />
+					{:then logitsResponse}
+						<TopLogits
+							{logitsResponse}
+							ontokenclick={(token) => {
+								inputString = token.toString() + inputString;
+							}}
+						/>
+					{:catch error}
+						{error}
+					{/await}
 				</div>
-			{/if}
-			{#await logitsInference.causal1()}
-				<EmergentSpinner />
-			{:then logitsResponse}
-				<TopLogits
-					{logitsResponse}
-					ontokenclick={(token) => {
-						inputString += token.toString();
-					}}
-				/>
-			{:catch error}
-				{error}
-			{/await}
-		</div>
-		<div class="min-w-200 col-span-2 rounded-xl border border-2 border-gray-200 p-2">
-			{#if inputString != processString.anticausal1}
-				<div class="w-full p-2 text-xl" transition:slide={{ axis: 'y' }}>
-					<button class="rounded bg-fire-400 p-2" onclick={() => refreshModel('anticausal1')}
-						>Aktualisieren</button
-					>
+				<div class="min-w-200 col-span-6 rounded-xl border border-2 border-gray-200 p-2">
+					{#if inputString != processString.causal1}
+						<div class="w-full p-2 text-xl" transition:slide={{ axis: 'y' }}>
+							<button class="rounded bg-fire-400 p-2" onclick={() => refreshModel('causal1')}
+								>Aktualisieren</button
+							>
+						</div>
+					{/if}
+					{#await logitsInference.causal1()}
+						<EmergentSpinner />
+					{:then logitsResponse}
+						<TopLogits
+							{logitsResponse}
+							ontokenclick={(token) => {
+								inputString += token.toString();
+							}}
+						/>
+					{:catch error}
+						{error}
+					{/await}
 				</div>
-			{/if}
-			{#await logitsInference.anticausal1()}
-				<EmergentSpinner />
-			{:then logitsResponse}
-				<TopLogits
-					{logitsResponse}
-					ontokenclick={(token) => {
-						inputString = token.toString() + inputString;
-					}}
-				/>
-			{:catch error}
-				{error}
-			{/await}
+			</div>
 		</div>
 	</div>
 </div>
