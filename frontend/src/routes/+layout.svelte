@@ -15,7 +15,7 @@
 		</main>
 		<footer>
 			<hr class="border-1 mb-3 w-full border border-gray-200" />
-			<div class="grid grid-cols-6">
+			<div class="grid grid-cols-6 p-4">
 				<div class="col-span-6 flex flex-col gap-2 xl:col-span-2">
 					<DeversaiLogo />
 					<Deployment />

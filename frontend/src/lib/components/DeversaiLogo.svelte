@@ -3,7 +3,7 @@
 </script>
 
 <a
-	class="deversai-logo display-block group m-4 inline-block w-[444px] rounded-2xl border border-4 border-gray-200 p-8 text-left text-white transition-all hover:scale-105"
+	class="deversai-logo display-block group m-4 inline-block w-[444px] rounded-2xl border border-4 border-gray-200 p-4 text-left text-white transition-all hover:scale-105"
 	href="/"
 	style:background={Gradient.Viridis.reverse().css('-45deg')}
 >
