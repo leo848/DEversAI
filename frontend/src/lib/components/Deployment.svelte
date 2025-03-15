@@ -13,6 +13,7 @@
 {#if isDeployed}
 	<div class="mt-4">
 		<div class="flex flex-row items-center gap-2">
+			<div class="h-4 w-4 rounded-full opacity-40" style:background-color="#0a0"></div>
 			<div class="opacity-50">{commitHash}</div>
 			<div class="opacity-90">
 				<SimpleLink href={commitLink}>{commitMsg}</SimpleLink>
