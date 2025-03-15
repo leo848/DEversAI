@@ -1,11 +1,11 @@
 <script lang="ts">
 	import SimpleLink from '$lib/components/SimpleLink.svelte';
 
-	const isDeployed = import.meta.env.VERCEL;
+	const isDeployed = process.env.VERCEL;
 
-	const fullCommitHash = import.meta.env.VERCEL_GIT_COMMIT_SHA;
+	const fullCommitHash = process.env.VERCEL_GIT_COMMIT_SHA;
 	const commitHash = fullCommitHash?.slice(0, 7);
-	const commitMsg = import.meta.env.VERCEL_GIT_COMMIT_MESSAGE;
+	const commitMsg = process.env.VERCEL_GIT_COMMIT_MESSAGE;
 
 	const commitLink = `https://github.com/leo848/deversai/commit/${fullCommitHash}`;
 </script>
