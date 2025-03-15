@@ -7,7 +7,7 @@
 	const commitHash = fullCommitHash?.slice(0, 7);
 	const commitMsg = import.meta.env.VERCEL_GIT_COMMIT_MESSAGE;
 
-	const commitLink = `https://github.com/leo848/jufo2024-frontend/commit/${fullCommitHash}`;
+	const commitLink = `https://github.com/leo848/deversai/commit/${fullCommitHash}`;
 </script>
 
 {#if isDeployed}
