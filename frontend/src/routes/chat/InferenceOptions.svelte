@@ -1,0 +1,45 @@
+<script lang="ts">
+	let {
+		value = $bindable()
+	}: {
+		value: {
+			maxTokens_log: number;
+			temperature: number;
+			topK_log: number;
+			syntheticWait_millis: number;
+		};
+	} = $props();
+</script>
+
+<div class="flex flex-col gap-4 text-lg">
+	<div class="flex flex-col">
+		<div>Maximal erzeugte Tokens: <b>{Math.round(Math.exp(value.maxTokens_log))}</b></div>
+		<input
+			type="range"
+			bind:value={value.maxTokens_log}
+			min={Math.log(1)}
+			max={Math.log(1001)}
+			step={0.001}
+		/>
+	</div>
+	<div class="flex flex-col">
+		<div>Temperatur: <b>{value.temperature}</b></div>
+		<input type="range" bind:value={value.temperature} min={0.1} max={1.5} step={0.025} />
+	</div>
+	<div class="flex flex-col">
+		<div>
+			Top-K: <b>{((v) => (v > 50200 ? '–' : v))(Math.round(Math.exp(value.topK_log)))}</b>
+		</div>
+		<input
+			type="range"
+			bind:value={value.topK_log}
+			min={Math.log(1)}
+			max={Math.log(50261)}
+			step={0.001}
+		/>
+	</div>
+	<div class="flex flex-col">
+		<div>Wartezeit: <b>{(value.syntheticWait_millis / 1000).toFixed(1)}</b>s</div>
+		<input type="range" bind:value={value.syntheticWait_millis} min={0} max={2000} step={10} />
+	</div>
+</div>

@@ -5,6 +5,7 @@
 	import TopLogits from '$lib/components/TopLogits.svelte';
 	import vocabulary from '$lib/tokenizing/german50000';
 	import SimpleInferenceButton from './SimpleInferenceButton.svelte';
+	import InferenceOptions from './InferenceOptions.svelte';
 	import type { Token } from '$lib/tokenizing/token';
 	import { slide } from 'svelte/transition';
 
@@ -83,44 +84,7 @@
 	<div class="grid grid-cols-12 gap-4">
 		<div class="col-span-4">
 			<BorderSection title="Einstellungen">
-				<div class="flex flex-col gap-4 text-lg">
-					<div class="flex flex-col">
-						<div>Maximal erzeugte Tokens: <b>{Math.round(Math.exp(options.maxTokens_log))}</b></div>
-						<input
-							type="range"
-							bind:value={options.maxTokens_log}
-							min={Math.log(1)}
-							max={Math.log(1001)}
-							step={0.001}
-						/>
-					</div>
-					<div class="flex flex-col">
-						<div>Temperatur: <b>{options.temperature}</b></div>
-						<input type="range" bind:value={options.temperature} min={0.1} max={1.5} step={0.025} />
-					</div>
-					<div class="flex flex-col">
-						<div>
-							Top-K: <b>{((v) => (v > 50200 ? '–' : v))(Math.round(Math.exp(options.topK_log)))}</b>
-						</div>
-						<input
-							type="range"
-							bind:value={options.topK_log}
-							min={Math.log(1)}
-							max={Math.log(50261)}
-							step={0.001}
-						/>
-					</div>
-					<div class="flex flex-col">
-						<div>Wartezeit: <b>{(options.syntheticWait_millis / 1000).toFixed(1)}</b>s</div>
-						<input
-							type="range"
-							bind:value={options.syntheticWait_millis}
-							min={0}
-							max={2000}
-							step={10}
-						/>
-					</div>
-				</div>
+				<InferenceOptions bind:value={options} />
 			</BorderSection>
 		</div>
 		<div class="col-span-8 grid w-full gap-4">
