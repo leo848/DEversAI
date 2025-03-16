@@ -20,12 +20,14 @@ engine: Engine = create_engine(
     DATABASE_URL, connect_args={"check_same_thread": False}, future=True
 )
 
+
 def get_db():
     connection = engine.connect()
     try:
         yield connection
     finally:
         connection.close()
+
 
 app = FastAPI()
 logger = logging.getLogger("uvicon.error")
@@ -42,9 +44,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/")
 def root_route():
     return {"status": "OK"}
+
 
 @app.get("/v0/token/{token_id}/info")
 def token_info(token_id: int, db: scoped_session = Depends(get_db)):
@@ -63,8 +67,18 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
         "embedding_768d": {
             "causal1": causal1_embeddings[token_id].tolist(),
             "anticausal1": anticausal1_embeddings[token_id].tolist(),
-        }
+        },
     }
+
+
+@app.get("/v0/embedding/{model_name}/{dim}")
+def embedding_dim_info(model_name: str, dim: int):
+    validate_model_name(model_name)
+    if dim < 0 or dim >= 768:
+        raise HTTPException(404, "Dim not found")
+    embeddings = np.load("assets/embedding/768d/{model_name}.npy")
+    return {"token_values": embeddings[:, dim].tolist()}
+
 
 @app.get("/v0/tokens/{model_name}/embeddings")
 def get_embeddings(model_name: str):
@@ -80,15 +94,17 @@ def get_embeddings(model_name: str):
     except IOError:
         raise HTTPException(404, "Model not found")
 
+
 # Mapping from request_id -> client WebSocket
 active_clients: dict[str, WebSocket] = {}
+
 
 @app.websocket("/ws")
 async def websocket_endpoint(client_ws: WebSocket):
     """Handles incoming WebSocket connections from clients."""
     await client_ws.accept()
     request_id = None  # Track the active request ID for cleanup
-    
+
     try:
         while True:
             message = await client_ws.receive_text()
@@ -99,7 +115,7 @@ async def websocket_endpoint(client_ws: WebSocket):
                 request_id = request.request_id
 
                 active_clients[request_id] = client_ws  # Store client connection
-                
+
                 # Forward the request to Kira
                 async with websockets.connect(DEEP_URL_WS) as kira_ws:
                     await kira_ws.send(message)
@@ -120,13 +136,11 @@ async def websocket_endpoint(client_ws: WebSocket):
         if request_id and request_id in active_clients:
             del active_clients[request_id]  # Cleanup
 
+
 @app.post("/v0/model/{model_name}/logits")
-async def model_logits(
-    model_name: str,
-    request: LogitsRequest
-):
-    
+async def model_logits(model_name: str, request: LogitsRequest):
+
     return requests.post(
         DEEP_URL_HTTP + "/model/" + model_name + "/logits",
-        json=jsonable_encoder(request)
+        json=jsonable_encoder(request),
     ).json()
