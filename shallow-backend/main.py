@@ -50,7 +50,6 @@ def root_route():
 def token_info(token_id: int, db: scoped_session = Depends(get_db)):
     query = text("SELECT examples FROM token_examples WHERE token_id = :token_id")
     result = db.execute(query, {"token_id": str(token_id)}).fetchone()
-    examples_idx = 0
 
     if not result:
         raise HTTPException(status_code=404, detail="Token ID not found")
@@ -60,10 +59,10 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
 
     return {
         "id": token_id,
-        "examples": json.loads(result[examples_idx]),
+        "examples": json.loads(result[0]),
         "embedding_768d": {
-            "causal1": causal1_embeddings[examples_idx].tolist(),
-            "anticausal1": anticausal1_embeddings[examples_idx].tolist(),
+            "causal1": causal1_embeddings[token_id].tolist(),
+            "anticausal1": anticausal1_embeddings[token_id].tolist(),
         }
     }
 
