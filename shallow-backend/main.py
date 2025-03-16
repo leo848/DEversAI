@@ -71,7 +71,7 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
     }
 
 
-@app.get("/v0/embedding/{model_name}/{dim}")
+@app.get("/v0/embedding/{model_name}/{dim}/info")
 def embedding_dim_info(model_name: str, dim: int):
     validate_model_name(model_name)
     if dim < 0 or dim >= 768:
