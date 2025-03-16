@@ -91,9 +91,9 @@ async def websocket_endpoint(websocket: WebSocket):
                     last_send = datetime.datetime.now()
                     for token in model.generate_generator(
                         input_tensor,
-                        max_new_tokens=100,
-                        temperature=0.8,
-                        top_k=200,
+                        max_new_tokens=request.action.config.num_tokens,
+                        temperature=request.action.config.temperature,
+                        top_k=request.action.config.top_k,
                     ):
                         rest_tokens.append(token)
                         if datetime.datetime.now() - last_send < datetime.timedelta(seconds=0.1):
