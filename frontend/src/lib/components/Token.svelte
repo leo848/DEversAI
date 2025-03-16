@@ -8,7 +8,6 @@
 		token,
 		rawString = false,
 		size = 'md',
-		showIndex = false,
 		proportion = null,
 		bold = 'hover',
 		noPad = false,
