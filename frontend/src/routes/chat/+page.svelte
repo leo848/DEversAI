@@ -40,7 +40,13 @@
 		anticausal1: async () => {
 			const gen = client.autoregressiveInference(
 				'anticausal1',
-				vocabulary.tokenize(inputString).toReversed()
+				vocabulary.tokenize(inputString).toReversed(),
+				{
+					num_tokens: Math.floor(Math.exp(options.maxTokens_log)),
+					temperature: options.temperature,
+					top_k: Math.floor(Math.exp(options.topK_log)),
+					synthetic_wait: options.syntheticWait_millis,
+				}
 			);
 			for await (const tokens of gen) {
 				for (const token of tokens) {

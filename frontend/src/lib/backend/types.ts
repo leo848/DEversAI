@@ -18,12 +18,21 @@ export const LogitsResponse = z.object({
 });
 export type LogitsResponse = z.infer<typeof LogitsResponse>;
 
+export const InferenceConfig = z.object({
+	num_tokens: z.number().int().optional(),
+	temperature: z.number().min(0).max(5).optional(),
+	top_k: z.number().int().optional(),
+	synthetic_wait: z.number().int().nonnegative().optional(),
+})
+export type InferenceConfig = z.infer<typeof InferenceConfig>;
+
 export const InferenceRequest = z.object({
 	request_id: z.string(),
 	action: z.object({
 		type: z.literal('autoregressiveInference'),
 		model_id: z.string(),
-		token_input: z.array(z.number())
+		token_input: z.array(z.number()),
+		config: InferenceConfig,
 	})
 });
 export type InferenceRequest = z.infer<typeof InferenceRequest>;

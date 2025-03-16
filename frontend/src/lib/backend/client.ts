@@ -2,6 +2,7 @@ import type { Token } from '$lib/tokenizing/token';
 import { assert } from '$lib/util/typed';
 import { v4 as uuidv4 } from 'uuid';
 import {
+	InferenceConfig,
 	InferenceRequest,
 	InferenceResponse,
 	LogitsResponse,
@@ -94,7 +95,7 @@ export class Client {
 		}
 	}
 
-	async *autoregressiveInference(modelName: string, tokens: Token[], controller?: AbortController) {
+	async *autoregressiveInference(modelName: string, tokens: Token[], config: InferenceConfig = {}, controller?: AbortController) {
 		const ws = new WebSocket(this.wsUrl);
 		const queue: string[] = [];
 		let resolveMsg: ((value: string | PromiseLike<string>) => void) | null = null;
@@ -123,7 +124,8 @@ export class Client {
 			action: {
 				type: 'autoregressiveInference',
 				model_id: modelName,
-				token_input: tokens.map((t) => t.id())
+				token_input: tokens.map((t) => t.id()),
+				config,
 			}
 		};
 
