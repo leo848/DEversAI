@@ -9,6 +9,7 @@
 		rawString = false,
 		size = 'md',
 		showIndex = false,
+		proportion = null,
 		bold = 'hover',
 		noPad = false,
 		noTransition = false,
@@ -19,6 +20,7 @@
 	}: {
 		token: Token;
 		rawString?: boolean;
+		proportion?: number | null;
 		bold?: 'hover' | boolean;
 		size?: 'md' | 'lg' | 'xl';
 		showIndex?: boolean;
@@ -72,7 +74,7 @@
 		bold: { hover: 'hover:font-bold', true: 'font-bold', false: 'font-normal' }['' + bold]
 	});
 	const classList = $derived(
-		`inline-block ${style.rounding} ${style.border} ${style.borderColor} ${style.bgColor} ${style.padding} font-mono ${style.textSize} ${style.bold} transition-all`
+		`inline-block ${style.rounding} ${style.border} ${style.borderColor} ${style.bgColor} ${style.padding} font-mono ${style.textSize} ${style.bold} transition-all flex flex-col`
 	);
 </script>
 
@@ -93,5 +95,10 @@
 		style:background-color={hueValue ? Gradient.Viridis.sample(1 - hueValue).toString() : undefined}
 	>
 		<pre style:font-size={scale == 1 ? undefined : scale + 'em'}>{stringRepr}</pre>
+		{#if proportion != null}
+			<div class="mx-auto w-full text-center font-sans text-sm font-normal">
+				{(proportion * 100).toFixed(proportion < 0.1 ? 2 : 1)}%
+			</div>
+		{/if}
 	</a>
 </div>

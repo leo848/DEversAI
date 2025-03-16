@@ -33,6 +33,8 @@
 		anticausal1: client.modelLogits('anticausal1', [token])
 	});
 
+	let showPercentages = $state(false);
+
 	function setTokenIndex(newTokenIndex: number) {
 		if (newTokenIndex != tokenIndex) {
 			inputTokenIndex = newTokenIndex;
@@ -96,6 +98,11 @@
 	</BorderSection>
 	<BorderSection title="Kinder">
 		<div class="grid grid-cols-2 gap-8">
+			<div class="col-span-2 flex flex-row justify-around">
+				<div>
+					Prozente anzeigen <input type="checkbox" bind:checked={showPercentages} />
+				</div>
+			</div>
 			{#each ['left', 'right'] as const as key}
 				<div class="flex flex-col gap-2">
 					<div class="text-xl">
@@ -103,7 +110,18 @@
 					</div>
 					<div class="flex flex-row flex-wrap gap-4">
 						{#each token.children[key] as child}
-							<Token token={child} />
+							{#if showPercentages}
+								{#await tokenData}
+									<Token token={child} />
+								{:then tokenData}
+									{@const ownCount = tokenData.occurrences.tokens[token.id()].count_transitive}
+									{@const childCount = tokenData.occurrences.tokens[child.id()].count_transitive}
+									{@const proportion = childCount / ownCount}
+									<Token token={child} {proportion} hueValue={proportion} />
+								{/await}
+							{:else}
+								<Token token={child} />
+							{/if}
 						{/each}
 					</div>
 				</div>

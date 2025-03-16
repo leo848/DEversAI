@@ -17,15 +17,25 @@
 	transition:scale
 	class="flex h-full flex-col rounded-xl border border-4 border-gray-200 bg-gray-100 p-4"
 >
-	{#each ['count_direct', 'count_transitive'] as const as key}
+	{#each ['count_transitive', 'count_direct'] as const as key}
 		{@const contained = !!tokenData.occurrences.tokens[token.id()]}
+		{@const directProportion = ((it) => it.count_direct / it.count_transitive)(
+			tokenData.occurrences.tokens[token.id()]
+		)}
 		{#if contained}
 			{@const freq = tokenData.occurrences.tokens[token.id()][key] / tokenData.occurrences.total}
 			{@const [base, exp] = freq.toExponential().split('e-').map(Number)}
 			<Tooltip>
 				{#snippet trigger()}
-					<div class:font-bold={key == 'count_direct'} class="text-2xl">
-						{base.toFixed(2)} × 10<sup>-{exp}</sup>
+					<div class="text-2xl">
+						<span class:font-bold={key == 'count_direct'}>
+							{base.toFixed(2)} × 10<sup>-{exp}</sup>
+						</span>
+						{#if key == 'count_direct'}
+							<span class="opacity-50">
+								({(directProportion * 100).toFixed(1)}%)
+							</span>
+						{/if}
 					</div>
 				{/snippet}
 				{#snippet tooltip()}
