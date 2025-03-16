@@ -50,6 +50,7 @@ errors.log
 # Temporarily ignore misc
 misc/
 *.pdf
+!Langfassung.pdf
 
 # SQLite databases
 *.db

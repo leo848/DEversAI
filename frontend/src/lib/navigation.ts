@@ -38,7 +38,7 @@ export const pages = [
 	},
 	{
 		title: 'Langfassung',
-		link: 'https://example.com',
+		link: '/Langfassung.pdf',
 		icon: {
 			icon: 'fluent:document-arrow-down-24-regular'
 		}

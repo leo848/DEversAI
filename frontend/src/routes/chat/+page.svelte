@@ -34,7 +34,7 @@
 				num_tokens: Math.floor(Math.exp(options.maxTokens_log)),
 				temperature: options.temperature,
 				top_k: Math.floor(Math.exp(options.topK_log)),
-				synthetic_wait: options.syntheticWait_millis
+				synthetic_wait: options.syntheticWait_millis / 1000,
 			});
 			inProgress.ongoing = true;
 			outer: for await (const tokens of gen) {
@@ -53,7 +53,7 @@
 					num_tokens: Math.floor(Math.exp(options.maxTokens_log)),
 					temperature: options.temperature,
 					top_k: Math.floor(Math.exp(options.topK_log)),
-					synthetic_wait: options.syntheticWait_millis
+					synthetic_wait: options.syntheticWait_millis / 1000,
 				}
 			);
 			inProgress.ongoing = true;
