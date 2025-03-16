@@ -104,11 +104,7 @@
 									</div>
 									<div class="flex flex-row gap-2 whitespace-nowrap">
 										<span>Token</span>
-										<TokenComponent
-											size="md"
-											noTransition
-											{token}
-										/>
+										<TokenComponent size="md" noTransition {token} />
 									</div>
 									<div class="whitespace-nowrap">Token-ID {token.id()}</div>
 								</div>

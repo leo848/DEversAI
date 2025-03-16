@@ -9,8 +9,8 @@
 	const round = (digits: number) => {
 		return (n: number) => {
 			return Math.round(n * 10 ** digits) / 10 ** digits;
-		}
-	}
+		};
+	};
 
 	let sensitivity = $state(round(2)(Math.log(0.2)));
 </script>
@@ -18,7 +18,10 @@
 <div>
 	<div>
 		Sensitivität Farbe: <b>{Math.exp(sensitivity).toFixed(2)}</b>
-		<button class="rounded bg-gray-100 ml-4" onclick={() => sensitivity = round(2)(Math.log(embeddingValuesMax))}>
+		<button
+			class="ml-4 rounded bg-gray-100"
+			onclick={() => (sensitivity = round(2)(Math.log(embeddingValuesMax)))}
+		>
 			= {embeddingValuesMax.toFixed(2)} (norm)
 		</button>
 	</div>

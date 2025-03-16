@@ -1,3 +1,13 @@
+<script context="module" lang="ts">
+	declare let process: {
+		env: {
+			VERCEL: 1 | undefined;
+			VERCEL_GIT_COMMIT_SHA: string | undefined;
+			VERCEL_GIT_COMMIT_MESSAGE: string | undefined;
+		};
+	};
+</script>
+
 <script lang="ts">
 	import SimpleLink from '$lib/components/SimpleLink.svelte';
 
