@@ -108,7 +108,6 @@
 											size="md"
 											noTransition
 											{token}
-											onclick={ontokenclick ? () => ontokenclick(token) : undefined}
 										/>
 									</div>
 									<div class="whitespace-nowrap">Token-ID {token.id()}</div>
