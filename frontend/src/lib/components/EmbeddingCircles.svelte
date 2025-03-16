@@ -4,18 +4,31 @@
 	import { normalize } from '$lib/util/math';
 	const { embeddingValues }: { embeddingValues: number[] } = $props();
 
-	let sensitivity = $state(Math.round(Math.log(0.2)));
+	const embeddingValuesMax = $derived(Math.max(...embeddingValues.map(Math.abs)));
+
+	const round = (digits: number) => {
+		return (n: number) => {
+			return Math.round(n * 10 ** digits) / 10 ** digits;
+		}
+	}
+
+	let sensitivity = $state(round(2)(Math.log(0.2)));
 </script>
 
 <div>
-	<div>Sensitivität Farbe: <b>{Math.exp(sensitivity).toFixed(2)}</b></div>
+	<div>
+		Sensitivität Farbe: <b>{Math.exp(sensitivity).toFixed(2)}</b>
+		<button class="rounded bg-gray-100 ml-4" onclick={() => sensitivity = round(2)(Math.log(embeddingValuesMax))}>
+			= {embeddingValuesMax.toFixed(2)} (norm)
+		</button>
+	</div>
 	<div>
 		<input
 			bind:value={sensitivity}
 			class="w-full"
 			type="range"
-			min={Math.floor(Math.log(0.01))}
-			max={Math.floor(Math.log(1))}
+			min={round(2)(Math.log(0.01))}
+			max={round(2)(Math.log(1))}
 			step={0.001}
 		/>
 	</div>
