@@ -91,7 +91,7 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
         },
         "occurrences": {
             "total": np.sum(occurrences_direct).item(),
-            **occurrence_dict,
+            "tokens": occurrence_dict,
         }
     }
 
