@@ -5,6 +5,7 @@
 	import TopLogits from '$lib/components/TopLogits.svelte';
 	import vocabulary from '$lib/tokenizing/german50000';
 	import SimpleInferenceButton from './SimpleInferenceButton.svelte';
+	import type { Token } from '$lib/tokenizing/token';
 	import { slide } from 'svelte/transition';
 
 	const client = new Client();
@@ -28,43 +29,31 @@
 		causal1: () => client.modelLogits('causal1', tokens.causal1)
 	});
 
-	let generate = $state({
-		causal1: async () => {
-			const gen = client.autoregressiveInference('causal1', vocabulary.tokenize(inputString), {
-				num_tokens: Math.floor(Math.exp(options.maxTokens_log)),
-				temperature: options.temperature,
-				top_k: Math.floor(Math.exp(options.topK_log)),
-				synthetic_wait: options.syntheticWait_millis / 1000,
-			});
+	const generate = $state((modelName: string) => {
+		const causality = modelName.includes('anticausal') ? 'anticausal' : 'causal';
+		const tokenInput = {
+			anticausal: (it: Token[]) => it.toReversed(),
+			causal: (it: Token[]) => it
+		}[causality](vocabulary.tokenize(inputString));
+		const gen = client.autoregressiveInference('causal1', tokenInput, {
+			num_tokens: Math.floor(Math.exp(options.maxTokens_log)),
+			temperature: options.temperature,
+			top_k: Math.floor(Math.exp(options.topK_log)),
+			synthetic_wait: options.syntheticWait_millis / 1000
+		});
+		return async () => {
 			inProgress.ongoing = true;
 			outer: for await (const tokens of gen) {
 				for (const token of tokens) {
 					if (token == 0xff) break outer;
-					inputString += vocabulary.tokens[token].toString();
+					({
+						causal: () => (inputString += vocabulary.tokens[token].toString()),
+						anticausal: () => (inputString = inputString + vocabulary.tokens[token].toString())
+					})[causality]();
 				}
 			}
 			inProgress.ongoing = false;
-		},
-		anticausal1: async () => {
-			const gen = client.autoregressiveInference(
-				'anticausal1',
-				vocabulary.tokenize(inputString).toReversed(),
-				{
-					num_tokens: Math.floor(Math.exp(options.maxTokens_log)),
-					temperature: options.temperature,
-					top_k: Math.floor(Math.exp(options.topK_log)),
-					synthetic_wait: options.syntheticWait_millis / 1000,
-				}
-			);
-			inProgress.ongoing = true;
-			outer: for await (const tokens of gen) {
-				for (const token of tokens) {
-					if (token == 0xff) break outer;
-					inputString = vocabulary.tokens[token].toString() + inputString;
-				}
-			}
-			inProgress.ongoing = false;
-		}
+		};
 	});
 
 	let inProgress = $state({
@@ -135,7 +124,11 @@
 			</BorderSection>
 		</div>
 		<div class="col-span-8 grid w-full gap-4">
-			<SimpleInferenceButton causality="anticausal" onclick={generate.anticausal1} disabled={inProgress.ongoing} />
+			<SimpleInferenceButton
+				causality="anticausal"
+				onclick={generate('anticausal1')}
+				disabled={inProgress.ongoing}
+			/>
 			<textarea
 				spellcheck={false}
 				class="w-full resize-none overflow-scroll rounded-xl border-2 border-gray-200 focus:border-gray-400"
@@ -143,7 +136,11 @@
 				rows={10}
 				bind:value={inputString}
 			></textarea>
-			<SimpleInferenceButton causality="causal" onclick={generate.causal1} disabled={inProgress.ongoing} />
+			<SimpleInferenceButton
+				causality="causal"
+				onclick={generate('causal1')}
+				disabled={inProgress.ongoing}
+			/>
 			<div class="grid grid-cols-12 gap-4">
 				<div class="col-span-6">
 					<BorderSection title="Rückinferenz" open={false}>
