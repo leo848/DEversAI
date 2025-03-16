@@ -13,6 +13,8 @@
 	import FullLoader from '$lib/components/FullLoader.svelte';
 	import EmergentSpinner from '$lib/components/EmergentSpinner.svelte';
 	import EmbeddingCircles from '$lib/components/EmbeddingCircles.svelte';
+	import Tooltip from '$lib/components/Tooltip.svelte';
+	import TokenOccurrence from './TokenOccurrence.svelte';
 
 	const tokenIndex = $derived(+$page.params.id);
 	const token = $derived(vocabulary.tokens[tokenIndex]);
@@ -45,6 +47,13 @@
 		{#key tokenIndex}
 			<Token {token} size="xl" />
 		{/key}
+		<div>
+			{#key token}
+				{#await tokenData then tokenData}
+					<TokenOccurrence {tokenData} {token} />
+				{/await}
+			{/key}
+		</div>
 		<div
 			class="flex flex-col content-stretch overflow-hidden rounded-xl border-4 border-gray-200 tabular-nums"
 		>
@@ -55,7 +64,7 @@
 						type="number"
 						bind:value={inputTokenIndex}
 						in:scale
-						onchange={(e) => setTokenIndex(inputTokenIndex ?? tokenIndex)}
+						onchange={() => setTokenIndex(inputTokenIndex ?? tokenIndex)}
 					/>
 				{/key}
 			</div>

@@ -6,6 +6,16 @@ export const TokenInfo = z.object({
 	embedding_768d: z.object({
 		causal1: z.array(z.number().finite()),
 		anticausal1: z.array(z.number().finite())
+	}),
+	occurrences: z.object({
+		total: z.number(),
+		tokens: z.record(
+			z.coerce.number().nonnegative(),
+			z.object({
+				count_direct: z.number().nonnegative(),
+				count_transitive: z.number().nonnegative()
+			})
+		)
 	})
 });
 export type TokenInfo = z.infer<typeof TokenInfo>;
