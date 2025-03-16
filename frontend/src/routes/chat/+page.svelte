@@ -35,7 +35,7 @@
 			anticausal: (it: Token[]) => it.toReversed(),
 			causal: (it: Token[]) => it
 		}[causality](vocabulary.tokenize(inputString));
-		const gen = client.autoregressiveInference('causal1', tokenInput, {
+		const gen = client.autoregressiveInference(modelName, tokenInput, {
 			num_tokens: Math.floor(Math.exp(options.maxTokens_log)),
 			temperature: options.temperature,
 			top_k: Math.floor(Math.exp(options.topK_log)),
