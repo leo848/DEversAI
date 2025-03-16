@@ -73,7 +73,7 @@
 				<div class="col-span-3">
 					<TokenComponent {token} onclick={ontokenclick ? () => ontokenclick(token) : undefined} />
 				</div>
-				<div>{logits[token.id()].toFixed(2)}</div>
+				<div>{logitsResponse.logits[token.id()].toFixed(2)}</div>
 				<div>{(probs[token.id()] * 100).toFixed(2)}%</div>
 			{/each}
 		</div>
@@ -96,7 +96,8 @@
 								<div class="flex flex-col">
 									<div>Rang #{i + 1}</div>
 									<div class="whitespace-nowrap">
-										Logit {logits[token.id()].toFixed(3)}
+										Logit {logitsResponse.logits[token.id()].toFixed(3)}
+										({logits[token.id()].toFixed(3)})
 									</div>
 									<div class="flex flex-row gap-2 whitespace-nowrap">
 										<span>Token</span>
