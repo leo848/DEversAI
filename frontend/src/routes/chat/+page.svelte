@@ -4,6 +4,7 @@
 	import EmergentSpinner from '$lib/components/EmergentSpinner.svelte';
 	import TopLogits from '$lib/components/TopLogits.svelte';
 	import vocabulary from '$lib/tokenizing/german50000';
+	import SimpleInferenceButton from './SimpleInferenceButton.svelte';
 	import { slide } from 'svelte/transition';
 
 	const client = new Client();
@@ -35,12 +36,14 @@
 				top_k: Math.floor(Math.exp(options.topK_log)),
 				synthetic_wait: options.syntheticWait_millis
 			});
-			for await (const tokens of gen) {
+			inProgress.ongoing = true;
+			outer: for await (const tokens of gen) {
 				for (const token of tokens) {
-					if (token == 0xff) return;
+					if (token == 0xff) break outer;
 					inputString += vocabulary.tokens[token].toString();
 				}
 			}
+			inProgress.ongoing = false;
 		},
 		anticausal1: async () => {
 			const gen = client.autoregressiveInference(
@@ -53,13 +56,19 @@
 					synthetic_wait: options.syntheticWait_millis
 				}
 			);
-			for await (const tokens of gen) {
+			inProgress.ongoing = true;
+			outer: for await (const tokens of gen) {
 				for (const token of tokens) {
-					if (token == 0xff) return;
+					if (token == 0xff) break outer;
 					inputString = vocabulary.tokens[token].toString() + inputString;
 				}
 			}
+			inProgress.ongoing = false;
 		}
+	});
+
+	let inProgress = $state({
+		ongoing: false
 	});
 
 	let options = $state({
@@ -126,25 +135,15 @@
 			</BorderSection>
 		</div>
 		<div class="col-span-8 grid w-full gap-4">
-			<div>
-				<button
-					class="rounded-xl border border-2 border-gray-200 p-2"
-					onclick={generate.anticausal1}
-				>
-					Antikausale Vorhersage
-				</button>
-			</div>
+			<SimpleInferenceButton causality="anticausal" onclick={generate.anticausal1} disabled={inProgress.ongoing} />
 			<textarea
 				spellcheck={false}
 				class="w-full resize-none overflow-scroll rounded-xl border-2 border-gray-200 focus:border-gray-400"
+				disabled={inProgress.ongoing}
 				rows={10}
 				bind:value={inputString}
 			></textarea>
-			<div>
-				<button class="rounded-xl border border-2 border-gray-200 p-2" onclick={generate.causal1}>
-					Kausale Vorhersage
-				</button>
-			</div>
+			<SimpleInferenceButton causality="causal" onclick={generate.causal1} disabled={inProgress.ongoing} />
 			<div class="grid grid-cols-12 gap-4">
 				<div class="col-span-6">
 					<BorderSection title="Rückinferenz" open={false}>
