@@ -10,10 +10,8 @@
 	import { Client } from '$lib/backend/client';
 	import { sortByKey } from '$lib/util/array';
 	import TopLogits from '$lib/components/TopLogits.svelte';
-	import FullLoader from '$lib/components/FullLoader.svelte';
 	import EmergentSpinner from '$lib/components/EmergentSpinner.svelte';
 	import EmbeddingCircles from '$lib/components/EmbeddingCircles.svelte';
-	import Tooltip from '$lib/components/Tooltip.svelte';
 	import TokenOccurrence from './TokenOccurrence.svelte';
 
 	const tokenIndex = $derived(+$page.params.id);
