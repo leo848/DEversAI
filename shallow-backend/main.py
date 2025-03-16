@@ -47,7 +47,7 @@ def root_route():
     return {"status": "OK"}
 
 @app.get("/v0/token/{token_id}/info")
-def get_token_examples(token_id: int, db: scoped_session = Depends(get_db)):
+def token_info(token_id: int, db: scoped_session = Depends(get_db)):
     query = text("SELECT examples FROM token_examples WHERE token_id = :token_id")
     result = db.execute(query, {"token_id": str(token_id)}).fetchone()
     examples_idx = 0
@@ -55,7 +55,17 @@ def get_token_examples(token_id: int, db: scoped_session = Depends(get_db)):
     if not result:
         raise HTTPException(status_code=404, detail="Token ID not found")
 
-    return {"id": token_id, "examples": json.loads(result[examples_idx])}
+    causal1_embeddings = np.load("assets/embedding/768d/causal1.npy")
+    anticausal1_embeddings = np.load("assets/embedding/768d/causal1.npy")
+
+    return {
+        "id": token_id,
+        "examples": json.loads(result[examples_idx]),
+        "embedding_768d": {
+            "causal1": causal1_embeddings[examples_idx].tolist(),
+            "anticausal1": anticausal1_embeddings[examples_idx].tolist(),
+        }
+    }
 
 @app.get("/v0/tokens/{model_name}/embeddings")
 def get_embeddings(model_name: str):
