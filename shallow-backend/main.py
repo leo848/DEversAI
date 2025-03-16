@@ -77,7 +77,10 @@ def embedding_dim_info(model_name: str, dim: int):
     if dim < 0 or dim >= 768:
         raise HTTPException(404, "Dim not found")
     embeddings = np.load("assets/embedding/768d/{model_name}.npy")
-    return {"token_values": embeddings[:, dim].tolist()}
+    return {
+        "dim": dim,
+        "token_values": embeddings[:, dim].tolist(),
+    }
 
 
 @app.get("/v0/tokens/{model_name}/embeddings")
