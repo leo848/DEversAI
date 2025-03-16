@@ -77,7 +77,7 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
     }
     for children in vocab["german-complete"].tokens[token_id].children:
         for child in children:
-            occurrence_dict[str(token_id)] = {
+            occurrence_dict[str(child.id())] = {
                 "count_direct": occurrences_direct[child.id()].item(),
                 "count_transitive": occurrences_transitive[child.id()].item(),
             }
