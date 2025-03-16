@@ -315,8 +315,7 @@ fn tokenize_corpora() {
     let bpe_state = BpeState::synced_with_file("/vocab/fineweb2.vocab");
 
     let paths = chain!(
-        (200..216).rev().map(|i| format!("train/fw2-shard-{i:05}.bin")),
-        (0..16).map(|i| format!("val/fw2-shard-{i:05}.bin")),
+        (200..1000).rev().map(|i| format!("train/fw2-shard-{i:05}.bin")),
     )
     .map(PathBuf::from)
     .collect_vec();
