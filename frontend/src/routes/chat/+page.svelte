@@ -46,7 +46,7 @@
 			inProgress.ongoing = true;
 			outer: for await (const tokens of gen) {
 				for (const token of tokens) {
-					if (token == 0xff) break outer;
+					if (token == 0xff && options.respectEot) break outer;
 					({
 						causal: () => (inputString += vocabulary.tokens[token].toString()),
 						anticausal: () => (inputString = vocabulary.tokens[token].toString() + inputString)
@@ -65,7 +65,8 @@
 		temperature: 0.8,
 		topK_log: Math.log(200),
 		maxTokens_log: Math.log(200),
-		syntheticWait_millis: 0
+		syntheticWait_millis: 0,
+		respectEot: true
 	});
 
 	function refreshModel(modelName: 'anticausal1' | 'causal1') {

@@ -7,6 +7,7 @@
 			temperature: number;
 			topK_log: number;
 			syntheticWait_millis: number;
+			respectEot: boolean;
 		};
 	} = $props();
 </script>
@@ -41,5 +42,8 @@
 	<div class="flex flex-col">
 		<div>Wartezeit: <b>{(value.syntheticWait_millis / 1000).toFixed(1)}</b>s</div>
 		<input type="range" bind:value={value.syntheticWait_millis} min={0} max={2000} step={10} />
+	</div>
+	<div class="flex flex-col">
+		<div>EOT (0xFF) respektieren: <input type="checkbox" bind:checked={value.respectEot} /></div>
 	</div>
 </div>
