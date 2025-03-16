@@ -42,3 +42,17 @@ export function sortByKey<T, K = T>(
 		}
 	});
 }
+
+export function sortByKeys<T, K = T>(
+	arr: T[],
+	keys: K[],
+	options: { reverse: boolean } = { reverse: false }
+): T[] {
+	return sortByKey(
+		arr.map((value, i) => [i, value] as const),
+		([i, _]) => {
+			return keys[i];
+		},
+		options
+	).map(([_i, value]) => value);
+}

@@ -2,9 +2,10 @@
 	import type { Vocabulary } from '$lib/tokenizing/vocabulary';
 	import { Token } from '$lib/tokenizing/token';
 	import TokenComponent from '$lib/components/Token.svelte';
-	import { sortByKey } from '$lib/util/array';
+	import { sortByKey, sortByKeys } from '$lib/util/array';
 	import { leftPad } from '$lib/util/string';
-	import { flip } from 'svelte/animate';
+	import { Client } from '$lib/backend/client';
+	import EmergentSpinner from './EmergentSpinner.svelte';
 
 	const {
 		vocabulary,
@@ -12,7 +13,6 @@
 		tokens = null,
 		href = (_) => null,
 		searchable = true,
-		sortable = true,
 		tokensPerPage = 1000
 	}: {
 		vocabulary: Vocabulary;
@@ -23,6 +23,8 @@
 		href?: (page: number) => string | null;
 		tokensPerPage?: number;
 	} = $props();
+
+	const client = new Client();
 
 	let search = $state('');
 	let searchRegex = $derived(
@@ -37,20 +39,43 @@
 
 	let sortKey = $state('tokenID');
 	let sortDirection = $state('ascending');
+	let sortKeyEmbedding = $state({
+		modelName: 'causal1',
+		dim: 0
+	});
+	let embeddingInfo = $derived(
+		client.getEmbeddingDimInfo(sortKeyEmbedding.modelName, sortKeyEmbedding.dim)
+	);
 
-	const sortKeys: Record<string, (token: Token) => string | number> = {
+	const sortKeys: Record<string, (token: Token) => Promise<string | number> | string | number> = {
 		tokenID: (token) => token.id(),
 		byteValue: (token) => [...token.value].map((v) => leftPad(v.toString(), '0', 3)).join('-'),
-		byteCount: (token) => token.value.length
+		byteCount: (token) => token.value.length,
+		embeddingDim: async (token) => {
+			return (await embeddingInfo).token_values[token.id()];
+		}
 	};
 
 	let tokensExist = $derived(tokens == null ? vocabulary.tokens : tokens);
 	let resultingTokens = $derived(tokensExist.filter((token) => searchRegex.test(token.toString())));
-	let shownTokens = $derived(
-		sortByKey(resultingTokens, sortKeys[sortKey] ?? sortKeys.tokenID, {
-			reverse: sortDirection == 'descending'
-		}).slice((pageNumber - 1) * tokensPerPage, pageNumber * tokensPerPage)
-	);
+	let shownTokens: Token[] = $state([]);
+	$effect(() => {
+		sortKey;
+		sortDirection;
+		sortKeyEmbedding;
+		embeddingInfo;
+		pageNumber;
+		(async () => {
+			const keys = await Promise.all(resultingTokens.map(sortKeys[sortKey] ?? sortKeys.tokenID));
+			let sortedTokens = sortByKeys(resultingTokens, keys, {
+				reverse: sortDirection == 'descending'
+			});
+			shownTokens = sortedTokens.slice(
+				(pageNumber - 1) * tokensPerPage,
+				pageNumber * tokensPerPage
+			);
+		})();
+	});
 
 	let pageAmount = $derived(Math.ceil(resultingTokens.length / tokensPerPage));
 
@@ -107,7 +132,15 @@
 				<option value="tokenID">Token-ID</option>
 				<option value="byteValue">Bytewerte</option>
 				<option value="byteCount">Anzahl Bytes</option>
+				<option value="embeddingDim">Embedding-Dimension</option>
 			</select>
+			{#if sortKey == 'embeddingDim'}
+				<select bind:value={sortKeyEmbedding.modelName}>
+					<option value="causal1">causal1</option>
+					<option value="anticausal1">anticausal1</option>
+				</select>
+				<input type="number" bind:value={sortKeyEmbedding.dim} />
+			{/if}
 			<select bind:value={sortDirection}>
 				<option value="ascending">aufsteigend</option>
 				<option value="descending">absteigend</option>
@@ -143,9 +176,15 @@
 	{@render paginationRow()}
 	<div>
 		<div class="flex flex-row flex-wrap gap-2">
-			{#each shownTokens as token}
-				<TokenComponent {token} />
-			{/each}
+			{#await shownTokens}
+				<EmergentSpinner />
+			{:then shownTokens}
+				{#each shownTokens as token}
+					<TokenComponent {token} />
+				{/each}
+			{:catch error}
+				<div>{error}</div>
+			{/await}
 		</div>
 	</div>
 	{@render paginationRow()}

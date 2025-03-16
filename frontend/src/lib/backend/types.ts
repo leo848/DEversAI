@@ -10,6 +10,12 @@ export const TokenInfo = z.object({
 });
 export type TokenInfo = z.infer<typeof TokenInfo>;
 
+export const EmbeddingDimInfo = z.object({
+	dim: z.number(),
+	token_values: z.array(z.number().finite())
+});
+export type EmbeddingDimInfo = z.infer<typeof EmbeddingDimInfo>;
+
 export const TokenEmbeddings = z.object({
 	tokenCount: z.number(),
 	embeddings3D: z.array(z.tuple([z.number(), z.number(), z.number()])),

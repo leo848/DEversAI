@@ -7,7 +7,8 @@ import {
 	InferenceResponse,
 	LogitsResponse,
 	TokenEmbeddings,
-	TokenInfo
+	TokenInfo,
+	EmbeddingDimInfo
 } from './types';
 
 const pathUtils = {
@@ -54,6 +55,18 @@ export class Client {
 			return tokenInfo.data;
 		} else {
 			return Promise.reject('Could not parse response: ' + tokenInfo.error);
+		}
+	}
+
+	async getEmbeddingDimInfo(modelName: string, dim: number): Promise<EmbeddingDimInfo> {
+		const apiPath = pathUtils.join(this.httpsBase, 'embedding', modelName, dim.toString(), 'info');
+		const response = await fetch(apiPath);
+		const json = await response.json();
+		const embeddingDimInfo = await EmbeddingDimInfo.safeParseAsync(json);
+		if (embeddingDimInfo.success) {
+			return embeddingDimInfo.data;
+		} else {
+			return Promise.reject('Could not parse response: ' + embeddingDimInfo.error);
 		}
 	}
 
