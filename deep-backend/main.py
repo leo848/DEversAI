@@ -96,6 +96,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         top_k=request.action.config.top_k,
                     ):
                         rest_tokens.append(token)
+                        await asyncio.sleep(request.action.config.synthetic_wait)
                         if datetime.datetime.now() - last_send < datetime.timedelta(seconds=0.1):
                             await websocket.send_json(
                                 jsonable_encoder(
