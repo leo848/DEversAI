@@ -150,7 +150,7 @@
 							<TopLogits
 								{logitsResponse}
 								temperature={options.temperature}
-								topK={Math.exp(options.topK_log)}
+								topK={Math.floor(Math.exp(options.topK_log))}
 								ontokenclick={(token) => {
 									inputString = token.toString() + inputString;
 								}}
@@ -175,7 +175,7 @@
 							<TopLogits
 								{logitsResponse}
 								temperature={options.temperature}
-								topK={Math.exp(options.topK_log)}
+								topK={Math.floor(Math.exp(options.topK_log))}
 								ontokenclick={(token) => {
 									inputString += token.toString();
 								}}

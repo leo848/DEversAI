@@ -41,7 +41,7 @@
 		return exps.map((exp) => exp / sumExps);
 	});
 
-	const shownTokens = $derived(allTokens.slice(0, Math.min(topK, topElements)));
+	const shownTokens = $derived(allTokens.slice(0, Math.min(topK + 1, topElements)));
 
 	function onscroll(evt: UIEvent) {
 		const { scrollHeight, scrollTop, clientHeight } = evt.target as HTMLDivElement;
@@ -80,7 +80,10 @@
 	{:else if viewType == 'overview'}
 		<div class="flex flex-wrap gap-y-2">
 			{#each shownTokens as token, i}
-				<div style:margin-right={Math.sqrt(probs[token.id()]) * 100 + 'px'}>
+				<div
+					style:margin-right={Math.sqrt(probs[token.id()]) * 100 + 'px'}
+					style:margin-bottom={i == topK ? '50%' : undefined}
+				>
 					<Tooltip>
 						{#snippet trigger()}
 							<TokenComponent
