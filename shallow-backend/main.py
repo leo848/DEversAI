@@ -10,6 +10,7 @@ import json
 import websockets
 import requests
 from models import LogitsRequest, RequestUnion, InferenceRequest
+from vocabulary import Vocabulary
 from validate import validate_model_name
 
 DATABASE_URL = "sqlite:///assets/token_examples.db"
@@ -44,6 +45,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+vocab = {
+    "german-complete": Vocabulary.load("assets/german-complete.vocab"),
+    "fineweb2": Vocabulary.load("assets/fineweb2.vocab"),
+}
+
 
 @app.get("/")
 def root_route():
@@ -61,6 +67,21 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
     causal1_embeddings = np.load("assets/embedding/768d/causal1.npy")
     anticausal1_embeddings = np.load("assets/embedding/768d/anticausal1.npy")
 
+    occurrences_direct = np.loadtxt("assets/direct_histogram.txt", dtype=np.long)
+    occurrences_transitive = np.loadtxt("assets/transitive_histogram.txt", dtype=np.long)
+
+    occurrence_dict = {}
+    occurrence_dict[str(token_id)] = {
+        "count_direct": occurrences_direct[token_id].item(),
+        "count_transitive": occurrences_transitive[token_id].item(),
+    }
+    for children in vocab["german-complete"].tokens[token_id].children:
+        for child in children:
+            occurrence_dict[str(token_id)] = {
+                "count_direct": occurrences_direct[child.id()].item(),
+                "count_transitive": occurrences_transitive[child.id()].item(),
+            }
+
     return {
         "id": token_id,
         "examples": json.loads(result[0]),
@@ -68,6 +89,10 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
             "causal1": causal1_embeddings[token_id].tolist(),
             "anticausal1": anticausal1_embeddings[token_id].tolist(),
         },
+        "occurrences": {
+            "total": np.sum(occurrences_direct).item(),
+            **occurrence_dict,
+        }
     }
 
 
