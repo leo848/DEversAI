@@ -48,7 +48,7 @@
 					if (token == 0xff) break outer;
 					({
 						causal: () => (inputString += vocabulary.tokens[token].toString()),
-						anticausal: () => (inputString = inputString + vocabulary.tokens[token].toString())
+						anticausal: () => (inputString = vocabulary.tokens[token].toString() + inputString)
 					})[causality]();
 				}
 			}
