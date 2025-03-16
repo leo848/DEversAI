@@ -95,7 +95,12 @@ export class Client {
 		}
 	}
 
-	async *autoregressiveInference(modelName: string, tokens: Token[], config: InferenceConfig = {}, controller?: AbortController) {
+	async *autoregressiveInference(
+		modelName: string,
+		tokens: Token[],
+		config: InferenceConfig = {},
+		controller?: AbortController
+	) {
 		const ws = new WebSocket(this.wsUrl);
 		const queue: string[] = [];
 		let resolveMsg: ((value: string | PromiseLike<string>) => void) | null = null;
@@ -125,7 +130,7 @@ export class Client {
 				type: 'autoregressiveInference',
 				model_id: modelName,
 				token_input: tokens.map((t) => t.id()),
-				config,
+				config: config
 			}
 		};
 

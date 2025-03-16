@@ -29,7 +29,12 @@
 
 	let generate = $state({
 		causal1: async () => {
-			const gen = client.autoregressiveInference('causal1', vocabulary.tokenize(inputString));
+			const gen = client.autoregressiveInference('causal1', vocabulary.tokenize(inputString), {
+				num_tokens: Math.floor(Math.exp(options.maxTokens_log)),
+				temperature: options.temperature,
+				top_k: Math.floor(Math.exp(options.topK_log)),
+				synthetic_wait: options.syntheticWait_millis
+			});
 			for await (const tokens of gen) {
 				for (const token of tokens) {
 					if (token == 0xff) return;
@@ -45,7 +50,7 @@
 					num_tokens: Math.floor(Math.exp(options.maxTokens_log)),
 					temperature: options.temperature,
 					top_k: Math.floor(Math.exp(options.topK_log)),
-					synthetic_wait: options.syntheticWait_millis,
+					synthetic_wait: options.syntheticWait_millis
 				}
 			);
 			for await (const tokens of gen) {
