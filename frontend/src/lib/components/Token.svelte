@@ -73,7 +73,7 @@
 		bold: { hover: 'hover:font-bold', true: 'font-bold', false: 'font-normal' }['' + bold]
 	});
 	const classList = $derived(
-		`inline-block ${style.rounding} ${style.border} ${style.borderColor} ${style.bgColor} ${style.padding} font-mono ${style.textSize} ${style.bold} transition-all flex flex-col`
+		`inline-block ${style.rounding} ${style.border} ${style.borderColor} ${style.bgColor} ${style.padding} font-mono ${style.textSize} ${style.bold} transition-all inline-flex flex-col`
 	);
 </script>
 
