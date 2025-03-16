@@ -55,7 +55,7 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Token ID not found")
 
     causal1_embeddings = np.load("assets/embedding/768d/causal1.npy")
-    anticausal1_embeddings = np.load("assets/embedding/768d/causal1.npy")
+    anticausal1_embeddings = np.load("assets/embedding/768d/anticausal1.npy")
 
     return {
         "id": token_id,
