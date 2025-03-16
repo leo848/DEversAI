@@ -3,9 +3,9 @@ import { z } from 'zod';
 export const TokenInfo = z.object({
 	id: z.number(),
 	examples: z.array(z.tuple([z.string(), z.string()])),
-	embeddings: z.object({
+	embedding_768d: z.object({
 		causal1: z.array(z.number().finite()),
-		anticausal1: z.array(z.number().finite()),
+		anticausal1: z.array(z.number().finite())
 	})
 });
 export type TokenInfo = z.infer<typeof TokenInfo>;

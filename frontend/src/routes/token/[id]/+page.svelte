@@ -12,6 +12,7 @@
 	import TopLogits from '$lib/components/TopLogits.svelte';
 	import FullLoader from '$lib/components/FullLoader.svelte';
 	import EmergentSpinner from '$lib/components/EmergentSpinner.svelte';
+	import EmbeddingCircles from '$lib/components/EmbeddingCircles.svelte';
 
 	const tokenIndex = $derived(+$page.params.id);
 	const token = $derived(vocabulary.tokens[tokenIndex]);
@@ -132,13 +133,31 @@
 		</div>
 	</BorderSection>
 	<div class="grid grid-cols-2 gap-8">
-		<BorderSection title="Embedding">
-			<div class="flex flex-row">
-				<a class="rounded bg-gray-100 p-2" href={`/token/embedding-space?id=${tokenIndex}`}>
-					Embedding-Raum
-				</a>
-			</div>
-		</BorderSection>
+		<div>
+			<BorderSection title="Embedding" open={false}>
+				<div class="flex flex-col gap-4">
+					<div class="flex flex-row">
+						<a class="rounded bg-gray-100 p-2" href={`/token/embedding-space?id=${tokenIndex}`}>
+							Embedding-Raum
+						</a>
+					</div>
+					<div class="grid gap-4">
+						{#await tokenData}
+							<EmergentSpinner />
+						{:then tokenInfo}
+							<BorderSection title="anticausal1">
+								<EmbeddingCircles embeddingValues={tokenInfo.embedding_768d.anticausal1} />
+							</BorderSection>
+							<BorderSection title="causal1">
+								<EmbeddingCircles embeddingValues={tokenInfo.embedding_768d.causal1} />
+							</BorderSection>
+						{:catch error}
+							<div>{error}</div>
+						{/await}
+					</div>
+				</div>
+			</BorderSection>
+		</div>
 		<BorderSection title="Vorhersagen">
 			<div class="grid grid-cols-2 gap-4">
 				<div>
