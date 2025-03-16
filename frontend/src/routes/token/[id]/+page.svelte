@@ -114,10 +114,12 @@
 								{#await tokenData}
 									<Token token={child} />
 								{:then tokenData}
-									{@const ownCount = tokenData.occurrences.tokens[token.id()].count_transitive}
-									{@const childCount = tokenData.occurrences.tokens[child.id()].count_transitive}
-									{@const proportion = childCount / ownCount}
-									<Token token={child} {proportion} hueValue={proportion} />
+									{#if tokenData.occurrences.tokens[token.id()]}
+										{@const ownCount = tokenData.occurrences.tokens[token.id()].count_transitive}
+										{@const childCount = tokenData.occurrences.tokens[child.id()].count_transitive}
+										{@const proportion = childCount / ownCount}
+										<Token token={child} {proportion} hueValue={proportion} />
+									{/if}
 								{/await}
 							{:else}
 								<Token token={child} />
