@@ -48,7 +48,7 @@
 					<div
 						class="h-4 w-4 rounded-xl text-center"
 						style:background-color={Gradient.Vlag.sample(
-							normalize([-Math.exp(sensitivity), Math.exp(sensitivity)])(value)
+							normalize([Math.exp(sensitivity), -Math.exp(sensitivity)])(value)
 						).toString()}
 					></div>
 				{/snippet}
