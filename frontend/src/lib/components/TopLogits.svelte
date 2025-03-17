@@ -10,7 +10,7 @@
 		logitsResponse,
 		temperature = 1.0,
 		topK = 50256,
-		ontokenclick = () => {}
+		ontokenclick = undefined
 	}: {
 		logitsResponse: LogitsResponse;
 		temperature?: number;

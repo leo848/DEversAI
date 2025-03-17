@@ -14,7 +14,7 @@
 		hueMap = (x: number) => x,
 		hueRange = [0, 1],
 		onscroll = () => {},
-		ontokenclick = () => {}
+		ontokenclick = undefined
 	}: {
 		tokens: Token[];
 		fields: { name: string; key: string; display: 'float' | 'perc' | 'none' }[];
