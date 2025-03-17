@@ -103,12 +103,12 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
         },
         "nearest_neighbors": {
             "causal1": {
-                "neighbors": causal1_nn.tolist(),
-                "distances": causal1_nn_dist.tolist(),
+                "neighbors": causal1_nn[0].tolist(),
+                "distances": causal1_nn_dist[0].tolist(),
             },
             "anticausal1": {
-                "neighbors": anticausal1_nn.tolist(),
-                "distances": anticausal1_nn_dist.tolist(),
+                "neighbors": anticausal1_nn[0].tolist(),
+                "distances": anticausal1_nn_dist[0].tolist(),
             }
         },
     }
