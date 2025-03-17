@@ -4,19 +4,18 @@
 	import type { Token } from '$lib/tokenizing/token';
 	import { sortByKey } from '$lib/util/array';
 	import TokenComponent from './Token.svelte';
-	import { remap } from '$lib/util/math';
-	import Tooltip from './Tooltip.svelte';
+	import AugmentedTokenList from './AugmentedTokenList.svelte';
 
 	const {
 		logitsResponse,
 		temperature = 1.0,
 		topK = 50256,
-		ontokenclick = undefined
+		ontokenclick = () => {}
 	}: {
 		logitsResponse: LogitsResponse;
 		temperature?: number;
 		topK?: number;
-		ontokenclick?: (token: Token) => void | undefined;
+		ontokenclick?: (token: Token) => void;
 	} = $props();
 
 	const allTokens = $derived.by(() => {
@@ -50,69 +49,36 @@
 			topElements = Math.min(50256, topElements);
 		}
 	}
-
-	let viewType: 'table' | 'overview' = $state('overview');
 </script>
 
-<div class="max-h-[400px] overflow-scroll" {onscroll}>
-	<div class="my-2 text-sm">
-		Darstellung
-		<select bind:value={viewType} class="text-sm">
-			<option value="overview">Überblick</option>
-			<option value="table">Tabelle</option>
-		</select>
-	</div>
-	{#if viewType == 'table'}
-		<div class="grid grid-cols-6">
-			<div class="font-bold">Rang</div>
-			<div class="col-span-3 font-bold">Token</div>
-			<div class="font-bold">Logit</div>
-			<div class="font-bold">Wsk.</div>
-			{#each shownTokens as token, i}
-				<div>#{i + 1}</div>
-				<div class="col-span-3">
-					<TokenComponent {token} onclick={ontokenclick ? () => ontokenclick(token) : undefined} />
+<AugmentedTokenList
+	tokens={shownTokens}
+	fields={[
+		{ key: 'logit', name: 'Logit', display: 'float' },
+		{ key: 'prob', name: 'Wsk.', display: 'perc' }
+	]}
+	values={shownTokens.map((token, _i) => {
+		return { logit: logitsResponse.logits[token.id()], prob: probs[token.id()] };
+	})}
+	hueKey="prob"
+	{onscroll}
+	{ontokenclick}
+>
+	{#snippet tooltip(token: Token, rank: number)}
+		<div class="flex flex-col gap-4">
+			<div class="text-2xl font-bold">{(probs[token.id()] * 100).toFixed(2)}%</div>
+			<div class="flex flex-col">
+				<div>Rang #{rank + 1}</div>
+				<div class="whitespace-nowrap">
+					Logit {logitsResponse.logits[token.id()].toFixed(3)}
+					({logits[token.id()].toFixed(3)})
 				</div>
-				<div>{logitsResponse.logits[token.id()].toFixed(2)}</div>
-				<div>{(probs[token.id()] * 100).toFixed(2)}%</div>
-			{/each}
-		</div>
-	{:else if viewType == 'overview'}
-		<div class="flex flex-wrap gap-y-2">
-			{#each shownTokens as token, i}
-				<div
-					style:margin-right={Math.sqrt(probs[token.id()]) * 100 + 'px'}
-					style:margin-bottom={i == topK ? '50%' : undefined}
-				>
-					<Tooltip>
-						{#snippet trigger()}
-							<TokenComponent
-								{token}
-								hueValue={remap([-5, 0], [0, 1])(Math.log(probs[token.id()]))}
-								scale={Math.sqrt(probs[token.id()] * 100)}
-								onclick={ontokenclick ? () => ontokenclick(token) : undefined}
-							/>
-						{/snippet}
-						{#snippet tooltip()}
-							<div class="flex flex-col gap-4">
-								<div class="text-2xl font-bold">{(probs[token.id()] * 100).toFixed(2)}%</div>
-								<div class="flex flex-col">
-									<div>Rang #{i + 1}</div>
-									<div class="whitespace-nowrap">
-										Logit {logitsResponse.logits[token.id()].toFixed(3)}
-										({logits[token.id()].toFixed(3)})
-									</div>
-									<div class="flex flex-row gap-2 whitespace-nowrap">
-										<span>Token</span>
-										<TokenComponent size="md" noTransition {token} />
-									</div>
-									<div class="whitespace-nowrap">Token-ID {token.id()}</div>
-								</div>
-							</div>
-						{/snippet}
-					</Tooltip>
+				<div class="flex flex-row gap-2 whitespace-nowrap">
+					<span>Token</span>
+					<TokenComponent size="md" noTransition {token} />
 				</div>
-			{/each}
+				<div class="whitespace-nowrap">Token-ID {token.id()}</div>
+			</div>
 		</div>
-	{/if}
-</div>
+	{/snippet}
+</AugmentedTokenList>
