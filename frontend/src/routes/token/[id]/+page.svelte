@@ -5,7 +5,7 @@
 	import { scale } from 'svelte/transition';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import Token from '$lib/components/Token.svelte';
+	import TokenComponent from '$lib/components/Token.svelte';
 	import BorderSection from '$lib/components/BorderSection.svelte';
 	import { Client } from '$lib/backend/client';
 	import { sortByKey } from '$lib/util/array';
@@ -13,6 +13,7 @@
 	import EmergentSpinner from '$lib/components/EmergentSpinner.svelte';
 	import EmbeddingCircles from '$lib/components/EmbeddingCircles.svelte';
 	import TokenOccurrence from './TokenOccurrence.svelte';
+	import AugmentedTokenList from '$lib/components/AugmentedTokenList.svelte';
 
 	const tokenIndex = $derived(+$page.params.id);
 	const token = $derived(vocabulary.tokens[tokenIndex]);
@@ -45,7 +46,7 @@
 	<div class="text-4xl font-bold">Token-Visualisierung</div>
 	<div class="flex flex-row justify-between">
 		{#key tokenIndex}
-			<Token {token} size="xl" />
+			<TokenComponent {token} size="xl" />
 		{/key}
 		<div>
 			{#key token}
@@ -110,17 +111,17 @@
 						{#each token.children[key] as child}
 							{#if showPercentages}
 								{#await tokenData}
-									<Token token={child} />
+									<TokenComponent token={child} />
 								{:then tokenData}
 									{#if tokenData.occurrences.tokens[token.id()]}
 										{@const ownCount = tokenData.occurrences.tokens[token.id()].count_transitive}
 										{@const childCount = tokenData.occurrences.tokens[child.id()].count_transitive}
 										{@const proportion = childCount / ownCount}
-										<Token token={child} {proportion} hueValue={proportion} />
+										<TokenComponent token={child} {proportion} hueValue={proportion} />
 									{/if}
 								{/await}
 							{:else}
-								<Token token={child} />
+								<TokenComponent token={child} />
 							{/if}
 						{/each}
 					</div>
@@ -185,29 +186,73 @@
 				</div>
 			</BorderSection>
 		</div>
-		<BorderSection title="Vorhersagen">
-			<div class="grid grid-cols-2 gap-4">
-				<div>
-					<div>anticausal1</div>
-					{#await predictions.anticausal1}
-						<EmergentSpinner />
-					{:then logitsResponse}
-						<TopLogits {logitsResponse} />
-					{:catch error}
-						<div>{error}</div>
-					{/await}
+		<div class="grid gap-8">
+			<BorderSection title="Ähnliche Tokens">
+				<div class="grid grid-cols-2 gap-4">
+					{#each ['anticausal1', 'causal1'] as modelId}
+						<div>
+							<div>{modelId}</div>
+							{#await tokenData}
+								<EmergentSpinner />
+							{:then tokenData}
+								{@const neighbors = tokenData.nearest_neighbors[modelId].neighbors}
+								{@const distances = tokenData.nearest_neighbors[modelId].distances}
+								{@debug distances}
+								<AugmentedTokenList
+									tokens={neighbors.map((id) => vocabulary.tokens[id])}
+									fields={[
+										{ name: 'Distanz', key: 'dist', display: 'float' },
+										{ name: 'Similarity', key: 'sim', display: 'none' }
+									]}
+									values={neighbors.map((_, i) => ({ dist: distances[i], sim: 1 - distances[i] }))}
+									hueKey="sim"
+									hueMap={(x) => x ** 3}
+								>
+									{#snippet tooltip(token, rank)}
+										<div class="flex flex-col gap-4">
+											<div class="text-2xl font-bold">{distances[rank].toFixed(4)}</div>
+											<div class="flex flex-col">
+												<div>Rang #{rank + 1}</div>
+												<div class="flex flex-row gap-2 whitespace-nowrap">
+													<span>Token</span>
+													<TokenComponent size="md" noTransition {token} />
+												</div>
+												<div class="whitespace-nowrap">Token-ID {token.id()}</div>
+											</div>
+										</div>
+									{/snippet}
+								</AugmentedTokenList>
+							{:catch error}
+								<div>{error}</div>
+							{/await}
+						</div>
+					{/each}
 				</div>
-				<div>
-					<div>causal1</div>
-					{#await predictions.causal1}
-						<EmergentSpinner />
-					{:then logitsResponse}
-						<TopLogits {logitsResponse} />
-					{:catch error}
-						<div>{error}</div>
-					{/await}
+			</BorderSection>
+			<BorderSection title="Vorhersagen">
+				<div class="grid grid-cols-2 gap-4">
+					<div>
+						<div>anticausal1</div>
+						{#await predictions.anticausal1}
+							<EmergentSpinner />
+						{:then logitsResponse}
+							<TopLogits {logitsResponse} />
+						{:catch error}
+							<div>{error}</div>
+						{/await}
+					</div>
+					<div>
+						<div>causal1</div>
+						{#await predictions.causal1}
+							<EmergentSpinner />
+						{:then logitsResponse}
+							<TopLogits {logitsResponse} />
+						{:catch error}
+							<div>{error}</div>
+						{/await}
+					</div>
 				</div>
-			</div>
-		</BorderSection>
+			</BorderSection>
+		</div>
 	</div>
 </div>
