@@ -14,15 +14,13 @@ export const TokenInfo = z.object({
 			})
 		)
 	}),
-	nearest_neighbors: z.object({
-		causal1: z.record(
-			z.string(),
-			z.object({
-				neighbors: z.array(z.number().int().nonnegative()),
-				distances: z.array(z.number().int().nonnegative())
-			})
-		)
-	})
+	nearest_neighbors: z.record(
+		z.string(),
+		z.object({
+			neighbors: z.array(z.number().int().nonnegative()),
+			distances: z.array(z.number().int().nonnegative())
+		})
+	)
 });
 export type TokenInfo = z.infer<typeof TokenInfo>;
 
