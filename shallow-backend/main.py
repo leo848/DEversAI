@@ -12,6 +12,7 @@ import requests
 from models import LogitsRequest, RequestUnion, InferenceRequest
 from vocabulary import Vocabulary
 from validate import validate_model_name
+from sklearn.neighbors import NearestNeighbors
 
 DATABASE_URL = "sqlite:///assets/token_examples.db"
 DEEP_URL_WS = "ws://127.0.0.1:8910/ws"
@@ -55,6 +56,16 @@ vocab = {
 def root_route():
     return {"status": "OK"}
 
+causal1_embeddings = np.load("assets/embedding/768d/causal1.npy")
+anticausal1_embeddings = np.load("assets/embedding/768d/anticausal1.npy")
+
+causal1_nn_model = NearestNeighbors(metric = "cosine")
+causal1_nn_model.fit(causal1_embeddings)
+anticausal1_nn_model = NearestNeighbors(metric = "cosine")
+anticausal1_nn_model.fit(anticausal1_embeddings)
+
+occurrences_direct = np.loadtxt("assets/direct_histogram.txt", dtype=np.long)
+occurrences_transitive = np.loadtxt("assets/transitive_histogram.txt", dtype=np.long)
 
 @app.get("/v0/token/{token_id}/info")
 def token_info(token_id: int, db: scoped_session = Depends(get_db)):
@@ -64,11 +75,8 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
     if not result:
         raise HTTPException(status_code=404, detail="Token ID not found")
 
-    causal1_embeddings = np.load("assets/embedding/768d/causal1.npy")
-    anticausal1_embeddings = np.load("assets/embedding/768d/anticausal1.npy")
-
-    occurrences_direct = np.loadtxt("assets/direct_histogram.txt", dtype=np.long)
-    occurrences_transitive = np.loadtxt("assets/transitive_histogram.txt", dtype=np.long)
+    (causal1_nn_dist, causal1_nn) = causal1_nn_model.kneighbors([causal1_embeddings[token_id]], 50)
+    (anticausal1_nn_dist, anticausal1_nn) = anticausal1_nn_model.kneighbors([anticausal1_embeddings[token_id]], 50)
 
     occurrence_dict = {}
     occurrence_dict[str(token_id)] = {
@@ -92,7 +100,17 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
         "occurrences": {
             "total": np.sum(occurrences_direct).item(),
             "tokens": occurrence_dict,
-        }
+        },
+        "nearest_neighbors": {
+            "causal1": {
+                "neighbors": causal1_nn.tolist(),
+                "distances": causal1_nn_dist.tolist(),
+            },
+            "anticausal1": {
+                "neighbors": anticausal1_nn.tolist(),
+                "distances": anticausal1_nn_dist.tolist(),
+            }
+        },
     }
 
 
