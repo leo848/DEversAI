@@ -18,7 +18,7 @@ export const TokenInfo = z.object({
 		z.string(),
 		z.object({
 			neighbors: z.array(z.number().int().nonnegative()),
-			distances: z.array(z.number().int().nonnegative())
+			distances: z.array(z.number().finite())
 		})
 	)
 });
