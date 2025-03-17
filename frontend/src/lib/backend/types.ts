@@ -3,10 +3,7 @@ import { z } from 'zod';
 export const TokenInfo = z.object({
 	id: z.number(),
 	examples: z.array(z.tuple([z.string(), z.string()])),
-	embedding_768d: z.object({
-		causal1: z.array(z.number().finite()),
-		anticausal1: z.array(z.number().finite())
-	}),
+	embedding_768d: z.record(z.string(), z.array(z.number().finite())),
 	occurrences: z.object({
 		total: z.number(),
 		tokens: z.record(
@@ -14,6 +11,15 @@ export const TokenInfo = z.object({
 			z.object({
 				count_direct: z.number().nonnegative(),
 				count_transitive: z.number().nonnegative()
+			})
+		)
+	}),
+	nearest_neighbors: z.object({
+		causal1: z.record(
+			z.string(),
+			z.object({
+				neighbors: z.array(z.number().int().nonnegative()),
+				distances: z.array(z.number().int().nonnegative())
 			})
 		)
 	})
