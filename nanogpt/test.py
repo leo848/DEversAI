@@ -8,6 +8,7 @@ import torch
 import random
 from gpt import GPTConfig, GPT
 from tqdm import tqdm
+import bracex
 
 # -----------------------------------------------------------------------------
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
@@ -16,8 +17,8 @@ print(f"Using seed {seed}")
 
 ckpt_value = 300000
 causality = "causal"
-device = 'cuda:2' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
-file = "oscar-2301-shard-00002.bin"
+device = 'cuda:0' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
+files = bracex.expand("fw2-shard-000{0,1,2}0.bin")
 
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
 compile = True # use PyTorch 2.0 to compile the model to be faster
@@ -54,53 +55,54 @@ if compile:
 # run generation
 with torch.no_grad(), ctx:
     directory = "/data/fw2-tokenized/val"
-    losses = []
-    try:
-        path = os.path.join(directory, file)
-        if not os.path.isfile(path): exit(1)
-        data = np.memmap(path, dtype=np.dtype(">u2"), mode="r")
+    for file in tqdm(files):
+        losses = []
+        try:
+            path = os.path.join(directory, file)
+            if not os.path.isfile(path): exit(1)
+            data = np.memmap(path, dtype=np.dtype(">u2"), mode="r")
 
-        total_loss = 0
-        num_batches = 0
+            total_loss = 0
+            num_batches = 0
 
-        for start_i in tqdm(list(range(0, len(data) - block_size - batch_size - 1, block_size))):
-            x, y = None, None
-            if causality == "causal":
-                x = torch.stack( [
-                    torch.from_numpy(
-                        data[i:i + block_size].astype(np.int64)
-                    )
-                    for i in range(start_i, start_i + batch_size)
-                ])
-                y = torch.stack([
-                    torch.from_numpy(
-                        data[i + 1: i + 1 + block_size].astype(np.int64)
-                    )
-                    for i in range(start_i, start_i + batch_size)
-                ])
-            elif causality == "anticausal":
-                x = torch.stack([
-                    torch.from_numpy(
-                        data[i + 1: i + 1 + block_size][::-1].astype(np.int64)
-                    )
-                    for i in range(start_i, start_i + batch_size)
-                ])
-                y = torch.stack( [
-                    torch.from_numpy(
-                        data[i:i + block_size][::-1].astype(np.int64)
-                    )
-                    for i in range(start_i, start_i + batch_size)
-                ])
+            for start_i in tqdm(list(range(0, len(data) - block_size - batch_size - 1, block_size // 4))):
+                x, y = None, None
+                if causality == "causal":
+                    x = torch.stack( [
+                        torch.from_numpy(
+                            data[i:i + block_size].astype(np.int64)
+                        )
+                        for i in range(start_i, start_i + batch_size)
+                    ])
+                    y = torch.stack([
+                        torch.from_numpy(
+                            data[i + 1: i + 1 + block_size].astype(np.int64)
+                        )
+                        for i in range(start_i, start_i + batch_size)
+                    ])
+                elif causality == "anticausal":
+                    x = torch.stack([
+                        torch.from_numpy(
+                            data[i + 1: i + 1 + block_size][::-1].astype(np.int64)
+                        )
+                        for i in range(start_i, start_i + batch_size)
+                    ])
+                    y = torch.stack( [
+                        torch.from_numpy(
+                            data[i:i + block_size][::-1].astype(np.int64)
+                        )
+                        for i in range(start_i, start_i + batch_size)
+                    ])
 
-            x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
-            _, loss = model(x, y)
-            losses.append(loss.item())
-    except Exception as e:
-        print(f"Exception: {e}")
-    losses_numpy = np.array(losses)
-    mean = np.mean(losses_numpy)
-    filename = f"/output/{causality}-fw2/{file}-losses.npy"
-    np.save(filename, losses_numpy)
-    print(f"Saved {len(losses_numpy)} loss entries (mean {mean}) to {filename}")
+                x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
+                _, loss = model(x, y)
+                losses.append(loss.item())
+        except Exception as e:
+            print(f"Exception: {e}")
+        losses_numpy = np.array(losses)
+        mean = np.mean(losses_numpy)
+        filename = f"/output/{causality}-fw2/{file}-losses.npy"
+        np.save(filename, losses_numpy)
+        print(f"Saved {len(losses_numpy)} loss entries (mean {mean}) to {filename}")
 
 
