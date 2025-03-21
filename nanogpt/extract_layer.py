@@ -23,7 +23,7 @@ assert init_from == "resume"
 
 exec(open('configurator.py').read()) # overrides from command line or config file
 
-for model_name in tqdm(bracex.expand("{anti,}causal1{,-plenar1,-laws1}.pt")):
+for model_name in tqdm(bracex.expand("anticausal-fw2.pt")):
     print(model_name)
     ckpt_path = os.path.join(out_dir, model_name)
     checkpoint = torch.load(ckpt_path, map_location=device, weights_only=True)
@@ -48,7 +48,7 @@ for model_name in tqdm(bracex.expand("{anti,}causal1{,-plenar1,-laws1}.pt")):
         if dim != 768:
             embedding = pacmap.PaCMAP(n_components=dim, n_neighbors=None, num_iters=900, verbose=True)
 
-            data_transformed = embedding.fit_transform(data)
+            data_transformed = embedding.fit_transform(data, init="random")
         else:
             data_transformed = data
 
