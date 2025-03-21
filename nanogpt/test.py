@@ -35,7 +35,7 @@ device_type = 'cuda' if 'cuda' in device else 'cpu' # for later use in torch.aut
 ptdtype = {'float32': torch.float32, 'bfloat16': torch.bfloat16, 'float16': torch.float16}[dtype]
 ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=device_type, dtype=ptdtype)
 
-ckpt_path = f"/output/{causality}1/ckpt_{ckpt_value}.pt"
+ckpt_path = f"/output/{causality}-fw2/ckpt_{ckpt_value}.pt"
 checkpoint = torch.load(ckpt_path, map_location=device, weights_only=True)
 gptconf = GPTConfig(**checkpoint['model_args'])
 model = GPT(gptconf)
@@ -53,7 +53,7 @@ if compile:
 
 # run generation
 with torch.no_grad(), ctx:
-    directory = "/data/tokenized-corpus/val"
+    directory = "/data/fw2-tokenized/val"
     losses = []
     try:
         path = os.path.join(directory, file)
@@ -63,7 +63,7 @@ with torch.no_grad(), ctx:
         total_loss = 0
         num_batches = 0
 
-        for start_i in tqdm(range(0, len(data) - block_size - batch_size - 1, block_size)):
+        for start_i in tqdm(list(range(0, len(data) - block_size - batch_size - 1, block_size))):
             x, y = None, None
             if causality == "causal":
                 x = torch.stack( [
@@ -99,7 +99,7 @@ with torch.no_grad(), ctx:
         print(f"Exception: {e}")
     losses_numpy = np.array(losses)
     mean = np.mean(losses_numpy)
-    filename = f"/output/{causality}1/{file}-losses.npy"
+    filename = f"/output/{causality}-fw2/{file}-losses.npy"
     np.save(filename, losses_numpy)
     print(f"Saved {len(losses_numpy)} loss entries (mean {mean}) to {filename}")
 
