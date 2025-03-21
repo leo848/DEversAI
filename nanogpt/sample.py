@@ -12,8 +12,8 @@ from vocabulary import Vocabulary
 from torch.nn import functional as F
 
 # -----------------------------------------------------------------------------
-model_name = "causal-fw2-ckpt27500.pt"
-vocab_file = "fineweb2.vocab"
+model_name = "causal1.pt"
+vocab_file = "german-complete.vocab"
 
 compile = False # use PyTorch 2.0 to compile the model to be faster
 causality = "anticausal" if "anticausal" in model_name else "causal" # 'causal' or 'anticausal'
@@ -29,7 +29,7 @@ show_samples_json = False
 # config
 
 num_samples = 64 # number of samples to draw
-max_new_tokens = int(1e10) # number of tokens generated in each sample
+max_new_tokens = int(100) # number of tokens generated in each sample
 temperature = 0.8 # 1.0 = no change, < 1.0 = less random, > 1.0 = more random, in predictions
 top_k = 200 # retain only the top_k most likely tokens, clamp others to have 0 probability
 

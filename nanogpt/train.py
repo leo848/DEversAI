@@ -40,8 +40,8 @@ checkpoint_interval = 2500
 eval_iters = 200
 eval_only = False # if True, script exits right after the first eval
 always_save_checkpoint = True # if True, always save a checkpoint after each eval
-init_from = 'scratch' # 'scratch' or 'resume' or 'gpt2*'
-init_from_resume_checkpoint = None
+init_from = 'resume' # 'scratch' or 'resume' or 'gpt2*'
+init_from_resume_checkpoint = 270000
 # data
 dataset = 'custom'
 gradient_accumulation_steps = 6 * 8 # used to simulate larger batch sizes
@@ -55,7 +55,7 @@ dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
 learning_rate = 6e-4 # max learning rate
-max_iters = 400_000 # total number of training iterations
+max_iters = 300_000 # total number of training iterations
 weight_decay = 1e-1
 beta1 = 0.9
 beta2 = 0.95
