@@ -41,7 +41,7 @@ eval_iters = 200
 eval_only = False # if True, script exits right after the first eval
 always_save_checkpoint = True # if True, always save a checkpoint after each eval
 init_from = 'resume' # 'scratch' or 'resume' or 'gpt2*'
-init_from_resume_checkpoint = 270000
+init_from_resume_checkpoint = 272500
 # data
 dataset = 'custom'
 gradient_accumulation_steps = 6 * 8 # used to simulate larger batch sizes
@@ -120,7 +120,6 @@ data_dir = "/data/fw2-tokenized"
 def get_all_data_files(split):
     assert split in {"train", "val"}
     files = os.listdir(os.path.join(data_dir, split))
-    files = [file for file in files if not "shard-002" in file]
     random.shuffle(files)
     return files
 
