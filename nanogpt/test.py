@@ -15,14 +15,14 @@ init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g.
 seed = random.randint(0, int(1e10))
 print(f"Using seed {seed}")
 
-ckpt_value = 300000
+ckpt_value = 100000
 causality = "causal"
 device = 'cuda:0' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 files = bracex.expand("fw2-shard-000{0,1,2}0.bin")
 
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
 compile = True # use PyTorch 2.0 to compile the model to be faster
-batch_size = 64
+batch_size = 32
 block_size = 1024
 
 exec(open('configurator.py').read()) # overrides from command line or config file
@@ -65,7 +65,7 @@ with torch.no_grad(), ctx:
             total_loss = 0
             num_batches = 0
 
-            for start_i in tqdm(list(range(0, len(data) - block_size - batch_size - 1, block_size // 4))):
+            for start_i in tqdm(list(range(0, len(data) - block_size - batch_size - 1, block_size))):
                 x, y = None, None
                 if causality == "causal":
                     x = torch.stack( [
