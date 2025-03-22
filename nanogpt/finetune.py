@@ -117,39 +117,26 @@ ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=
 
 data_dir = f"/data/{finetune_name}"
 
-def get_all_data_files(split):
-    assert split in {"train", "val"}
-    files = os.listdir(os.path.join(data_dir, split))
-    random.shuffle(files)
-    return files
-
 data_epoch = {split: -1 for split in ("train", "val")}
-data_file_stack = {split: [] for split in ("train", "val")}
 data_ix_stack = {split: [] for split in ("train", "val")}
 
 def get_estimated_epoch(split: str):
     return data_epoch[split] + (1 - len(data_file_stack[split]) / len(get_all_data_files(split)))
 
-def get_batch(split: str, retries=10):
+def get_batch(split: str):
     assert split in {"train", "val"}
     assert causality in {"causal", "anticausal"}
     # We recreate np.memmap every batch to avoid a memory leak, as per
     # https://stackoverflow.com/questions/45132940/numpy-memmap-memory-usage-want-to-iterate-once/61472122#61472122
-    if len(data_file_stack[split]) == 0:
-        data_epoch[split] += 1
-        if master_process:
-            print(f"{split} epoch {data_epoch[split]}")
-        data_file_stack[split] = get_all_data_files(split)
-        data_ix_stack[split] = [-1] # sentinel
     try:
-        filename = cast(str, data_file_stack[split][-1])
+        filename = os.path.join(data_dir, f"{split}.bin")
         data = np.memmap(
             os.path.join(data_dir, split, filename),
             dtype=np.dtype(">u2"),
             mode='r'
         )
 
-        if len(data_ix_stack[split]) == 1 and data_ix_stack[split][0] == -1: # sentinel
+        if len(data_ix_stack[split]) < batch_size:
             offset = random.randint(0, block_size * 2)
             indices = list(range(
                 len(data) * ddp_rank // ddp_world_size + offset,
@@ -158,10 +145,6 @@ def get_batch(split: str, retries=10):
             ))
             random.shuffle(indices)
             data_ix_stack[split] = indices
-        if len(data_ix_stack[split]) < batch_size:
-            data_file_stack[split].pop()
-            data_ix_stack[split] = [-1]
-            return get_batch(split)
 
         ix = [
             data_ix_stack[split].pop()
