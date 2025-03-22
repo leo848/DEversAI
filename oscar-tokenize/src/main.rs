@@ -229,6 +229,51 @@ fn count_tokens() {
 }
 
 #[allow(dead_code)]
+fn tokenize_wikipedia() {
+    let bpe_state = BpeState::synced_with_file("/vocab/fineweb2.vocab");
+    let mut input_paths = Path::new("/data/tokenizer-shards/")
+        .read_dir()
+        .expect("directory should exist")
+        .filter(|path| path.as_ref().is_ok_and(|path| {
+            path.path().to_string_lossy().contains("wikipedia")
+        }))
+        .collect_vec();
+    let output_path = "/data/wikipedia-tokenized/shard.bin";
+    let output_file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(false)
+        .truncate(true)
+        .open(output_path)
+        .expect("Failed to open output file");
+    let mut output_writer = BufWriter::new(output_file);
+
+    fastrand::shuffle(&mut input_paths);
+
+    let tokens = input_paths
+        .into_par_iter()
+        .progress_with_style({
+    ProgressStyle::default_bar()
+        .template("Tokenizing der Wikipedia-Shards: [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
+        .expect("Template-Fehler")
+    })
+        .flat_map(|path| {
+            let path = path.expect("failed to read path").path();
+            let Some(text) = xml::extract_text(&path) else { return vec![] };
+            let mut tokens = bpe_state.tokenizer().tokenize_bytes(&text.as_bytes());
+            tokens.push(Token::new(0xff));
+            tokens
+        })
+        .collect::<Vec<_>>();
+
+    for token in tokens {
+        output_writer
+            .write_all(&token.into_inner().to_be_bytes())
+            .expect("Could not write to file");
+    }
+}
+
+#[allow(dead_code)]
 fn tokenize_plenarprotokolle() {
     let bpe_state = BpeState::synced_with_file("/vocab/fineweb2.vocab");
     let mut input_paths = Path::new("/data/plenarprotokolle-raw/")
