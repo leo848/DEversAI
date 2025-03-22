@@ -30,15 +30,17 @@ from gpt import GPTConfig, GPT
 # I/O
 out_dir = '/output'
 
-model_name = "anticausal1-laws1"
-input_model = "anticausal1"
-finetune_name = "plenarprotokolle-tokenized"
+model_name = "anticausal-fw2-laws1"
+input_model = "anticausal-fw2"
+finetune_name = "gesetze-tokenized"
 init_from_resume_checkpoint = 300_000
-
-eval_interval = 50
-log_interval = 1
+max_iters = 302_000
 checkpoint_interval = 200
-eval_iters = 200
+gpus_to_use_now = [0, 1]
+
+eval_interval = 25
+log_interval = 1
+eval_iters = 1000
 eval_only = False # if True, script exits right after the first eval
 always_save_checkpoint = True # if True, always save a checkpoint after each eval
 init_from = 'resume' # 'scratch' or 'resume' or 'gpt2*'
@@ -55,7 +57,6 @@ dropout = 0.1 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
 learning_rate = 6e-5 # max learning rate
-max_iters = 310_000
 weight_decay = 1e-1
 beta1 = 0.9
 beta2 = 0.95
@@ -84,7 +85,6 @@ config = {k: globals()[k] for k in config_keys} # will be useful for logging
 # various inits, derived attributes, I/O setup
 ddp = int(os.environ.get('RANK', -1)) != -1 # is this a ddp run?
 if ddp:
-    gpus_to_use_now = [6, 7, 8, 9]
     init_process_group(backend=backend)
     ddp_rank = int(os.environ['RANK'])
     ddp_local_rank = gpus_to_use_now[int(os.environ['LOCAL_RANK'])]
@@ -115,32 +115,69 @@ device_type = 'cuda' if 'cuda' in device else 'cpu' # for later use in torch.aut
 ptdtype = {'float32': torch.float32, 'bfloat16': torch.bfloat16, 'float16': torch.float16}[dtype]
 ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=device_type, dtype=ptdtype)
 
-data_dir = "/data/"
-calls_per_file = 32
-access_indices = {"train": [], "val": []}
-epoch = {"train": 0, "val": 0}
+data_dir = f"/data/{finetune_name}"
 
-def get_batch(split):
+def get_all_data_files(split):
+    assert split in {"train", "val"}
+    files = os.listdir(os.path.join(data_dir, split))
+    random.shuffle(files)
+    return files
+
+data_epoch = {split: -1 for split in ("train", "val")}
+data_file_stack = {split: [] for split in ("train", "val")}
+data_ix_stack = {split: [] for split in ("train", "val")}
+
+def get_estimated_epoch(split: str):
+    return data_epoch[split] + (1 - len(data_file_stack[split]) / len(get_all_data_files(split)))
+
+def get_batch(split: str, retries=10):
     assert split in {"train", "val"}
     assert causality in {"causal", "anticausal"}
     # We recreate np.memmap every batch to avoid a memory leak, as per
     # https://stackoverflow.com/questions/45132940/numpy-memmap-memory-usage-want-to-iterate-once/61472122#61472122
-    data = np.memmap(os.path.join(data_dir, finetune_name, f"{split}.bin"), dtype=np.dtype(">u2"), mode='r')
-    if len(access_indices[split]) < batch_size:
-        start_idx = int(len(data) * ddp_rank / ddp_world_size)
-        end_idx = int(len(data) * (ddp_rank + 1) / ddp_world_size)
-        access_indices[split] = list(range(start_idx, end_idx-block_size-batch_size-1))
-        random.shuffle(access_indices[split])
-        epoch[split] += 1
-        if split == "train":
-            print("train epoch", epoch[split])
-    ix = list(access_indices[split].pop() for _ in range(batch_size))
-    if causality == "causal":
-        x = torch.stack([torch.from_numpy((data[i:i+block_size]).astype(np.int64)) for i in ix])
-        y = torch.stack([torch.from_numpy((data[i+1:i+1+block_size]).astype(np.int64)) for i in ix])
-    elif causality == "anticausal":
-        x = torch.stack([torch.from_numpy((data[i+1:i+1+block_size][::-1]).astype(np.int64)) for i in ix])
-        y = torch.stack([torch.from_numpy((data[i:i+block_size][::-1]).astype(np.int64)) for i in ix])
+    if len(data_file_stack[split]) == 0:
+        data_epoch[split] += 1
+        if master_process:
+            print(f"{split} epoch {data_epoch[split]}")
+        data_file_stack[split] = get_all_data_files(split)
+        data_ix_stack[split] = [-1] # sentinel
+    try:
+        filename = cast(str, data_file_stack[split][-1])
+        data = np.memmap(
+            os.path.join(data_dir, split, filename),
+            dtype=np.dtype(">u2"),
+            mode='r'
+        )
+
+        if len(data_ix_stack[split]) == 1 and data_ix_stack[split][0] == -1: # sentinel
+            offset = random.randint(0, block_size * 2)
+            indices = list(range(
+                len(data) * ddp_rank // ddp_world_size + offset,
+                len(data) * (ddp_rank + 1) // ddp_world_size - block_size * 2,
+                block_size * 2,
+            ))
+            random.shuffle(indices)
+            data_ix_stack[split] = indices
+        if len(data_ix_stack[split]) < batch_size:
+            data_file_stack[split].pop()
+            data_ix_stack[split] = [-1]
+            return get_batch(split)
+
+        ix = [
+            data_ix_stack[split].pop()
+            for _ in range(batch_size)
+        ]
+
+        if causality == "causal":
+            x = torch.stack([torch.from_numpy((data[i:i+block_size]).astype(np.int64)) for i in ix])
+            y = torch.stack([torch.from_numpy((data[i+1:i+1+block_size]).astype(np.int64)) for i in ix])
+        elif causality == "anticausal":
+            x = torch.stack([torch.from_numpy((data[i+1:i+1+block_size][::-1]).astype(np.int64)) for i in ix])
+            y = torch.stack([torch.from_numpy((data[i:i+block_size][::-1]).astype(np.int64)) for i in ix])
+    except Exception:
+        if retries == 0:
+            raise
+        return get_batch(split, retries=retries-1)
 
     if device_type == 'cuda':
         # pin arrays x,y, which allows us to move them to GPU asynchronously (non_blocking=True)
@@ -150,7 +187,7 @@ def get_batch(split):
     return x, y
 
 if master_process:
-    writer = SummaryWriter(comment=f" {model_name}")
+    writer = SummaryWriter(comment=f"{model_name}")
 
 # init these up here, can override if init_from='resume' (i.e. from a checkpoint)
 iter_num = 0
