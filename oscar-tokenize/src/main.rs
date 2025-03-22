@@ -24,7 +24,7 @@ use regex::bytes::RegexSet;
 use rusqlite::{params, Connection};
 
 pub fn main() {
-    count_tokens();
+    tokenize_plenarprotokolle();
 }
 
 #[allow(dead_code)]
@@ -230,8 +230,8 @@ fn count_tokens() {
 
 #[allow(dead_code)]
 fn tokenize_plenarprotokolle() {
-    let bpe_state = BpeState::synced_with_file("/vocab/german-complete.vocab");
-    let input_paths = Path::new("/data/plenarprotokolle-raw/")
+    let bpe_state = BpeState::synced_with_file("/vocab/fineweb2.vocab");
+    let mut input_paths = Path::new("/data/plenarprotokolle-raw/")
         .read_dir()
         .expect("directory should exist")
         .collect_vec();
@@ -244,6 +244,8 @@ fn tokenize_plenarprotokolle() {
         .open(output_path)
         .expect("Failed to open output file");
     let mut output_writer = BufWriter::new(output_file);
+
+    fastrand::shuffle(&mut input_paths);
 
     let tokens = input_paths
         .into_par_iter()
