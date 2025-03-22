@@ -254,7 +254,7 @@ fn tokenize_wikipedia() {
         .into_par_iter()
         .progress_with_style({
         ProgressStyle::default_bar()
-            .template("Tokenizing der Gesetze: [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
+            .template("Tokenizing der Wikipedia: [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
             .expect("Template-Fehler")
         })
         .flat_map(|path| {
