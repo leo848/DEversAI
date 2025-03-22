@@ -24,7 +24,7 @@ use regex::bytes::RegexSet;
 use rusqlite::{params, Connection};
 
 pub fn main() {
-    tokenize_gesetze();
+    tokenize_wikipedia();
 }
 
 #[allow(dead_code)]
@@ -253,14 +253,16 @@ fn tokenize_wikipedia() {
     let tokens = input_paths
         .into_par_iter()
         .progress_with_style({
-    ProgressStyle::default_bar()
-        .template("Tokenizing der Wikipedia-Shards: [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
-        .expect("Template-Fehler")
-    })
+        ProgressStyle::default_bar()
+            .template("Tokenizing der Gesetze: [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
+            .expect("Template-Fehler")
+        })
         .flat_map(|path| {
+            let mut buffer = Vec::with_capacity(1_000_000);
             let path = path.expect("failed to read path").path();
-            let Some(text) = xml::extract_text(&path) else { return vec![] };
-            let mut tokens = bpe_state.tokenizer().tokenize_bytes(&text.as_bytes());
+            let mut file = File::open(path).expect("failed to open file");
+            file.read_to_end(&mut buffer).expect("failed to read file");
+            let mut tokens = bpe_state.tokenizer().tokenize_bytes(&buffer);
             tokens.push(Token::new(0xff));
             tokens
         })
