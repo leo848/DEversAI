@@ -56,7 +56,7 @@ if compile:
 
 # run generation
 with torch.no_grad(), ctx:
-    directory = "/data/{data_dir}/"
+    directory = f"/data/{data_dir}/"
     if "val" in os.listdir(directory):
         directory += "val/"
     for file in tqdm(files):
