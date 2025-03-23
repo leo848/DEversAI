@@ -12,11 +12,10 @@ import bracex
 
 # -----------------------------------------------------------------------------
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
-seed = random.randint(0, int(1e10))
-print(f"Using seed {seed}")
+model_name = "causal-fw2"
+data_dir = "fw2-tokenized"
 
-ckpt_value = 100000
-causality = "causal"
+ckpt_value = 300000
 device = 'cuda:0' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 files = bracex.expand("fw2-shard-000{0,1,2}0.bin")
 
@@ -24,10 +23,12 @@ dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported
 compile = True # use PyTorch 2.0 to compile the model to be faster
 batch_size = 32
 block_size = 1024
+causality = "anticausal" if "anticausal" in model_name else "causal"
 
 exec(open('configurator.py').read()) # overrides from command line or config file
 # -----------------------------------------------------------------------------
 
+seed = random.randint(0, int(1e10))
 torch.manual_seed(seed)
 torch.cuda.manual_seed(seed)
 torch.backends.cuda.matmul.allow_tf32 = True # allow tf32 on matmul
@@ -54,7 +55,9 @@ if compile:
 
 # run generation
 with torch.no_grad(), ctx:
-    directory = "/data/fw2-tokenized/val"
+    directory = "/data/{data_dir}/"
+    if "val" in os.listdir(directory):
+        directory += "val/"
     for file in tqdm(files):
         losses = []
         try:
