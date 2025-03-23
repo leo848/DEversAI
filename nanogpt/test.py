@@ -38,7 +38,7 @@ device_type = 'cuda' if 'cuda' in device else 'cpu' # for later use in torch.aut
 ptdtype = {'float32': torch.float32, 'bfloat16': torch.bfloat16, 'float16': torch.float16}[dtype]
 ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=device_type, dtype=ptdtype)
 
-ckpt_path = f"/output/{causality}-fw2/ckpt_{ckpt_value}.pt"
+ckpt_path = f"/output/{model_name}/ckpt_{ckpt_value}.pt"
 checkpoint = torch.load(ckpt_path, map_location=device, weights_only=True)
 gptconf = GPTConfig(**checkpoint['model_args'])
 model = GPT(gptconf)
