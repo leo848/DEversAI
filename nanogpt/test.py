@@ -18,6 +18,7 @@ data_dir = "fw2-tokenized"
 ckpt_value = 300000
 device = 'cuda:0' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 files = bracex.expand("fw2-shard-000{0,1,2}0.bin")
+skip_every = 1
 
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
 compile = True # use PyTorch 2.0 to compile the model to be faster
@@ -69,7 +70,7 @@ with torch.no_grad(), ctx:
             total_loss = 0
             num_batches = 0
 
-            for start_i in tqdm(list(range(0, len(data) - block_size - batch_size - 1, block_size if skip_every_block_size else 1))):
+            for start_i in tqdm(list(range(0, len(data) - block_size - batch_size - 1, block_size if skip_every_block_size else skip_every))):
                 x, y = None, None
                 if causality == "causal":
                     x = torch.stack( [
