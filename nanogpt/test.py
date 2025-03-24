@@ -12,12 +12,12 @@ import bracex
 
 # -----------------------------------------------------------------------------
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
-model_name = "causal-fw2"
-data_dir = "fw2-tokenized"
+model_name = "causal-fw2-laws1"
+data_dir = "gesetze-tokenized"
 
 ckpt_value = 300000
 device = 'cuda:0' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
-files = bracex.expand("fw2-shard-000{0,1,2}0.bin")
+files = bracex.expand("val.bin")
 skip_every = 1
 
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
@@ -106,7 +106,9 @@ with torch.no_grad(), ctx:
             print(f"Exception: {e}")
         losses_numpy = np.array(losses)
         mean = np.mean(losses_numpy)
-        filename = f"/output/{causality}-fw2/{file}-losses.npy"
+        filename = f"/output/{model_name}/{file}-losses.npy"
+        while os.path.isfile(filename):
+            filename = filename.replace("losses", "losses-2")
         np.save(filename, losses_numpy)
         print(f"Saved {len(losses_numpy)} loss entries (mean {mean}) to {filename}")
 
