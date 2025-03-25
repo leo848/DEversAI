@@ -12,7 +12,6 @@ import random
 import numpy as np
 
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
-model_name = "causal1.pt"
 out_dir = 'output' # ignored if init_from is not 'resume'
 
 device = 'cpu' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
@@ -23,8 +22,9 @@ assert init_from == "resume"
 
 exec(open('configurator.py').read()) # overrides from command line or config file
 
-for model_name in tqdm(bracex.expand("anticausal-fw2.pt")):
-    print(model_name)
+for model_id in tqdm(bracex.expand("{anti,}causal-fw2-{laws,plenar}1")):
+    print(model_id)
+    model_name = model_id + ".pt"
     ckpt_path = os.path.join(out_dir, model_name)
     checkpoint = torch.load(ckpt_path, map_location=device, weights_only=True)
     gptconf = GPTConfig(**checkpoint['model_args'])
@@ -44,7 +44,7 @@ for model_name in tqdm(bracex.expand("anticausal-fw2.pt")):
 
     data = model.transformer.wte(tokens).detach().clone().numpy()
 
-    for dim in [2, 3, 768]:
+    for dim in tqdm([2, 3, 768], leave=False):
         if dim != 768:
             embedding = pacmap.PaCMAP(n_components=dim, n_neighbors=None, num_iters=900, verbose=True)
 
@@ -52,10 +52,11 @@ for model_name in tqdm(bracex.expand("anticausal-fw2.pt")):
         else:
             data_transformed = data
 
-        np.save(f"output/{model_name}-embedding-{dim}d.npy", data_transformed)
+        np.save(f"output/{model_id}-embedding-{dim}d.npy", data_transformed)
+        np.save(f"../shallow-backend/assets/embedding/{dim}d/{model_id}.npy", data_transformed)
 
         gc.collect()
 
 def extract_wpe(model):
     data = model.transformer.wpe(torch.tensor(np.arange(0, 1024))).detach().clone().transpose(0, 1).numpy()
-    np.save(f"output/{model_name}-embedding-{dim}d.npy", data_transformed)
+    np.save(f"output/{model_id}-embedding-{dim}d.npy", data_transformed)
