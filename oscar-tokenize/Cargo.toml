@@ -9,7 +9,7 @@ path = "src/lib.rs"
 
 [dependencies]
 arrow = "53.3.0"
-crossbeam-channel = "0.5.13"
+crossbeam-channel = "0.5.15"
 dashmap = "6.1.0"
 derive_more = { version = "1.0.0", features = ["add", "add_assign", "sum", "constructor"] }
 fastrand = "2.3.0"
