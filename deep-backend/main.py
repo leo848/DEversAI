@@ -18,6 +18,8 @@ class ModelLocation:
 MODEL_LOCATIONS = [
     ModelLocation("anticausal1", 300_000, 9),
     ModelLocation("causal1", 300_000, 9),
+    ModelLocation("anticausal-fw2", 300_000, 9),
+    ModelLocation("causal-fw2", 300_000, 9),
 ]
 
 # Load models and assign a unique CUDA Stream to each
