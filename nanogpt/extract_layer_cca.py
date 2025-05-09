@@ -37,4 +37,24 @@ for comp in range(num_components):
     ])
 
 # Output JSON to stdout
-print(json.dumps(results, indent=2))
+# print(json.dumps(results, indent=2))
+
+# Compute projection onto first canonical dimension
+for i in range(num_components):
+    print("num_components =", i)
+    x_projected = X @ cca.x_weights_[:, i]  # Project X onto first CCA dimension
+    y_projected = Y @ cca.y_weights_[:, i]  # Project Y onto first CCA dimension
+
+    # Get indices of most positive and most negative points
+    num_top_ids = 20  # Number of extreme data points to display
+
+    x_most_pos = np.argsort(-x_projected)[:num_top_ids].tolist()  # Most positive
+    x_most_neg = np.argsort(x_projected)[:num_top_ids].tolist()   # Most negative
+    y_most_pos = np.argsort(-y_projected)[:num_top_ids].tolist()
+    y_most_neg = np.argsort(y_projected)[:num_top_ids].tolist()
+
+    # Output results in a machine-readable format
+    print("anticausal_most_pos =", x_most_pos)
+    print("anticausal_most_neg =", x_most_neg)
+    print("causal_most_pos =", y_most_pos)
+    print("causal_most_neg =", y_most_neg)
