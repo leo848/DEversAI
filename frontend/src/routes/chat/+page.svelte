@@ -78,7 +78,7 @@
 		let modelInput = causality == "causal"
 			? tokens[causality].toReversed()
 			: tokens[causality];
-		logitsInference[causality] = () => client.modelLogits(options.modelId + causality, modelInput);
+		logitsInference[causality] = () => client.modelLogits(causality + options.modelId, modelInput);
 	}
 </script>
 

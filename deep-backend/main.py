@@ -31,7 +31,7 @@ for model in MODEL_LOCATIONS:
     MODELS[model.name] = GPT.load(
         os.path.join("/output", model.name, f"ckpt_{model.ckpt}.pt"),
         device=device,
-        compile=True,
+        compile=False,
     )
     STREAMS[model.name] = torch.cuda.Stream(device=torch.device(device))
 
