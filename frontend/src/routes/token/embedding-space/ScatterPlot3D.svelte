@@ -11,7 +11,7 @@
 	import { PointCloudLayer } from '@deck.gl/layers';
 	import Token from '$lib/components/Token.svelte';
 
-	import vocabulary from '$lib/tokenizing/german50000';
+	import vocabulary from '$lib/tokenizing/fineweb2';
 	import { Color } from '$lib/util/color';
 	import type { Tuple } from '$lib/util/array';
 	import { Tween } from 'svelte/motion';

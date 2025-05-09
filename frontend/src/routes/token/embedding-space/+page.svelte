@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Client } from '$lib/backend/client';
 	import type { Token } from '$lib/tokenizing/token';
-	import vocabulary from '$lib/tokenizing/german50000';
+	import vocabulary from '$lib/tokenizing/fineweb2';
 	import type { Tuple } from '$lib/util/array';
 	import { Color, Gradient } from '$lib/util/color';
 	import ScatterPlot3D from './ScatterPlot3D.svelte';
@@ -15,9 +15,9 @@
 	import TokenComponent from '$lib/components/Token.svelte';
 
 	const client = new Client();
-	let modelDirectionality = $state('anticausal1') as 'anticausal1' | 'causal1';
+	let modelDirectionality = $state('anticausal') as 'anticausal' | 'augmented' | 'causal';
 	let modelFinetune = $state('') as '' | 'laws1' | 'plenar1';
-	let modelName = $derived(modelDirectionality + (modelFinetune ? '-' + modelFinetune : ''));
+	let modelName = $derived(modelDirectionality + "-fw2" + (modelFinetune && modelDirectionality != "augmented" ? '-' + modelFinetune : ''));
 
 	const embeddingData = $derived(client.getTokenEmbeddings(modelName));
 
@@ -295,20 +295,29 @@
 				>
 					3D
 				</button>
-				<button
-					class="align-center rounded border border-gray-200 p-3 text-center transition-all hover:bg-gray-100 active:bg-gray-100"
-					class:bg-gray-100={modelDirectionality == 'causal1'}
-					onclick={() => (modelDirectionality = 'causal1')}
-				>
-					causal1
-				</button>
-				<button
-					class="align-center rounded border border-gray-200 p-3 text-center transition-all hover:bg-gray-100 active:bg-gray-100"
-					class:bg-gray-100={modelDirectionality == 'anticausal1'}
-					onclick={() => (modelDirectionality = 'anticausal1')}
-				>
-					anticausal1
-				</button>
+				<div class="grid grid-cols-5 col-span-2 gap-4">
+					<button
+						class="col-span-2 align-center rounded border border-gray-200 p-3 text-center transition-all hover:bg-gray-100 active:bg-gray-100"
+						class:bg-gray-100={modelDirectionality == 'causal'}
+						onclick={() => (modelDirectionality = 'causal')}
+					>
+						causal1
+					</button>
+					<button
+						class="align-center rounded border border-gray-200 p-3 text-center transition-all hover:bg-gray-100 active:bg-gray-100"
+						class:bg-gray-100={modelDirectionality == 'augmented'}
+						onclick={() => (modelDirectionality = 'augmented')}
+						>
+						+
+					</button>
+					<button
+						class="col-span-2 align-center rounded border border-gray-200 p-3 text-center transition-all hover:bg-gray-100 active:bg-gray-100"
+						class:bg-gray-100={modelDirectionality == 'anticausal'}
+						onclick={() => (modelDirectionality = 'anticausal')}
+					>
+						anticausal1
+					</button>
+				</div>
 				<div class="self-center text-right">Finetune</div>
 				<select bind:value={modelFinetune}>
 					<option value="">Basis</option>
