@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { Client } from '$lib/backend/client';
 	import BorderSection from '$lib/components/BorderSection.svelte';
+	import {models, type ModelId} from '$lib/backend/models';
 	import EmergentSpinner from '$lib/components/EmergentSpinner.svelte';
 	import TopLogits from '$lib/components/TopLogits.svelte';
-	import vocabulary from '$lib/tokenizing/german50000';
+	import vocabs from '$lib/tokenizing/vocabs';
 	import SimpleInferenceButton from './SimpleInferenceButton.svelte';
 	import InferenceOptions from './InferenceOptions.svelte';
 	import type { Token } from '$lib/tokenizing/token';
@@ -16,27 +17,28 @@
 	let inputString = $state(initialValue);
 
 	let processString = $state({
-		anticausal1: initialValue,
-		causal1: initialValue
+		anticausal: initialValue,
+		causal: initialValue
 	});
 
+	let vocabulary = (modelId: ModelId) => vocabs[models[modelId].vocab];
+
 	let tokens = $state({
-		anticausal1: vocabulary.tokenize(initialValue),
-		causal1: vocabulary.tokenize(initialValue)
+		anticausal: vocabs.fineweb2.tokenize(initialValue),
+		causal: vocabs.fineweb2.tokenize(initialValue)
 	});
 
 	let logitsInference = $state({
-		anticausal1: () => client.modelLogits('anticausal1', tokens.anticausal1.toReversed()),
-		causal1: () => client.modelLogits('causal1', tokens.causal1)
+		anticausal: () => client.modelLogits('anticausal-fw2', tokens.anticausal.toReversed()),
+		causal: () => client.modelLogits('causal-fw2', tokens.causal)
 	});
 
-	const generate = $state((modelName: string) => {
-		const causality = modelName.includes('anticausal') ? 'anticausal' : 'causal';
+	const generate = $state((causality: "anticausal" | "causal") => {
 		const tokenInput = {
 			anticausal: (it: Token[]) => it.toReversed(),
 			causal: (it: Token[]) => it
-		}[causality](vocabulary.tokenize(inputString));
-		const gen = client.autoregressiveInference(modelName, tokenInput, {
+		}[causality](vocabulary(options.modelId).tokenize(inputString));
+		const gen = client.autoregressiveInference(causality + options.modelId, tokenInput, {
 			num_tokens: Math.floor(Math.exp(options.maxTokens_log)),
 			temperature: options.temperature,
 			top_k: Math.floor(Math.exp(options.topK_log)),
@@ -48,8 +50,8 @@
 				for (const token of tokens) {
 					if (token == 0xff && options.respectEot) break outer;
 					({
-						causal: () => (inputString += vocabulary.tokens[token].toString()),
-						anticausal: () => (inputString = vocabulary.tokens[token].toString() + inputString)
+						causal: () => (inputString += vocabulary(options.modelId).tokens[token].toString()),
+						anticausal: () => (inputString = vocabulary(options.modelId).tokens[token].toString() + inputString)
 					})[causality]();
 				}
 			}
@@ -66,16 +68,17 @@
 		topK_log: Math.log(200),
 		maxTokens_log: Math.log(200),
 		syntheticWait_millis: 0,
-		respectEot: true
+		respectEot: true,
+		modelId: "-fw2" as "1" | "-fw2",
 	});
 
-	function refreshModel(modelName: 'anticausal1' | 'causal1') {
-		processString[modelName] = inputString;
-		tokens[modelName] = vocabulary.tokenize(processString[modelName]);
-		let modelInput = modelName.includes('anti')
-			? tokens[modelName].toReversed()
-			: tokens[modelName];
-		logitsInference[modelName] = () => client.modelLogits(modelName, modelInput);
+	function refreshModel(causality: 'anticausal' | 'causal') {
+		processString[causality] = inputString;
+		tokens[causality] = vocabulary(options.modelId).tokenize(processString[causality]);
+		let modelInput = causality == "causal"
+			? tokens[causality].toReversed()
+			: tokens[causality];
+		logitsInference[causality] = () => client.modelLogits(options.modelId + causality, modelInput);
 	}
 </script>
 
@@ -91,7 +94,7 @@
 		<div class="col-span-8 grid w-full gap-4">
 			<SimpleInferenceButton
 				causality="anticausal"
-				onclick={generate('anticausal1')}
+				onclick={generate('anticausal')}
 				disabled={inProgress.ongoing}
 			/>
 			<textarea
@@ -103,20 +106,20 @@
 			></textarea>
 			<SimpleInferenceButton
 				causality="causal"
-				onclick={generate('causal1')}
+				onclick={generate('causal')}
 				disabled={inProgress.ongoing}
 			/>
 			<div class="grid grid-cols-12 gap-4">
 				<div class="col-span-6">
 					<BorderSection title="Rückinferenz" open={false}>
-						{#if inputString != processString.anticausal1}
+						{#if inputString != processString.anticausal}
 							<div class="w-full p-2 text-xl" transition:slide={{ axis: 'y' }}>
-								<button class="rounded bg-fire-400 p-2" onclick={() => refreshModel('anticausal1')}
+								<button class="rounded bg-fire-400 p-2" onclick={() => refreshModel('anticausal')}
 									>Aktualisieren</button
 								>
 							</div>
 						{/if}
-						{#await logitsInference.anticausal1()}
+						{#await logitsInference.anticausal()}
 							<EmergentSpinner />
 						{:then logitsResponse}
 							<TopLogits
@@ -134,14 +137,14 @@
 				</div>
 				<div class="col-span-6">
 					<BorderSection title="Hininferenz" open={false}>
-						{#if inputString != processString.causal1}
+						{#if inputString != processString.causal}
 							<div class="w-full p-2 text-xl" transition:slide={{ axis: 'y' }}>
-								<button class="rounded bg-fire-400 p-2" onclick={() => refreshModel('causal1')}
+								<button class="rounded bg-fire-400 p-2" onclick={() => refreshModel('causal')}
 									>Aktualisieren</button
 								>
 							</div>
 						{/if}
-						{#await logitsInference.causal1()}
+						{#await logitsInference.causal()}
 							<EmergentSpinner />
 						{:then logitsResponse}
 							<TopLogits

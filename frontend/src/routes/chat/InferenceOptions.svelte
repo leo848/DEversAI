@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type {ModelId} from "$lib/backend/models";
+
 	let {
 		value = $bindable()
 	}: {
@@ -8,11 +10,23 @@
 			topK_log: number;
 			syntheticWait_millis: number;
 			respectEot: boolean;
+			modelId: ModelId,
 		};
 	} = $props();
 </script>
 
 <div class="flex flex-col gap-4 text-lg">
+	<div class="flex flex-col">
+		<div>Ausgewähltes Modell</div>
+		<select bind:value={value.modelId}>
+			<option value="1">
+				OSCAR (1)
+			</option>
+			<option value="-fw2">
+				FineWeb (2)
+			</option>
+		</select>
+	</div>
 	<div class="flex flex-col">
 		<div>Maximal erzeugte Tokens: <b>{Math.round(Math.exp(value.maxTokens_log))}</b></div>
 		<input
