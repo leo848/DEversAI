@@ -29,8 +29,8 @@
 	});
 
 	let logitsInference = $state({
-		anticausal: () => client.modelLogits('anticausal-fw2', tokens.anticausal.toReversed()),
-		causal: () => client.modelLogits('causal-fw2', tokens.causal)
+		anticausal: () => client.modelLogits("anticausal" + options.modelId, tokens.anticausal.toReversed()),
+		causal: () => client.modelLogits("causal" + options.modelId, tokens.causal)
 	});
 
 	const generate = $state((causality: "anticausal" | "causal") => {
@@ -124,6 +124,7 @@
 						{:then logitsResponse}
 							<TopLogits
 								{logitsResponse}
+		   						vocabulary={vocabulary(options.modelId)}
 								temperature={options.temperature}
 								topK={Math.floor(Math.exp(options.topK_log))}
 								ontokenclick={(token) => {
@@ -149,6 +150,7 @@
 						{:then logitsResponse}
 							<TopLogits
 								{logitsResponse}
+		   						vocabulary={vocabulary(options.modelId)}
 								temperature={options.temperature}
 								topK={Math.floor(Math.exp(options.topK_log))}
 								ontokenclick={(token) => {

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import InverseBinaryTree from '$lib/components/InverseBinaryTree.svelte';
-	import vocabulary from '$lib/tokenizing/german50000';
+	import vocabulary from '$lib/tokenizing/fineweb2';
 	import Icon from '@iconify/svelte';
 	import { scale } from 'svelte/transition';
 	import { page } from '$app/stores';
@@ -14,6 +14,7 @@
 	import EmbeddingCircles from '$lib/components/EmbeddingCircles.svelte';
 	import TokenOccurrence from './TokenOccurrence.svelte';
 	import AugmentedTokenList from '$lib/components/AugmentedTokenList.svelte';
+	import type {ModelId} from '$lib/backend/models';
 
 	const tokenIndex = $derived(+$page.params.id);
 	const token = $derived(vocabulary.tokens[tokenIndex]);
@@ -28,8 +29,8 @@
 	const tokenData = $derived(client.getTokenInfo(token));
 
 	const predictions = $derived({
-		causal1: client.modelLogits('causal1', [token]),
-		anticausal1: client.modelLogits('anticausal1', [token])
+		causal: client.modelLogits('causal-fw2', [token]),
+		anticausal: client.modelLogits('anticausal-fw2', [token])
 	});
 
 	let showPercentages = $state(false);
@@ -232,21 +233,21 @@
 			<BorderSection title="Vorhersagen">
 				<div class="grid grid-cols-2 gap-4">
 					<div>
-						<div>anticausal1</div>
-						{#await predictions.anticausal1}
+						<div>anticausal-fw2</div>
+						{#await predictions.anticausal}
 							<EmergentSpinner />
 						{:then logitsResponse}
-							<TopLogits {logitsResponse} />
+							<TopLogits {logitsResponse} {vocabulary} />
 						{:catch error}
 							<div>{error}</div>
 						{/await}
 					</div>
 					<div>
-						<div>causal1</div>
-						{#await predictions.causal1}
+						<div>causal-fw2</div>
+						{#await predictions.causal}
 							<EmergentSpinner />
 						{:then logitsResponse}
-							<TopLogits {logitsResponse} />
+							<TopLogits {logitsResponse} {vocabulary} />
 						{:catch error}
 							<div>{error}</div>
 						{/await}

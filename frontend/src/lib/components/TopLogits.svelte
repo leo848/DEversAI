@@ -1,18 +1,20 @@
 <script lang="ts">
 	import type { LogitsResponse } from '$lib/backend/types';
-	import vocabulary from '$lib/tokenizing/german50000';
 	import type { Token } from '$lib/tokenizing/token';
 	import { sortByKey } from '$lib/util/array';
 	import TokenComponent from './Token.svelte';
 	import AugmentedTokenList from './AugmentedTokenList.svelte';
+	import type {Vocabulary} from '$lib/tokenizing/vocabulary';
 
 	const {
 		logitsResponse,
+		vocabulary,
 		temperature = 1.0,
 		topK = 50256,
 		ontokenclick = undefined
 	}: {
 		logitsResponse: LogitsResponse;
+		vocabulary: Vocabulary;
 		temperature?: number;
 		topK?: number;
 		ontokenclick?: (token: Token) => void;
