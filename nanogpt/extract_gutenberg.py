@@ -30,11 +30,16 @@ def all_files(root_folder="/data/gutenberg-raw"):
 def main():
     files = all_files()
     counter = 0
+    SKIP_FIRST = 10000
+    STOP_AFTER = 10100
 
     contents = []
 
     for file in tqdm(files):
         counter += 1
+        if counter < SKIP_FIRST:
+            continue
+
         with open(file) as f:
             soup = BeautifulSoup(f.read(), "html.parser")
         body = soup.body
@@ -63,7 +68,7 @@ def main():
             if found_heading and tag.name == "p":
                 body_paragraphs.append(tag.get_text(strip=True))
 
-        if counter > 1000:
+        if counter > STOP_AFTER:
             break
 
         content = "\n".join(body_paragraphs)
