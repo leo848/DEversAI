@@ -31,7 +31,7 @@ pub fn main() {
 pub fn find_token_examples() {
     const EXAMPLE_COUNT: usize = 100;
     const TOKENS_CONTEXT: usize = 100;
-    const MAX_TRIES: usize = EXAMPLE_COUNT + 100;
+    const MAX_TRIES: usize = 5;
 
     let paths = std::env::args()
         .skip(1)
@@ -82,8 +82,10 @@ pub fn find_token_examples() {
                     }
                 }
                 if !found_token {
+                    counter += 1;
                     continue;
                 }
+                counter = 0;
 
                 let mut bytes_after = [0u8; TOKENS_CONTEXT * 2];
                 reader
@@ -147,10 +149,6 @@ pub fn find_token_examples() {
                 }
 
                 examples.insert((str_before, str_after));
-            }
-            if fastrand::f32() < 0.01 {
-                let ex = &examples.first().cloned().unwrap_or_default();
-                dbg!(ex);
             }
 
             (token.index().to_string(), examples)
