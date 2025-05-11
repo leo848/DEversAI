@@ -75,8 +75,8 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
     if not result:
         raise HTTPException(status_code=404, detail="Token ID not found")
 
-    (causal1_nn_dist, causal1_nn) = causal_fw2_nn_model.kneighbors([causal_fw2_embeddings[token_id]], 50)
-    (anticausal1_nn_dist, anticausal1_nn) = anticausal_fw2_nn_model.kneighbors([anticausal_fw2_embeddings[token_id]], 50)
+    (causal_fw2_nn_dist, causal_fw2_nn) = causal_fw2_nn_model.kneighbors([causal_fw2_embeddings[token_id]], 50)
+    (anticausal_fw2_nn_dist, anticausal_fw2_nn) = anticausal_fw2_nn_model.kneighbors([anticausal_fw2_embeddings[token_id]], 50)
 
     occurrence_dict = {}
     occurrence_dict[str(token_id)] = {
@@ -94,8 +94,8 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
         "id": token_id,
         "examples": json.loads(result[0]),
         "embedding_768d": {
-            "causal1": causal_fw2_embeddings[token_id].tolist(),
-            "anticausal1": anticausal_fw2_embeddings[token_id].tolist(),
+            "causal_fw2": causal_fw2_embeddings[token_id].tolist(),
+            "anticausal_fw2": anticausal_fw2_embeddings[token_id].tolist(),
         },
         "occurrences": {
             "total": np.sum(occurrences_direct).item(),
@@ -103,12 +103,12 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
         },
         "nearest_neighbors": {
             "causal_fw2": {
-                "neighbors": causal1_nn[0][1:].tolist(),
-                "distances": causal1_nn_dist[0][1:].tolist(),
+                "neighbors": causal_fw2_nn[0][1:].tolist(),
+                "distances": causal_fw2_nn_dist[0][1:].tolist(),
             },
             "anticausal_fw2": {
-                "neighbors": anticausal1_nn[0][1:].tolist(),
-                "distances": anticausal1_nn_dist[0][1:].tolist(),
+                "neighbors": anticausal_fw2_nn[0][1:].tolist(),
+                "distances": anticausal_fw2_nn_dist[0][1:].tolist(),
             }
         },
     }
