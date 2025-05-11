@@ -69,7 +69,7 @@ occurrences_transitive = np.loadtxt("assets/transitive_histogram2.txt", dtype=np
 
 @app.get("/v0/token/{token_id}/info")
 def token_info(token_id: int, db: scoped_session = Depends(get_db)):
-    query = text("SELECT examples FROM token_examples_fineweb2 WHERE token_id = :token_id")
+    query = text("SELECT examples FROM token_examples_fineweb WHERE token_id = :token_id")
     result = db.execute(query, {"token_id": str(token_id)}).fetchone()
 
     if not result:
