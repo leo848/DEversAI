@@ -84,10 +84,8 @@ def main():
         content = "\n".join(body_paragraphs)
         contents.append((file, content))
 
-        print(len(content), end = " ", flush=True)
-
     for path, content in contents:
-        parts = path.parts[-3:]
+        parts = list(path.parts[-3:])
         if path.suffix:
             parts[-1] = path.stem
         print(parts)
