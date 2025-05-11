@@ -139,7 +139,7 @@ pub fn find_token_examples() {
                 let str_before = split_before(ctx_before);
                 let str_after = split_after(ctx_after);
 
-                if str_before.len() < 5 || str_after.len() < 5 {
+                if (str_before.len() < 5 || str_after.len() < 5) && fastrand::f32() < 0.9 {
                     continue;
                 }
 
