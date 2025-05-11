@@ -3,6 +3,8 @@ import os
 import pathlib
 from tqdm import tqdm
 
+def tqdm(x):
+    return x
 
 def is_relevant_file(path) -> bool:
     if path.suffix != ".html":
