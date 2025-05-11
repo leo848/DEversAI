@@ -45,7 +45,7 @@ pub fn find_token_examples() {
     // Open SQLite database connection
     let conn = Connection::open("/output/token_examples.db").expect("Failed to open database");
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS token_examples2 (
+        "CREATE TABLE IF NOT EXISTS token_examples_fineweb (
             token_id TEXT PRIMARY KEY,
             examples TEXT
         )",
@@ -148,6 +148,8 @@ pub fn find_token_examples() {
 
                 examples.insert((str_before, str_after));
             }
+            let ex = &examples.first().cloned().unwrap_or_default();
+            dbg!(ex);
 
             (token.index().to_string(), examples)
         })
@@ -155,7 +157,7 @@ pub fn find_token_examples() {
 
     // Insert into SQLite
     let mut stmt = conn
-        .prepare("INSERT OR REPLACE INTO token_examples2 (token_id, examples) VALUES (?, ?)")
+        .prepare("INSERT OR REPLACE INTO token_examples_fineweb (token_id, examples) VALUES (?, ?)")
         .expect("Failed to prepare insert statement");
 
     for (token_id, examples) in token_examples {
