@@ -56,13 +56,13 @@ vocab = {
 def root_route():
     return {"status": "OK"}
 
-causal1_embeddings = np.load("assets/embedding/768d/causal1.npy")
-anticausal1_embeddings = np.load("assets/embedding/768d/anticausal1.npy")
+causal_fw2_embeddings = np.load("assets/embedding/768d/causal1.npy")
+anticausal_fw2_embeddings = np.load("assets/embedding/768d/anticausal1.npy")
 
-causal1_nn_model = NearestNeighbors(metric = "cosine")
-causal1_nn_model.fit(causal1_embeddings)
-anticausal1_nn_model = NearestNeighbors(metric = "cosine")
-anticausal1_nn_model.fit(anticausal1_embeddings)
+causal_fw2_nn_model = NearestNeighbors(metric = "cosine")
+causal_fw2_nn_model.fit(causal_fw2_embeddings)
+anticausal_fw2_nn_model = NearestNeighbors(metric = "cosine")
+anticausal_fw2_nn_model.fit(anticausal_fw2_embeddings)
 
 occurrences_direct = np.loadtxt("assets/direct_histogram2.txt", dtype=np.long)
 occurrences_transitive = np.loadtxt("assets/transitive_histogram2.txt", dtype=np.long)
@@ -75,8 +75,8 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
     if not result:
         raise HTTPException(status_code=404, detail="Token ID not found")
 
-    (causal1_nn_dist, causal1_nn) = causal1_nn_model.kneighbors([causal1_embeddings[token_id]], 50)
-    (anticausal1_nn_dist, anticausal1_nn) = anticausal1_nn_model.kneighbors([anticausal1_embeddings[token_id]], 50)
+    (causal1_nn_dist, causal1_nn) = causal_fw2_nn_model.kneighbors([causal_fw2_embeddings[token_id]], 50)
+    (anticausal1_nn_dist, anticausal1_nn) = anticausal_fw2_nn_model.kneighbors([anticausal_fw2_embeddings[token_id]], 50)
 
     occurrence_dict = {}
     occurrence_dict[str(token_id)] = {
@@ -94,8 +94,8 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
         "id": token_id,
         "examples": json.loads(result[0]),
         "embedding_768d": {
-            "causal1": causal1_embeddings[token_id].tolist(),
-            "anticausal1": anticausal1_embeddings[token_id].tolist(),
+            "causal1": causal_fw2_embeddings[token_id].tolist(),
+            "anticausal1": anticausal_fw2_embeddings[token_id].tolist(),
         },
         "occurrences": {
             "total": np.sum(occurrences_direct).item(),
