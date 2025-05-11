@@ -28,6 +28,10 @@ def all_files(root_folder="/data/gutenberg-raw"):
 
 def main():
     files = all_files()
+
+    print(len(list(files)))
+    exit(1)
+
     counter = 0
     SKIP_FIRST = None # 10000
     STOP_AFTER = 200 # 10100
