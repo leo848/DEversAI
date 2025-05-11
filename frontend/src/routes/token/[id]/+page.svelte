@@ -196,9 +196,7 @@
 							{#await tokenData}
 								<EmergentSpinner />
 							{:then tokenData}
-								{@const neighbors = tokenData.nearest_neighbors[modelId].neighbors}
-								{@const distances = tokenData.nearest_neighbors[modelId].distances}
-								{@debug distances}
+								{@const { neighbors, distances } = tokenData.nearest_neighbors[modelId] ?? { neighbors: [], distances: [] }}
 								<AugmentedTokenList
 									tokens={neighbors.map((id) => vocabulary.tokens[id])}
 									fields={[
