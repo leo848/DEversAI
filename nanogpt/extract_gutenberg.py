@@ -3,9 +3,6 @@ import os
 import pathlib
 from tqdm import tqdm
 
-def tqdm(x):
-    return x
-
 def is_relevant_file(path) -> bool:
     if path.suffix != ".html":
         return False
@@ -33,7 +30,7 @@ def main():
     files = all_files()
     counter = 0
     SKIP_FIRST = None # 10000
-    STOP_AFTER = None # 10100
+    STOP_AFTER = 20 # 10100
 
     contents = []
 
@@ -43,7 +40,10 @@ def main():
             continue
 
         with open(file) as f:
-            soup = BeautifulSoup(f.read(), "html.parser")
+            try:
+                soup = BeautifulSoup(f.read(), "html.parser")
+            except UnicodeDecodeError:
+                continue
         body = soup.body
         for nav in body.select(".navi-gb, .center, .footnote"):
             nav.decompose()
@@ -86,9 +86,12 @@ def main():
 
         print(len(content), end = " ", flush=True)
 
-    # for file, content in contents:
-        # print(file, ":", len(content), repr(content[:100]))
-        # print(file, ":", len(content), repr(content[:100]))
+    for path, content in contents:
+        parts = path.parts[-3:]
+        if path.suffix:
+            parts[-1] = path.stem
+        print(parts)
+        print(path, ":", len(content), repr(content[:100]))
 
 if __name__ == "__main__":
     main()
