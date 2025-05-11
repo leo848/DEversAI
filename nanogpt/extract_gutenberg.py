@@ -37,6 +37,8 @@ def main():
         counter += 1
         if SKIP_FIRST is not None and counter < SKIP_FIRST:
             continue
+        if STOP_AFTER is not None and counter > STOP_AFTER:
+            break
 
         with open(file) as f:
             try:
@@ -77,10 +79,10 @@ def main():
                 if text:
                     body_paragraphs.append(text)
 
-        if STOP_AFTER is not None and counter > STOP_AFTER:
-            break
-
         content = "\n".join(body_paragraphs)
+
+        if len(content) < 100:
+            continue
 
         parts = list(file.parts[-3:])
         if file.suffix:
