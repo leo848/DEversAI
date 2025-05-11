@@ -30,7 +30,7 @@ def main():
     files = all_files()
     counter = 0
     SKIP_FIRST = None # 10000
-    STOP_AFTER = 20 # 10100
+    STOP_AFTER = 200 # 10100
 
     contents = []
 
@@ -88,7 +88,10 @@ def main():
         parts = list(path.parts[-3:])
         if path.suffix:
             parts[-1] = path.stem
-        print(parts)
+        filename = "--".join(parts) + ".txt"
+        new_path = pathlib.Path("/data/gutenberg-extracted") / filename
+        with open(new_path, "w") as f:
+            f.write(content)
         print(path, ":", len(content), repr(content[:100]))
 
 if __name__ == "__main__":
