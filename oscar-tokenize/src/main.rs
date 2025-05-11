@@ -24,7 +24,7 @@ use regex::bytes::RegexSet;
 use rusqlite::{params, Connection};
 
 pub fn main() {
-    count_tokens();
+    find_token_examples();
 }
 
 #[allow(dead_code)]
