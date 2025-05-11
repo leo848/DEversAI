@@ -36,13 +36,12 @@ def main():
     for file in tqdm(files):
         counter += 1
         with open(file) as f:
-            soup = BeautifulSoup(f.read())
+            soup = BeautifulSoup(f.read(), "html.parser")
         body = soup.body
         for nav in body.select(".navi-gb"):
             nav.decompose()
 
         found_heading = False
-
         body_paragraphs = []
 
 
@@ -57,14 +56,14 @@ def main():
             if found_heading and tag.name == "p":
                 body_paragraphs.append(tag.get_text(strip=True))
 
-        if counter > 10:
+        if counter > 1000:
             break
 
         content = "\n".join(body_paragraphs)
-        contents.append(content)
+        contents.append((file, content))
 
-    for content in contents:
-        print(repr(content[:1000]))
+    for file, content in contents:
+        print(file, ":", len(content), repr(content[:100]))
 
 if __name__ == "__main__":
     main()
