@@ -48,15 +48,16 @@ def main():
         for tag in body.descendants:
             if not hasattr(tag, "name"):
                 continue
+            tag_name = str(tag.name)
             if not found_heading:
-                tag_name = str(tag.name)
                 if len(tag_name) == 2 and tag_name[0] == "h":
                     heading_level = int(tag_name[1])
                     found_heading = True
-                    body_paragraphs.append(
-                        "#" * heading_level +
-                        tag.get_text(strip=True)
-                    )
+                    heading_text = tag.get_text(strip=True).strip()
+                    if heading_text:
+                        body_paragraphs.append(
+                    "#" * heading_level + " " + heading_text + "\n"
+                        )
                 continue
 
             if found_heading and tag.name == "p":
