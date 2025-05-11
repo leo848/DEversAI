@@ -174,10 +174,10 @@
 						{#await tokenData}
 							<EmergentSpinner />
 						{:then tokenInfo}
-							<BorderSection title="anticausal1">
+							<BorderSection title="anticausal-fw2">
 								<EmbeddingCircles embeddingValues={tokenInfo.embedding_768d.anticausal1} />
 							</BorderSection>
-							<BorderSection title="causal1">
+							<BorderSection title="causal-fw2">
 								<EmbeddingCircles embeddingValues={tokenInfo.embedding_768d.causal1} />
 							</BorderSection>
 						{:catch error}
