@@ -1,7 +1,7 @@
 <script lang="ts">
 	import BorderSection from '$lib/components/BorderSection.svelte';
 	import TokenComponent from '$lib/components/Token.svelte';
-	import vocabulary from '$lib/tokenizing/german50000';
+	import vocabulary from '$lib/tokenizing/fineweb2';
 	import type { Token } from '$lib/tokenizing/token';
 	import { urlStringStore } from '$lib/state/urlState.svelte';
 
