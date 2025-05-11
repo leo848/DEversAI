@@ -43,7 +43,7 @@ def main():
         with open(file) as f:
             soup = BeautifulSoup(f.read(), "html.parser")
         body = soup.body
-        for nav in body.select(".navi-gb"):
+        for nav in body.select(".navi-gb", ".center"):
             nav.decompose()
 
         found_heading = False
@@ -65,8 +65,15 @@ def main():
                         )
                 continue
 
-            if found_heading and tag.name == "p":
-                body_paragraphs.append(tag.get_text(strip=True))
+            if tag_name == "p":
+                if "vers" in tag.get("class", set()):
+                    for br in tag.find_all("br"):
+                        br.replace_with("\n")
+                    text = tag.get_text().strip() + "\n"
+                else:
+                    text = tag.get_text(strip=True)
+                if text:
+                    body_paragraphs.append(text)
 
         if counter > STOP_AFTER:
             break
