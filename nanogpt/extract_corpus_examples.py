@@ -1,4 +1,5 @@
 import numpy as np
+import json
 from random import randint
 from vocabulary import Vocabulary
 
@@ -16,4 +17,4 @@ for i in range(n):
     result_str = vocab.decode(list(tokens))
     result.append(result_str)
 
-print(result)
+print(json.dumps(result))
