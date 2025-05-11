@@ -69,9 +69,9 @@ def main():
                 if "vers" in tag.get("class", set()):
                     for br in tag.find_all("br"):
                         br.replace_with("\n")
-                    text = tag.get_text().strip() + "\n"
+                    text = tag.get_text(strip=True).strip() + "\n"
                 else:
-                    text = tag.get_text(strip=True)
+                    text = tag.get_text(strip=True).strip()
                 if text:
                     body_paragraphs.append(text)
 
