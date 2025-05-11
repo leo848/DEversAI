@@ -40,7 +40,7 @@
 	let sortKey = $state('tokenID');
 	let sortDirection = $state('ascending');
 	let sortKeyEmbedding = $state({
-		modelName: 'causal1',
+		modelName: 'anticausal-fw2',
 		dim: 0
 	});
 	let embeddingInfo = $derived(
@@ -136,8 +136,8 @@
 			</select>
 			{#if sortKey == 'embeddingDim'}
 				<select bind:value={sortKeyEmbedding.modelName}>
-					<option value="causal1">causal1</option>
-					<option value="anticausal1">anticausal1</option>
+					<option value="causal-fw2">causal-fw2</option>
+					<option value="anticausal-fw2">anticausal-fw2</option>
 				</select>
 				<input type="number" bind:value={sortKeyEmbedding.dim} />
 			{/if}
