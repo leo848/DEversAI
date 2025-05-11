@@ -30,14 +30,14 @@ def all_files(root_folder="/data/gutenberg-raw"):
 def main():
     files = all_files()
     counter = 0
-    SKIP_FIRST = 10000
-    STOP_AFTER = 10100
+    SKIP_FIRST = None # 10000
+    STOP_AFTER = None # 10100
 
     contents = []
 
     for file in tqdm(files):
         counter += 1
-        if counter < SKIP_FIRST:
+        if SKIP_FIRST is not None and counter < SKIP_FIRST:
             continue
 
         with open(file) as f:
@@ -76,7 +76,7 @@ def main():
                 if text:
                     body_paragraphs.append(text)
 
-        if counter > STOP_AFTER:
+        if STOP_AFTER is not None and counter > STOP_AFTER:
             break
 
         content = "\n".join(body_paragraphs)
