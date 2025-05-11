@@ -18,7 +18,7 @@ def all_files(root_folder="/data/gutenberg-raw"):
         current = directory_stack.pop()
         children = current.iterdir()
         for child in children:
-            if child.is_dir(follow_symlinks=False):
+            if child.is_dir():
                 directory_stack.append(child)
             elif child.is_file():
                 if is_relevant_file(child):
