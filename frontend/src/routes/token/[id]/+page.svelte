@@ -190,7 +190,7 @@
 		<div class="grid gap-8">
 			<BorderSection title="Ähnliche Tokens">
 				<div class="grid grid-cols-2 gap-4">
-					{#each ['anticausal1', 'causal1'] as modelId}
+					{#each ['anticausal_fw2', 'causal_fw2'] as modelId}
 						<div>
 							<div>{modelId}</div>
 							{#await tokenData}
