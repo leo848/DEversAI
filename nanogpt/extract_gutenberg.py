@@ -82,8 +82,11 @@ def main():
         content = "\n".join(body_paragraphs)
         contents.append((file, content))
 
-    for file, content in contents:
-        print(file, ":", len(content), repr(content[:100]))
+        print(len(content), end = " ", flush=True)
+
+    # for file, content in contents:
+        # print(file, ":", len(content), repr(content[:100]))
+        # print(file, ":", len(content), repr(content[:100]))
 
 if __name__ == "__main__":
     main()
