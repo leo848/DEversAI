@@ -1,7 +1,19 @@
 import numpy as np
+from random import randint
+from vocabulary import Vocabulary
 
 FILE = "/data/fw2-tokenized/train/fw2-shard-00069.bin"
 
 data = np.memmap(FILE, dtype=np.dtype(">u2"))
+vocab = Vocabulary.load("fineweb2.vocab")
 
-print(data)
+n = 100
+
+result = []
+for i in range(n):
+    random_idx = randint(0, len(data) // 2)
+    tokens = data[random_idx:random_idx+100]
+    result_str = vocab.decode(list(tokens))
+    result.append(result_str)
+
+print(result)
