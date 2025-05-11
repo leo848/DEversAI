@@ -1,3 +1,4 @@
+from typing import cast
 from bs4 import BeautifulSoup
 import os
 import pathlib
@@ -49,8 +50,14 @@ def main():
             if not hasattr(tag, "name"):
                 continue
             if not found_heading:
-                if tag.name in {"h1", "h2", "h3", "h4", "h5"}:
+                tag_name = cast(str, tag.name)
+                if len(tag_name) == 2 and tag_name[0] == "h":
+                    heading_level = int(tag_name[1])
                     found_heading = True
+                    body_paragraphs.append(
+                        "#" * heading_level +
+                        tag.get_text(strip=True)
+                    )
                 continue
 
             if found_heading and tag.name == "p":
