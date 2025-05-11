@@ -7,7 +7,7 @@ from tqdm import tqdm
 def is_relevant_file(path) -> bool:
     if path.suffix != ".html":
         return False
-    if path.stem == "index":
+    if path.stem in {"index", "titlepage"}:
         return False
     return True
 
