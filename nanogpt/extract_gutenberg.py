@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import os
 import pathlib
 
+
 def is_relevant_file(path) -> bool:
     if path.suffix != ".html":
         return False
@@ -9,7 +10,7 @@ def is_relevant_file(path) -> bool:
         return False
     return True
 
-def all_files(root_folder="/home/shared/datasets/GUTENBERG"):
+def all_files(root_folder="/data/gutenberg-raw"):
     directory_stack = [pathlib.Path(root_folder)]
     files = []
 
