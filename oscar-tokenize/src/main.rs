@@ -24,7 +24,7 @@ use regex::bytes::RegexSet;
 use rusqlite::{params, Connection};
 
 pub fn main() {
-    find_token_examples();
+    count_tokens();
 }
 
 #[allow(dead_code)]
@@ -167,13 +167,13 @@ pub fn find_token_examples() {
 
 #[allow(dead_code)]
 fn count_tokens() {
-    let bpe_state = BpeState::synced_with_file("/vocab/german-complete.vocab");
+    let bpe_state = BpeState::synced_with_file("/vocab/fineweb2.vocab");
 
     let paths = args().skip(1).map(PathBuf::from).collect_vec();
 
     let [mut direct_histogram_file, mut transitive_histogram_file] = [
-        "/output/direct_histogram.txt",
-        "/output/transitive_histogram.txt",
+        "/output/direct_histogram2.txt",
+        "/output/transitive_histogram2.txt",
     ]
     .map(|path| {
         let file = OpenOptions::new()
