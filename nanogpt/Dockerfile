@@ -22,6 +22,7 @@ RUN pip install --upgrade pip && \
     torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 && \
     pip install \
     diffusers transformers accelerate \
+    beautifulsoup4 \
     Pillow alive-progress tensorboard \
     matplotlib pacmap scipy numpy \
     bracex
