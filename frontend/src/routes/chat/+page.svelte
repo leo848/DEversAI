@@ -76,8 +76,8 @@
 		processString[causality] = inputString;
 		tokens[causality] = vocabulary(options.modelId).tokenize(processString[causality]);
 		let modelInput = causality == "causal"
-			? tokens[causality].toReversed()
-			: tokens[causality];
+			? tokens[causality]
+			: tokens[causality].toReversed();
 		logitsInference[causality] = () => client.modelLogits(causality + options.modelId, modelInput);
 	}
 </script>
