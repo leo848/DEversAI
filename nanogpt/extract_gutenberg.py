@@ -30,8 +30,8 @@ def main():
     files = all_files()
 
     counter = 0
-    SKIP_FIRST = None # 10000
-    STOP_AFTER = 200 # 10100
+    SKIP_FIRST = None
+    STOP_AFTER = None
 
     for file in tqdm(files, total=253773):
         counter += 1
@@ -89,7 +89,7 @@ def main():
         new_path = pathlib.Path("/data/gutenberg-extracted") / filename
         with open(new_path, "w") as f:
             f.write(content)
-        print(file, ":", len(content), repr(content[:100]))
+        tqdm.write(" ".join(map(str, (file, ":", len(content), repr(content[:100])))))
 
 if __name__ == "__main__":
     main()
