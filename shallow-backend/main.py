@@ -64,8 +64,8 @@ causal1_nn_model.fit(causal1_embeddings)
 anticausal1_nn_model = NearestNeighbors(metric = "cosine")
 anticausal1_nn_model.fit(anticausal1_embeddings)
 
-occurrences_direct = np.loadtxt("assets/direct_histogram.txt", dtype=np.long)
-occurrences_transitive = np.loadtxt("assets/transitive_histogram.txt", dtype=np.long)
+occurrences_direct = np.loadtxt("assets/direct_histogram2.txt", dtype=np.long)
+occurrences_transitive = np.loadtxt("assets/transitive_histogram2.txt", dtype=np.long)
 
 @app.get("/v0/token/{token_id}/info")
 def token_info(token_id: int, db: scoped_session = Depends(get_db)):
@@ -83,7 +83,7 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
         "count_direct": occurrences_direct[token_id].item(),
         "count_transitive": occurrences_transitive[token_id].item(),
     }
-    for children in vocab["german-complete"].tokens[token_id].children:
+    for children in vocab["fineweb2"].tokens[token_id].children:
         for child in children:
             occurrence_dict[str(child.id())] = {
                 "count_direct": occurrences_direct[child.id()].item(),
