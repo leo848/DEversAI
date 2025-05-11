@@ -30,13 +30,41 @@ def all_files(root_folder="/data/gutenberg-raw"):
 def main():
     files = all_files()
     counter = 0
+
+    contents = []
+
     for file in tqdm(files):
         counter += 1
         with open(file) as f:
             soup = BeautifulSoup(f.read())
-        print(soup.prettify()[:10000])
+        body = soup.body
+        for nav in body.select(".navi-gb"):
+            nav.decompose()
+
+        found_heading = False
+
+        body_paragraphs = []
+
+
+        for tag in body.descendants:
+            if not hasattr(tag, "name"):
+                continue
+            if not found_heading:
+                if tag.name in {"h1", "h2", "h3", "h4", "h5"}:
+                    found_heading = True
+                continue
+
+            if found_heading and tag.name == "p":
+                body_paragraphs.append(tag.get_text(strip=True))
+
         if counter > 10:
             break
+
+        content = "\n".join(body_paragraphs)
+        contents.append(content)
+
+    for content in contents:
+        print(repr(content[:1000]))
 
 if __name__ == "__main__":
     main()
