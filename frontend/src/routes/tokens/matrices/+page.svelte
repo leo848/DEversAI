@@ -63,6 +63,8 @@
 <div class="m-4 flex flex-col gap-8 xl:mx-16">
 	<div class="text-4xl font-bold">Matrizen</div>
 
+	<div class="text-xl opacity-50">Tokenizer: OSCAR</div>
+
 	<div class="grid grid-cols-2">
 		{#each { length: 2 } as _, i}
 			{@const title = ['Zeilen', 'Spalten'][i]}
