@@ -148,8 +148,10 @@ pub fn find_token_examples() {
 
                 examples.insert((str_before, str_after));
             }
-            let ex = &examples.first().cloned().unwrap_or_default();
-            dbg!(ex);
+            if fastrand::f32() < 0.01 {
+                let ex = &examples.first().cloned().unwrap_or_default();
+                dbg!(ex);
+            }
 
             (token.index().to_string(), examples)
         })
