@@ -43,7 +43,7 @@ def main():
         with open(file) as f:
             soup = BeautifulSoup(f.read(), "html.parser")
         body = soup.body
-        for nav in body.select(".navi-gb, .center"):
+        for nav in body.select(".navi-gb, .center, .footnote"):
             nav.decompose()
 
         found_heading = False
