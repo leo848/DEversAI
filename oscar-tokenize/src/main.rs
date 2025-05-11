@@ -58,10 +58,7 @@ pub fn find_token_examples() {
         .progress()
         .map(|token| {
             let mut examples = BTreeSet::new();
-            let mut counter = 0;
-            while examples.len() < EXAMPLE_COUNT && counter < MAX_TRIES {
-                counter += 1;
-
+            while examples.len() < EXAMPLE_COUNT {
                 let path = &paths[fastrand::usize(..paths.len())];
                 let file = File::open(path).expect("File should exist");
                 let size_bytes = file.metadata().expect("File should have metadata").len();
@@ -82,10 +79,8 @@ pub fn find_token_examples() {
                     }
                 }
                 if !found_token {
-                    counter += 1;
-                    continue;
+                    break;
                 }
-                counter = 0;
 
                 let mut bytes_after = [0u8; TOKENS_CONTEXT * 2];
                 reader
