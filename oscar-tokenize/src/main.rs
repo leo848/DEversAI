@@ -74,7 +74,7 @@ pub fn find_token_examples() {
                 let mut found_token = false;
                 while let Ok(_) = reader.read_exact(&mut buffer) {
                     let present_token = Token::new(u16::from_be_bytes(buffer));
-                    if present_token == token {
+                    if present_token == *token {
                         found_token = true;
                         break;
                     }
