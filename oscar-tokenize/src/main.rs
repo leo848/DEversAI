@@ -54,6 +54,7 @@ pub fn find_token_examples() {
     .expect("Failed to create table");
 
     let token_examples = tokens
+        [..1000]
         .into_par_iter()
         .progress()
         .map(|token| {
