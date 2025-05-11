@@ -175,10 +175,10 @@
 							<EmergentSpinner />
 						{:then tokenInfo}
 							<BorderSection title="anticausal-fw2">
-								<EmbeddingCircles embeddingValues={tokenInfo.embedding_768d.anticausal1} />
+								<EmbeddingCircles embeddingValues={tokenInfo.embedding_768d.anticausal_fw2} />
 							</BorderSection>
 							<BorderSection title="causal-fw2">
-								<EmbeddingCircles embeddingValues={tokenInfo.embedding_768d.causal1} />
+								<EmbeddingCircles embeddingValues={tokenInfo.embedding_768d.causal_fw2} />
 							</BorderSection>
 						{:catch error}
 							<div>{error}</div>

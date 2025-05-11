@@ -102,11 +102,11 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
             "tokens": occurrence_dict,
         },
         "nearest_neighbors": {
-            "causal1": {
+            "causal_fw2": {
                 "neighbors": causal1_nn[0][1:].tolist(),
                 "distances": causal1_nn_dist[0][1:].tolist(),
             },
-            "anticausal1": {
+            "anticausal_fw2": {
                 "neighbors": anticausal1_nn[0][1:].tolist(),
                 "distances": anticausal1_nn_dist[0][1:].tolist(),
             }
