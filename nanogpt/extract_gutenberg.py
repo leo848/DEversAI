@@ -67,9 +67,10 @@ def main():
 
             if tag_name == "p":
                 if "vers" in tag.get("class", set()):
+                    BR_KEY = "␤nl␤"
                     for br in tag.find_all("br"):
-                        br.replace_with("\n")
-                    text = tag.get_text(strip=True).strip() + "\n"
+                        br.replace_with(BR_KEY)
+                    text = tag.get_text(strip=True).strip().replace(BR_KEY, "\n") + "\n"
                 else:
                     text = tag.get_text(strip=True).strip()
                 if text:
