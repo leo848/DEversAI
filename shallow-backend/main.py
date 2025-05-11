@@ -56,8 +56,8 @@ vocab = {
 def root_route():
     return {"status": "OK"}
 
-causal_fw2_embeddings = np.load("assets/embedding/768d/causal1.npy")
-anticausal_fw2_embeddings = np.load("assets/embedding/768d/anticausal1.npy")
+causal_fw2_embeddings = np.load("assets/embedding/768d/causal-fw2.npy")
+anticausal_fw2_embeddings = np.load("assets/embedding/768d/anticausal-fw2.npy")
 
 causal_fw2_nn_model = NearestNeighbors(metric = "cosine")
 causal_fw2_nn_model.fit(causal_fw2_embeddings)
