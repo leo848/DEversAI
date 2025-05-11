@@ -24,28 +24,28 @@ use regex::bytes::RegexSet;
 use rusqlite::{params, Connection};
 
 pub fn main() {
-    tokenize_wikipedia();
+    find_token_examples();
 }
 
 #[allow(dead_code)]
 pub fn find_token_examples() {
     const EXAMPLE_COUNT: usize = 100;
     const TOKENS_CONTEXT: usize = 100;
-    const MAX_TRIES: usize = EXAMPLE_COUNT + 20;
+    const MAX_TRIES: usize = EXAMPLE_COUNT + 100;
 
     let paths = std::env::args()
         .skip(1)
         .map(PathBuf::from)
         .collect::<Vec<_>>();
 
-    let bpe_state = BpeState::synced_with_file("/vocab/german-complete.vocab");
+    let bpe_state = BpeState::synced_with_file("/vocab/fineweb2.vocab");
 
     let tokens = bpe_state.tokens();
 
     // Open SQLite database connection
     let conn = Connection::open("/output/token_examples.db").expect("Failed to open database");
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS token_examples (
+        "CREATE TABLE IF NOT EXISTS token_examples2 (
             token_id TEXT PRIMARY KEY,
             examples TEXT
         )",
@@ -155,7 +155,7 @@ pub fn find_token_examples() {
 
     // Insert into SQLite
     let mut stmt = conn
-        .prepare("INSERT OR REPLACE INTO token_examples (token_id, examples) VALUES (?, ?)")
+        .prepare("INSERT OR REPLACE INTO token_examples2 (token_id, examples) VALUES (?, ?)")
         .expect("Failed to prepare insert statement");
 
     for (token_id, examples) in token_examples {
