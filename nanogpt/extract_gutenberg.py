@@ -29,16 +29,11 @@ def all_files(root_folder="/data/gutenberg-raw"):
 def main():
     files = all_files()
 
-    print(len(list(files)))
-    exit(1)
-
     counter = 0
     SKIP_FIRST = None # 10000
     STOP_AFTER = 200 # 10100
 
-    contents = []
-
-    for file in tqdm(files):
+    for file in tqdm(files, total=253773):
         counter += 1
         if SKIP_FIRST is not None and counter < SKIP_FIRST:
             continue
@@ -86,17 +81,15 @@ def main():
             break
 
         content = "\n".join(body_paragraphs)
-        contents.append((file, content))
 
-    for path, content in contents:
-        parts = list(path.parts[-3:])
-        if path.suffix:
-            parts[-1] = path.stem
+        parts = list(file.parts[-3:])
+        if file.suffix:
+            parts[-1] = file.stem
         filename = "--".join(parts) + ".txt"
         new_path = pathlib.Path("/data/gutenberg-extracted") / filename
         with open(new_path, "w") as f:
             f.write(content)
-        print(path, ":", len(content), repr(content[:100]))
+        print(file, ":", len(content), repr(content[:100]))
 
 if __name__ == "__main__":
     main()
