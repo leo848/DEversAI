@@ -83,9 +83,9 @@ pub fn find_token_examples() {
                 }
 
                 let mut bytes_after = [0u8; TOKENS_CONTEXT * 2];
-                reader
+                let Ok(_) = reader
                     .read_exact(&mut bytes_after)
-                    .expect("Failed to read right context");
+                    else { continue };
                 let mut bytes_before = [0u8; TOKENS_CONTEXT * 2];
                 reader
                     .seek_relative(-(TOKENS_CONTEXT as i64) * 4 - 2)
