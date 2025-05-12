@@ -1,7 +1,11 @@
 from bs4 import BeautifulSoup
-import os
+import re
 import pathlib
 from tqdm import tqdm
+
+EXPR = re.compile(r"\s+")
+def strip_text(text: str):
+    return re.sub(EXPR, " ", text).strip()
 
 def is_relevant_file(path) -> bool:
     if path.suffix != ".html":
@@ -56,16 +60,25 @@ def main():
         for tag in body.descendants:
             if not hasattr(tag, "name"):
                 continue
+            classes = tag.get("class", set())
             tag_name = str(tag.name)
+            if len(tag_name) == 2 and tag_name[0] == "h":
+                heading_level = int(tag_name[1])
+                found_heading = True
+                heading_text = strip(tag.get_text())
+
+                is_author = "author" in classes
+                is_title = "title" in classes
+
+                if is_title:
+                    heading_level = 1
+                    body_paragraphs = []
+
+                if heading_text and not is_author:
+                    body_paragraphs.append(
+                "#" * heading_level + " " + heading_text + "\n"
+                    )
             if not found_heading:
-                if len(tag_name) == 2 and tag_name[0] == "h":
-                    heading_level = int(tag_name[1])
-                    found_heading = True
-                    heading_text = tag.get_text(strip=True).strip()
-                    if heading_text:
-                        body_paragraphs.append(
-                    "#" * heading_level + " " + heading_text + "\n"
-                        )
                 continue
 
             if tag_name == "p":
@@ -73,9 +86,9 @@ def main():
                     BR_KEY = "␤nl␤"
                     for br in tag.find_all("br"):
                         br.replace_with(BR_KEY)
-                    text = tag.get_text(strip=True).strip().replace(BR_KEY, "\n") + "\n"
+                    text = strip(tag.get_text()).replace(BR_KEY, "\n") + "\n"
                 else:
-                    text = tag.get_text(strip=True).strip()
+                    text = strip(tag.get_text())
                 if text:
                     body_paragraphs.append(text)
 
@@ -87,11 +100,12 @@ def main():
         parts = list(file.parts[-3:])
         if file.suffix:
             parts[-1] = file.stem
+        if parts[-1] == parts[-2]:
+            continue
         filename = "--".join(parts) + ".txt"
         new_path = pathlib.Path("/data/gutenberg-extracted") / filename
         with open(new_path, "w") as f:
             f.write(content)
-        tqdm.write(" ".join(map(str, (file, ":", len(content), repr(content[:100])))))
 
 if __name__ == "__main__":
     main()
