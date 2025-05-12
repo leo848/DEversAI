@@ -3,9 +3,10 @@ import re
 import pathlib
 from tqdm import tqdm
 
+BR_KEY = "␤nl␤"
 EXPR = re.compile(r"\s+")
 def strip(text: str):
-    return re.sub(EXPR, " ", text).strip()
+    return re.sub(EXPR, " ", text).strip().replace(BR_KEY, "\n")
 
 def is_relevant_file(path) -> bool:
     if path.suffix != ".html":
@@ -65,6 +66,8 @@ def main():
             except (IndexError, AttributeError):
                 classes = set()
             tag_name = str(tag.name)
+            for br in tag.find_all("br"):
+                br.replace_with(BR_KEY)
             if len(tag_name) == 2 and tag_name[0] == "h" and tag_name[1].isdigit():
                 heading_level = int(tag_name[1])
                 found_heading = True
@@ -86,10 +89,7 @@ def main():
 
             if tag_name == "p":
                 if "vers" in tag.get("class", set()):
-                    BR_KEY = "␤nl␤"
-                    for br in tag.find_all("br"):
-                        br.replace_with(BR_KEY)
-                    text = strip(tag.get_text()).replace(BR_KEY, "\n") + "\n"
+                    text = strip(tag.get_text()) + "\n"
                 else:
                     text = strip(tag.get_text())
                 if text:
