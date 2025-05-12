@@ -84,7 +84,7 @@ def main():
                     body_paragraphs.append("")
                     for line in heading_text.split("\n"):
                         body_paragraphs.append(
-                    "\n#" * heading_level + " " + line
+                    "#" * heading_level + " " + line
                         )
                     body_paragraphs.append("")
             if not found_heading:
