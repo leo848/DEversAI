@@ -65,7 +65,7 @@ def main():
             except (IndexError, AttributeError):
                 classes = set()
             tag_name = str(tag.name)
-            if len(tag_name) == 2 and tag_name[0] == "h":
+            if len(tag_name) == 2 and tag_name[0] == "h" and tag_name[1].isdigit():
                 heading_level = int(tag_name[1])
                 found_heading = True
                 heading_text = strip(tag.get_text())
