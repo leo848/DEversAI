@@ -52,7 +52,7 @@ def main():
             except UnicodeDecodeError:
                 continue
         body = soup.body
-        for nav in body.select(".navi-gb, .center, .footnote"):
+        for nav in body.select(".navi-gb, .center, .centerbig, .footnote"):
             nav.decompose()
 
         found_heading = False
@@ -74,14 +74,13 @@ def main():
                 found_heading = True
                 heading_text = strip(tag.get_text())
 
-                is_author = "author" in classes
                 is_title = "title" in classes
 
                 if is_title:
                     heading_level = 1
                     body_paragraphs = []
 
-                if heading_text and heading_text != "Inhalt" and not is_author:
+                if heading_text and heading_text != "Inhalt":
                     if body_paragraphs:
                         body_paragraphs.append("")
                     for line in heading_text.split("\n"):
@@ -93,12 +92,12 @@ def main():
                 continue
 
             if tag_name == "p":
-                if "vers" in tag.get("class", set()):
-                    text = strip(tag.get_text()) + "\n"
-                else:
-                    text = strip(tag.get_text())
+                text = strip(tag.get_text())
                 if text:
-                    body_paragraphs.append(text)
+                    for line in text.split("\n"):
+                        body_paragraphs.append(line.strip())
+                    if "vers" in tag.get("class", set()):
+                        body_paragraphs.append("")
 
         content = "\n".join(body_paragraphs)
         content = EXPR_NL.sub(content, "\n\n")
