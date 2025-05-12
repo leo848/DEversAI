@@ -77,7 +77,7 @@ def main():
                     heading_level = 1
                     body_paragraphs = []
 
-                if heading_text and not is_author:
+                if heading_text and heading_text != "Inhalt" and not is_author:
                     body_paragraphs.append(
                 "#" * heading_level + " " + heading_text + "\n"
                     )
