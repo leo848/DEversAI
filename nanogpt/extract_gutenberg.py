@@ -5,6 +5,7 @@ from tqdm import tqdm
 
 BR_KEY = "␤nl␤"
 EXPR = re.compile(r"\s+")
+EXPR_NL = re.compile(r"\n{2,}")
 def strip(text: str):
     return re.sub(EXPR, " ", text).replace(BR_KEY, "\n").strip()
 
@@ -100,6 +101,7 @@ def main():
                     body_paragraphs.append(text)
 
         content = "\n".join(body_paragraphs)
+        content = EXPR_NL.sub(content, "\n\n")
 
         if len(content) < 100:
             continue
