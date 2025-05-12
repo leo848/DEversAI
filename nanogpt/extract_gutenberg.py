@@ -79,7 +79,7 @@ def main():
 
                 if heading_text and heading_text != "Inhalt" and not is_author:
                     body_paragraphs.append(
-                "#" * heading_level + " " + heading_text + "\n"
+                "\n#" * heading_level + " " + heading_text + "\n"
                     )
             if not found_heading:
                 continue
