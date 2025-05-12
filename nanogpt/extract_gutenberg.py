@@ -6,7 +6,7 @@ from tqdm import tqdm
 BR_KEY = "␤nl␤"
 EXPR = re.compile(r"\s+")
 def strip(text: str):
-    return re.sub(EXPR, " ", text).strip().replace(BR_KEY, "\n")
+    return re.sub(EXPR, " ", text).replace(BR_KEY, "\n").strip()
 
 def is_relevant_file(path) -> bool:
     if path.suffix != ".html":
