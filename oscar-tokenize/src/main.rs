@@ -24,7 +24,7 @@ use regex::bytes::RegexSet;
 use rusqlite::{params, Connection};
 
 pub fn main() {
-    find_token_examples();
+    tokenize_gutenberg();
 }
 
 #[allow(dead_code)]
@@ -338,6 +338,50 @@ fn tokenize_gesetze() {
         .progress_with_style({
         ProgressStyle::default_bar()
             .template("Tokenizing der Gesetze: [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
+            .expect("Template-Fehler")
+        })
+        .flat_map(|path| {
+            let mut buffer = Vec::with_capacity(1_000_000);
+            let path = path.expect("failed to read path").path();
+            let mut file = File::open(path).expect("failed to open file");
+            file.read_to_end(&mut buffer).expect("failed to read file");
+            let mut tokens = bpe_state.tokenizer().tokenize_bytes(&buffer);
+            tokens.push(Token::new(0xff));
+            tokens
+        })
+        .collect::<Vec<_>>();
+
+    for token in tokens {
+        output_writer
+            .write_all(&token.into_inner().to_be_bytes())
+            .expect("Could not write to file");
+    }
+}
+
+#[allow(dead_code)]
+fn tokenize_gutenberg() {
+    let bpe_state = BpeState::synced_with_file("/vocab/fineweb2.vocab");
+    let mut input_paths = Path::new("/data/gutenberg-extracted/")
+        .read_dir()
+        .expect("directory should exist")
+        .collect_vec();
+    let output_path = "/data/gutenberg-tokenized/shard.bin";
+    let output_file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(false)
+        .truncate(true)
+        .open(output_path)
+        .expect("Failed to open output file");
+    let mut output_writer = BufWriter::new(output_file);
+
+    fastrand::shuffle(&mut input_paths);
+
+    let tokens = input_paths
+        .into_par_iter()
+        .progress_with_style({
+        ProgressStyle::default_bar()
+            .template("Tokenizing des Gutenberg-Korpus: [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
             .expect("Template-Fehler")
         })
         .flat_map(|path| {
