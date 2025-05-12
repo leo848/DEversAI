@@ -4,7 +4,7 @@ import pathlib
 from tqdm import tqdm
 
 EXPR = re.compile(r"\s+")
-def strip_text(text: str):
+def strip(text: str):
     return re.sub(EXPR, " ", text).strip()
 
 def is_relevant_file(path) -> bool:
