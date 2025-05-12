@@ -94,7 +94,7 @@ def main():
 
             if tag_name == "p":
                 text = strip(tag.get_text())
-            if text:
+                if text:
                     for line in text.split("\n"):
                         body_paragraphs.append(line.strip())
                     if "vers" in tag.get("class", set()):
