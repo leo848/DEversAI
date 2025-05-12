@@ -60,7 +60,10 @@ def main():
         for tag in body.descendants:
             if not hasattr(tag, "name"):
                 continue
-            classes = tag.get("class", set())
+            try:
+                classes = tag.get("class", set())
+            except (IndexError, AttributeError):
+                classes = set()
             tag_name = str(tag.name)
             if len(tag_name) == 2 and tag_name[0] == "h":
                 heading_level = int(tag_name[1])
