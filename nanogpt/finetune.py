@@ -30,13 +30,13 @@ from gpt import GPTConfig, GPT
 # I/O
 out_dir = '/output'
 
-model_name = "anticausal-fw2-gutenberg1"
-input_model = "anticausal-fw2"
+model_name = "causal-fw2-gutenberg1"
+input_model = "causal-fw2"
 finetune_name = "gutenberg-tokenized"
 init_from_resume_checkpoint = 300_000
 max_iters = 350_000
 checkpoint_interval = 2500
-gpus_to_use_now = [2, 3, 4, 5]
+gpus_to_use_now = [6, 7, 8, 9]
 
 eval_interval = 1250
 log_interval = 1
@@ -74,7 +74,7 @@ dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported
 compile = True # use PyTorch 2.0 to compile the model to be faster
 
 # deversai
-causality = "anticausal" # 'causal' or 'anticausal'
+causality = "anticausal" if "anti" in model_name else "causal" # 'causal' or 'anticausal'
 
 # -----------------------------------------------------------------------------
 config_keys = [k for k,v in globals().items() if not k.startswith('_') and isinstance(v, (int, float, bool, str))]
