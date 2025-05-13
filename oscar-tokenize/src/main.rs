@@ -33,14 +33,20 @@ pub fn train_test_split() {
     let file = File::open(path).expect("Failed to open file");
     let mut reader = BufReader::new(file);
 
-    let mut counter = 0;
+    let mut counter: usize = 0;
+    let mut eof_token_counter: usize = 0;
 
     let mut buf = [0u8; 2];
     while let Ok(_) = reader.read_exact(&mut buf) {
+        let token = Token::new(u16::from_be_bytes(buf));
+        if token == Token::new(0xff) {
+            eof_token_counter += 1;
+        }
         counter += 1;
     }
 
     println!("{} tokens", counter);
+    println!("{} samples", eof_token_counter);
 }
 
 #[allow(dead_code)]
