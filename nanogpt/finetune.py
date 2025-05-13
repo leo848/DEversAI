@@ -30,13 +30,13 @@ from gpt import GPTConfig, GPT
 # I/O
 out_dir = '/output'
 
-model_name = "anticausal-fw2-laws1"
+model_name = "anticausal-fw2-gutenberg1"
 input_model = "anticausal-fw2"
-finetune_name = "gesetze-tokenized"
+finetune_name = "gutenberg-tokenized"
 init_from_resume_checkpoint = 300_000
-max_iters = 302_000
-checkpoint_interval = 200
-gpus_to_use_now = [0, 1]
+max_iters = 350_000
+checkpoint_interval = 2500
+gpus_to_use_now = [2, 3, 4, 5]
 
 eval_interval = 25
 log_interval = 1
