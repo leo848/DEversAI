@@ -15,7 +15,7 @@
 		hueKey,
 		tooltip,
 		hueMap = (x: number) => x,
-		barChartMap = (x: number) => x,
+		barChartMap = null,
 		hueRange = [0, 1],
 		onscroll = () => {},
 		ontokenclick = undefined
@@ -26,7 +26,7 @@
 		values: Record<string, number>[];
 		tooltip: Snippet<[Token, number]>;
 		hueMap?: (input: number) => number;
-		barChartMap?: (input: number) => number;
+		barChartMap?: null | ((input: number) => number);
 		hueRange?: [number, number];
 		onscroll?: (evt: UIEvent) => void;
 		ontokenclick?: (token: Token) => void;
@@ -41,7 +41,9 @@
 		<select bind:value={viewType} class="text-sm">
 			<option value="overview">Überblick</option>
 			<option value="table">Tabelle</option>
-			<option value="barChart">Balkendiagramm</option>
+			{#if barChartMap != null}
+				<option value="barChart">Balkendiagramm</option>
+			{/if}
 		</select>
 	</div>
 	{#if viewType == 'table'}
@@ -95,7 +97,7 @@
 				</div>
 			{/each}
 		</div>
-	{:else if viewType == 'barChart'}
+	{:else if viewType == 'barChart' && barChartMap != null}
 		<Histogram posts={range(0, tokens.length+1)} values={tokens.map((_, index) => barChartMap(values[index][fields[0].key]))} colorGradient={Gradient.Viridis.reverse()}>
 		</Histogram>
 	{/if}
