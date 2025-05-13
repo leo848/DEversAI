@@ -33,20 +33,21 @@ pub fn train_test_split() {
     let file = File::open(path).expect("Failed to open file");
     let mut reader = BufReader::new(file);
 
-    let mut counter: usize = 0;
-    let mut eof_token_counter: usize = 0;
+    let mut samples = Vec::with_capacity(200_000);
+    samples.push(Vec::with_capacity(200));
 
     let mut buf = [0u8; 2];
     while let Ok(_) = reader.read_exact(&mut buf) {
         let token = Token::new(u16::from_be_bytes(buf));
         if token == Token::new(0xff) {
-            eof_token_counter += 1;
+            samples.push(Vec::with_capacity(200));
         }
-        counter += 1;
+        samples.last_mut().expect("Empty sample list").push(token);
     }
 
-    println!("{} tokens", counter);
-    println!("{} samples", eof_token_counter);
+    fastrand::shuffle(&mut samples);
+
+    println!("{:?}", &samples[..20]);
 }
 
 #[allow(dead_code)]
