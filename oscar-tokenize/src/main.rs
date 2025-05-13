@@ -29,25 +29,49 @@ pub fn main() {
 
 #[allow(dead_code)]
 pub fn train_test_split() {
-    let path = args().nth(1).expect("No argument");
-    let file = File::open(path).expect("Failed to open file");
+    const N_SAMPLES_CAPA: usize = 200_000;
+    const SAMPLE_LEN_CAPA: usize = 200;
+
+    const TRAIN_RATIO: f64 = 0.9;
+
+    let shard_path = args().nth(1).expect("No argument");
+    let file = File::open(&shard_path).expect("Failed to open file");
     let mut reader = BufReader::new(file);
 
-    let mut samples = Vec::with_capacity(200_000);
-    samples.push(Vec::with_capacity(200));
+    let mut samples = Vec::with_capacity(N_SAMPLES_CAPA);
+    samples.push(Vec::with_capacity(SAMPLE_LEN_CAPA));
 
     let mut buf = [0u8; 2];
     while let Ok(_) = reader.read_exact(&mut buf) {
         let token = Token::new(u16::from_be_bytes(buf));
         if token == Token::new(0xff) {
-            samples.push(Vec::with_capacity(200));
+            samples.push(Vec::with_capacity(SAMPLE_LEN_CAPA));
+        } else {
+            samples.last_mut().expect("Empty sample list").push(token);
         }
-        samples.last_mut().expect("Empty sample list").push(token);
+    }
+    if samples.last().is_some_and(Vec::is_empty) {
+        samples.pop();
     }
 
     fastrand::shuffle(&mut samples);
 
-    println!("{:?}", &samples[..20]);
+    let split_index = (samples.len() as f64 * TRAIN_RATIO).floor() as usize;
+    for (split_i, split_name) in ["val", "train"].iter().enumerate() {
+        let split_path = shard_path.replace("shard", split_name);
+        let tokens = [
+            &samples[..split_index],
+            &samples[split_index..]
+        ][split_i];
+        let file = OpenOptions::new().create_new(true).write(true).open(split_path).expect("Failed to create file");
+        let mut writer = BufWriter::new(file);
+        for sample in tokens {
+            for &token in sample {
+                writer.write_all(&token.into_inner().to_be_bytes()).expect("Failed to write");
+            }
+            writer.write_all(&0xffu16.to_be_bytes()).expect("Failed to write");
+        }
+    }
 }
 
 #[allow(dead_code)]
