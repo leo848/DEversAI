@@ -4,6 +4,9 @@
 	import type { Snippet } from 'svelte';
 	import TokenComponent from './Token.svelte';
 	import Tooltip from './Tooltip.svelte';
+	import Histogram from './Histogram.svelte';
+	import {range} from 'd3';
+	import {Gradient} from '$lib/util/color';
 
 	const {
 		tokens,
@@ -12,6 +15,7 @@
 		hueKey,
 		tooltip,
 		hueMap = (x: number) => x,
+		barChartMap = (x: number) => x,
 		hueRange = [0, 1],
 		onscroll = () => {},
 		ontokenclick = undefined
@@ -22,12 +26,13 @@
 		values: Record<string, number>[];
 		tooltip: Snippet<[Token, number]>;
 		hueMap?: (input: number) => number;
+		barChartMap?: (input: number) => number;
 		hueRange?: [number, number];
 		onscroll?: (evt: UIEvent) => void;
 		ontokenclick?: (token: Token) => void;
 	} = $props();
 
-	let viewType: 'table' | 'overview' = $state('overview');
+	let viewType: 'table' | 'overview' | 'barChart' = $state('overview');
 </script>
 
 <div class="max-h-[400px] overflow-scroll" {onscroll}>
@@ -36,6 +41,7 @@
 		<select bind:value={viewType} class="text-sm">
 			<option value="overview">Überblick</option>
 			<option value="table">Tabelle</option>
+			<option value="barChart">Balkendiagramm</option>
 		</select>
 	</div>
 	{#if viewType == 'table'}
@@ -89,5 +95,8 @@
 				</div>
 			{/each}
 		</div>
+	{:else if viewType == 'barChart'}
+		<Histogram posts={range(0, tokens.length+1)} values={tokens.map((_, index) => barChartMap(values[index][fields[0].key]))} colorGradient={Gradient.Viridis.reverse()}>
+		</Histogram>
 	{/if}
 </div>

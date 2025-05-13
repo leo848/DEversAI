@@ -206,6 +206,7 @@
 									values={neighbors.map((_, i) => ({ dist: distances[i], sim: 1 - distances[i] }))}
 									hueKey="sim"
 									hueMap={(x) => x ** 4}
+									 barChartMap={x => 1 - x}
 								>
 									{#snippet tooltip(token, rank)}
 										<div class="flex flex-col gap-4">

@@ -48,7 +48,7 @@
 			inProgress.ongoing = true;
 			outer: for await (const tokens of gen) {
 				for (const token of tokens) {
-					if (token == 0xff && options.respectEot) break outer;
+					if (token == 0xff && options.respectEot || token == -1) break outer;
 					({
 						causal: () => (inputString += vocabulary(options.modelId).tokens[token].toString()),
 						anticausal: () => (inputString = vocabulary(options.modelId).tokens[token].toString() + inputString)
