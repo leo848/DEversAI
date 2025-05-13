@@ -57,7 +57,7 @@ pub fn train_test_split() {
     fastrand::shuffle(&mut samples);
 
     let split_index = (samples.len() as f64 * TRAIN_RATIO).floor() as usize;
-    for (split_i, split_name) in ["val", "train"].iter().enumerate() {
+    for (split_i, split_name) in ["train", "val"].iter().enumerate() {
         let split_path = shard_path.replace("shard", split_name);
         let tokens = [
             &samples[..split_index],
