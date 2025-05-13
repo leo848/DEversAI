@@ -24,7 +24,23 @@ use regex::bytes::RegexSet;
 use rusqlite::{params, Connection};
 
 pub fn main() {
-    tokenize_gutenberg();
+    train_test_split();
+}
+
+#[allow(dead_code)]
+pub fn train_test_split() {
+    let path = args().nth(1).expect("No argument");
+    let file = File::open(path).expect("Failed to open file");
+    let mut reader = BufReader::new(file);
+
+    let mut counter = 0;
+
+    let mut buf = [0u8; 2];
+    while let Ok(_) = reader.read_exact(&mut buf) {
+        counter += 1;
+    }
+
+    println!("{} tokens", counter);
 }
 
 #[allow(dead_code)]
