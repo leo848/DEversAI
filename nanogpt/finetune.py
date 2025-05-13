@@ -38,7 +38,7 @@ max_iters = 350_000
 checkpoint_interval = 2500
 gpus_to_use_now = [2, 3, 4, 5]
 
-eval_interval = 25
+eval_interval = 1250
 log_interval = 1
 eval_iters = 1000
 eval_only = False # if True, script exits right after the first eval
