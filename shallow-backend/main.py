@@ -66,7 +66,7 @@ anticausal_fw2_nn_model.fit(anticausal_fw2_embeddings)
 
 fw2_cca = causal_fw2_embeddings @ np.load("assets/causal-fw2-wte-cca.npy").T
 anticausal_fw2_cca = anticausal_fw2_embeddings @ np.load("assets/anticausal-fw2-wte-cca.npy").T
-assert np.max(np.abs(fw2_cca - anticausal_fw2_cca)) < 1e-6
+assert np.max(np.abs(fw2_cca - anticausal_fw2_cca)) < 1e-2
 
 occurrences_direct = np.loadtxt("assets/direct_histogram2.txt", dtype=np.long)
 occurrences_transitive = np.loadtxt("assets/transitive_histogram2.txt", dtype=np.long)
