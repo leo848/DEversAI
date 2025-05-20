@@ -58,8 +58,7 @@ export class Client {
 		}
 	}
 
-	async getEmbeddingDimInfo(modelName: string, dim: number): Promise<EmbeddingDimInfo> {
-		const apiPath = pathUtils.join(this.httpsBase, 'embedding', modelName, dim.toString(), 'info');
+	async #getEdi(apiPath: string): Promise<EmbeddingDimInfo> {
 		const response = await fetch(apiPath);
 		const json = await response.json();
 		const embeddingDimInfo = await EmbeddingDimInfo.safeParseAsync(json);
@@ -68,6 +67,16 @@ export class Client {
 		} else {
 			return Promise.reject('Could not parse response: ' + embeddingDimInfo.error);
 		}
+	}
+
+	async getEmbeddingDimInfo(modelName: string, dim: number): Promise<EmbeddingDimInfo> {
+		const apiPath = pathUtils.join(this.httpsBase, 'embedding', modelName, dim.toString(), 'info');
+		return this.#getEdi(apiPath);
+	}
+
+	async getCcaDimInfo(dim: number): Promise<EmbeddingDimInfo> {
+		const apiPath = pathUtils.join(this.httpsBase, 'cca-embedding', dim.toString(), 'info');
+		return this.#getEdi(apiPath);
 	}
 
 	async getTokenEmbeddings(modelName: string): Promise<TokenEmbeddings> {
