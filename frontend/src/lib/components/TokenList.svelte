@@ -2,7 +2,7 @@
 	import type { Vocabulary } from '$lib/tokenizing/vocabulary';
 	import { Token } from '$lib/tokenizing/token';
 	import TokenComponent from '$lib/components/Token.svelte';
-	import { sortByKey, sortByKeys } from '$lib/util/array';
+	import { sortByKeys } from '$lib/util/array';
 	import { leftPad } from '$lib/util/string';
 	import { Client } from '$lib/backend/client';
 	import EmergentSpinner from './EmergentSpinner.svelte';
@@ -40,12 +40,16 @@
 	let sortKey = $state('tokenID');
 	let sortDirection = $state('ascending');
 	let sortKeyEmbedding = $state({
-		modelName: 'anticausal-fw2',
+		modelName: 'anticausal-fw2' as 'anticausal-fw2' | 'causal-fw2' | 'cca',
 		dim: 0
 	});
-	let embeddingInfo = $derived(
-		client.getEmbeddingDimInfo(sortKeyEmbedding.modelName, sortKeyEmbedding.dim)
-	);
+	let embeddingInfo = $derived.by(() => {
+		if (sortKeyEmbedding.modelName === "cca") {
+			return client.getCcaDimInfo(sortKeyEmbedding.dim);
+		} else {
+			return client.getEmbeddingDimInfo(sortKeyEmbedding.modelName, sortKeyEmbedding.dim)
+		}
+	});
 
 	const sortKeys: Record<string, (token: Token) => Promise<string | number> | string | number> = {
 		tokenID: (token) => token.id(),
@@ -138,6 +142,7 @@
 				<select bind:value={sortKeyEmbedding.modelName}>
 					<option value="causal-fw2">causal-fw2</option>
 					<option value="anticausal-fw2">anticausal-fw2</option>
+					<option value="cca">CCA</option>
 				</select>
 				<input type="number" bind:value={sortKeyEmbedding.dim} />
 			{/if}
