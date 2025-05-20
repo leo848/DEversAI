@@ -26,4 +26,3 @@ COPY . /app
 
 
 CMD ["fastapi", "run", "main.py", "--port", "80"]
-

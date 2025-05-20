@@ -25,6 +25,12 @@
 			<option value="-fw2">
 				FineWeb (2)
 			</option>
+			<option value="-fw2-laws1">
+				FineWeb / Finetune Gesetzestexte
+			</option>
+			<option value="-fw2-wikipedia1">
+				FineWeb / Finetune Wikipedia
+			</option>
 		</select>
 	</div>
 	<div class="flex flex-col">
