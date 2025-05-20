@@ -12,7 +12,7 @@ from vocabulary import Vocabulary
 from torch.nn import functional as F
 
 # -----------------------------------------------------------------------------
-model_name = "causal-fw2.pt"
+model_name = "anticausal-fw2-wikipedia1.pt"
 vocab_file = "fineweb2.vocab"
 
 compile = False # use PyTorch 2.0 to compile the model to be faster
@@ -28,8 +28,8 @@ show_samples_json = False
 
 # config
 
-num_samples = 64 # number of samples to draw
-max_new_tokens = int(250) # number of tokens generated in each sample
+num_samples = 24 # number of samples to draw
+max_new_tokens = int(350) # number of tokens generated in each sample
 temperature = 0.8 # 1.0 = no change, < 1.0 = less random, > 1.0 = more random, in predictions
 top_k = 200 # retain only the top_k most likely tokens, clamp others to have 0 probability
 
@@ -55,12 +55,14 @@ vocab = Vocabulary.load(vocab_file)
 prompt_input = True
 while prompt_input:
     raw_input = input("\n\x1B[32m>>> \x1B[0m")
+    add_eot = "EOT" in raw_input
+    raw_input = raw_input.replace("EOT", "")
     eval_input = literal_eval(f'"{raw_input}"')
     if causality == "causal":
         prompt_input = eval_input
     else:
         prompt_input = eval_input
-    start_ids = vocab.encode(prompt_input, reverse=causality == "anticausal")
+    start_ids = vocab.encode(prompt_input, reverse=causality == "anticausal", add_eot=add_eot)
 
     x = (torch.tensor(start_ids, dtype=torch.long, device=device)[None, ...])
 
@@ -150,7 +152,14 @@ while prompt_input:
             except KeyboardInterrupt:
                 continue
             print()
+        # elif causality == 'anticausal':
+        #     y = model.generate(x, max_new_tokens, temperature=temperature, top_k=top_k)
+        #     string = vocab.decode(y[0], reverse=True)
+        #     print(string + prompt_input)
         elif causality == 'anticausal':
-            y = model.generate(x, max_new_tokens, temperature=temperature, top_k=top_k)
-            string = vocab.decode(y[0], reverse=True)
-            print(string + prompt_input)
+            x_batch = torch.tensor([x[0].tolist()] * num_samples, dtype=torch.long, device=device)
+            y_batch = model.generate(x_batch, max_new_tokens, temperature=temperature, top_k=top_k)
+            for y in y_batch:
+                string = vocab.decode(y, reverse=True)
+                print("=" * 50)
+                print(string + prompt_input)

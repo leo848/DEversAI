@@ -169,7 +169,7 @@ class Vocabulary:
         merged_value = left.value + right.value
         return Token(index, merged_value, self)
 
-    def encode(self, input_str: str, reverse=False, last_applied_merge_rule: Optional[int] = None) -> List[int]:
+    def encode(self, input_str: str, reverse=False, last_applied_merge_rule: Optional[int] = None, add_eot: bool = False) -> List[int]:
         inf = len(self.tokens) * 2
         if last_applied_merge_rule is None:
             last_applied_merge_rule = +inf
@@ -215,6 +215,8 @@ class Vocabulary:
         ]
         if reverse:
             result = list(reversed(result))
+        if add_eot:
+            result = [0xff] + result
         return result
 
     def decode_bytes(self, token_ids: list[int], reverse=False) -> bytes:
