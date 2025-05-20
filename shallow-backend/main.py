@@ -64,8 +64,8 @@ causal_fw2_nn_model.fit(causal_fw2_embeddings)
 anticausal_fw2_nn_model = NearestNeighbors(metric = "cosine")
 anticausal_fw2_nn_model.fit(anticausal_fw2_embeddings)
 
-fw2_cca = (causal_fw2_embeddings - np.mean(causal_fw2_embeddings)) @ np.load("assets/causal-fw2-wte-cca.npy").T
-# anticausal_fw2_cca = (anticausal_fw2_embeddings - np.mean(anticausal_fw2_embeddings)) @ np.load("assets/anticausal-fw2-wte-cca.npy").T
+causal_fw2_cca = (causal_fw2_embeddings - np.mean(causal_fw2_embeddings)) @ np.load("assets/causal-fw2-wte-cca.npy").T
+anticausal_fw2_cca = (anticausal_fw2_embeddings - np.mean(anticausal_fw2_embeddings)) @ np.load("assets/anticausal-fw2-wte-cca.npy").T
 # assert np.max(np.abs(fw2_cca - anticausal_fw2_cca)) < 1e-2
 
 occurrences_direct = np.loadtxt("assets/direct_histogram2.txt", dtype=np.long)
@@ -102,7 +102,7 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
             "anticausal_fw2": anticausal_fw2_embeddings[token_id].tolist(),
         },
         "cca_embedding_768d": {
-            "causal_fw2": fw2_cca[token_id].tolist(),
+            "causal_fw2": causal_fw2_cca[token_id].tolist(),
             "anticausal_fw2": anticausal_fw2_cca[token_id].tolist(),
         },
         "occurrences": {
@@ -140,7 +140,7 @@ def cca_embedding_dim_info(dim: int):
         raise HTTPException(404, "Dim not found")
     return {
         "dim": dim,
-        "token_values": fw2_cca[:, dim].tolist()
+        "token_values": causal_fw2_cca[:, dim].tolist()
     }
 
 @app.get("/v0/tokens/{model_name}/embeddings")
