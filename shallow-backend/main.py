@@ -1,4 +1,5 @@
 import logging
+from typing import cast
 from fastapi import FastAPI, HTTPException, Depends, WebSocket, WebSocketDisconnect
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
@@ -127,20 +128,24 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
 @app.post("/v0/gemini-column")
 def gemini_column(request: GeminiColumnRequest):
     EMPTY = {}
-    result = [-1] * 50256
+    result: list[str | int] = [-1] * 50256
     for entry in gemini_fw2_tokens:
         token_id = entry["id"]
         path = [*request.path]
         while path:
+            if not isinstance(entry, dict) or not isinstance(entry, list):
+                break
             first = path[0]
             path = path[1:]
             entry = entry.get(first, EMPTY)
             if entry == EMPTY:
                 break
+            if isinstance(entry, bool):
+                entry = "ja" if entry else "nein"
         if entry == EMPTY:
             result[token_id] = -1
         else:
-            result[token_id] = entry
+            result[token_id] = cast( str | int, entry)
     return {
         "column": result
     }
