@@ -9,7 +9,7 @@ import numpy as np
 import json
 import websockets
 import requests
-from models import LogitsRequest, RequestUnion, InferenceRequest
+from models import GeminiColumnRequest, LogitsRequest, RequestUnion, InferenceRequest
 from vocabulary import Vocabulary
 from validate import validate_model_name
 from sklearn.neighbors import NearestNeighbors
@@ -124,6 +124,25 @@ def token_info(token_id: int, db: scoped_session = Depends(get_db)):
         "gemini_info": gemini_fw2_tokens[token_id],
     }
 
+@app.post("/v0/gemini-column")
+def gemini_column(request: GeminiColumnRequest):
+    EMPTY = {}
+    result = [-1] * 50256
+    for entry in gemini_fw2_tokens:
+        path = [*request.path]
+        while path:
+            first = path[0]
+            path = path[1:]
+            entry = entry.get(first, EMPTY)
+            if entry == EMPTY:
+                break
+        if entry == EMPTY:
+            result[entry["id"]] = -1
+        else:
+            result[entry["id"]] = entry
+    return {
+        "column": result
+    }
 
 @app.get("/v0/embedding/{model_name}/{dim}/info")
 def embedding_dim_info(model_name: str, dim: int):
