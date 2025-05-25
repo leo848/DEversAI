@@ -129,7 +129,7 @@ def gemini_column(request: GeminiColumnRequest):
     EMPTY = {}
     result = [-1] * 50256
     for entry in gemini_fw2_tokens:
-        logger.log(logging.DEBUG, entry)
+        token_id = entry["id"]
         path = [*request.path]
         while path:
             first = path[0]
@@ -138,9 +138,9 @@ def gemini_column(request: GeminiColumnRequest):
             if entry == EMPTY:
                 break
         if entry == EMPTY:
-            result[entry["id"]] = -1
+            result[token_id] = -1
         else:
-            result[entry["id"]] = entry
+            result[token_id] = entry
     return {
         "column": result
     }
