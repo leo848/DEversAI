@@ -11,6 +11,7 @@
 	import MenuEntry from './MenuEntry.svelte';
 	import { slide } from 'svelte/transition';
 	import { urlNullableNumberStore } from '$lib/state/urlState.svelte';
+	import { geminiKeys } from '$lib/backend/geminiTypes';
 	import type { Writable } from 'svelte/store';
 	import TokenComponent from '$lib/components/Token.svelte';
 
@@ -158,17 +159,26 @@
 	let geminiLabels = $state(["(Leer)"])
 
 	async function loadGeminiKey(key: { path: string, name: string }) {
+		const blacklist = new Set([
+			"andere",
+			"rest",
+			"-1",
+			-1,
+			"keine",
+			null,
+			undefined,
+		])
 		geminiKey = key.path;
 		const result = await client.getGeminiColumn(key.path.split("/"));
 		const counter: Record<number | string, number> = {};
 		for (const entry of result.column) {
-			if (entry == "Andere" || entry == "Rest" || entry == "-1" || entry == "keine" || entry == null) continue;
+			if (entry == null || blacklist.has(entry?.toString()?.toLowerCase())) continue;
 			counter[entry] = (counter[entry] ?? 0) + 1;
 		}
-		const topElements = sortByKey([...new Set(result.column)], element => -(counter[element] ?? -1));
-		const sliced = topElements.slice(0, Math.min(topElements.length, 10));
+		const topElements = sortByKey([...new Set(result.column)], element => -(counter[element ?? -1] ?? -1));
+		const sliced = topElements.slice(0, Math.min(topElements.length, 10)).map(e => e?.toString()).filter(str => !blacklist.has(str)).map(str => str as string);
 
-		geminiLabels = [...sliced.map(e => e.toString())];
+		geminiLabels = [...sliced];
 
 		const elementToNumber: Record<string | number, number> = {};
 		for (let i = 0; i < sliced.length; i++) {
@@ -176,35 +186,14 @@
 		}
 
 		for (let i = 0; i < result.column.length; i++) {
-			geminiClassifier[i] = elementToNumber[result.column[i]] ?? -1;
+			geminiClassifier[i] = elementToNumber[result.column[i] ?? -1] ?? -1;
 		}
 
 		paintKey = paintKey;
 	}
 
-	const geminiKeys = [
-		{
-			path: "ist_komplett_vollständig",
-			name: "Vollständigkeit",
-		},
-		{
-			path: "wortart",
-			name: "Wortart",
-		},
-		{
-			path: "kategorie",
-			name: "Kategorie",
-		},
-		{
-			path: "silbenanzahl",
-			name: "Silbenanzahl",
-		},
-		{
-			path: "typische_position_im_wort",
-			name: "Wortposition",
-		}
-	] as const;
 	let geminiKey: string = $state('');
+	let geminiKeyCategory: string = $state("general")
 
 	const option = {
 		continuous: (object: { name: string; metric: Metric }) =>
@@ -401,7 +390,15 @@
 
 		{#if paintKey == "gemini"}
 			<MenuEntry title="LLM-Schlüssel">
-				{#each geminiKeys as key}
+				<select bind:value={geminiKeyCategory}>
+					<option value="general">Allgemein</option>
+					<option value="substantiv">Substantiv</option>
+					<option value="verb">Verb</option>
+					<option value="adjektiv">Adjektiv</option>
+					<option value="pronomen">Präposition</option>
+					<option value="other">Weitere</option>
+				</select>
+				{#each geminiKeys.filter(key => key.category == geminiKeyCategory) as key}
 					<button
 						class="border-gray block rounded border p-1 transition-all hover:bg-gray-100 active:bg-gray-100"
 						class:bg-gray-100={geminiKey == key.path}

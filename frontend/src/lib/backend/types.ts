@@ -45,7 +45,7 @@ export const LogitsResponse = z.object({
 export type LogitsResponse = z.infer<typeof LogitsResponse>;
 
 export const GeminiColumnResponse = z.object({
-	column: z.array(z.union([z.number(), z.string()]))
+	column: z.array(z.union([z.number(), z.string()]).nullable())
 })
 export type GeminiColumnResponse = z.infer<typeof GeminiColumnResponse>;
 

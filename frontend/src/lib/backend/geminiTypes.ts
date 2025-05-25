@@ -52,3 +52,72 @@ export const GeminiInfo = z.object({
     komposita_teile: z.array(z.string()).nullish()
 });
 export type GeminiInfo = z.infer<typeof GeminiInfo>;
+
+const rawGeminiKeys = [
+		{
+			path: "ist_komplett_vollständig",
+			name: "Vollständigkeit",
+		},
+		"wortart",
+		"kategorie",
+		{
+			path: "typische_position_im_wort",
+			name: "Wortposition",
+			category: "general",
+		},
+		"substantiv_morphologie/genus",
+			"substantiv_morphologie/numerus",
+		{
+			path: "substantiv_morphologie/abstrakt_oder_konkret",
+			name: "Abstrakt/Konkret",
+		},
+			"substantiv_morphologie/deklinationstyp",
+			"substantiv_morphologie/soziales_geschlecht",
+			"substantiv_morphologie/kasus",
+			"verb_morphologie/tempus",
+			"verb_morphologie/numerus",
+			"verb_morphologie/modus",
+			"verb_morphologie/person",
+			"verb_morphologie/konjugationstyp",
+			"adjektiv_morphologie/steigerungsform",
+			"adjektiv_morphologie/deklinationstyp",
+			"adjektiv_morphologie/numerus",
+			"adjektiv_morphologie/kasus",
+			"adjektiv_morphologie/genus",
+			"adjektiv_morphologie/endung",
+			{
+				path: "pronomen_morphologie/pronomen_typ",
+				name: "Typ",
+			},
+			"pronomen_morphologie/numerus",
+			"pronomen_morphologie/kasus",
+		{
+			path: "emoji",
+			category: "other",
+		},
+		{
+			path: "silbenanzahl",
+			category: "other",
+		},
+	];
+
+function prepareGeminiKeys(keys: (string | { path: string, name ?: string, category ?: string })[]) {
+	return keys.map((key) => {
+		if (typeof key == "string") {
+			key = {
+				path: key
+			};
+		}
+		return {
+			path: key.path,
+			name: key.name ?? key.path.split("/").slice(-1)[0].split("_").map(s => {
+				return s.charAt(0).toUpperCase() + s.slice(1);
+			}).join(" "),
+			category: key.category ?? (
+				key.path.includes("_morphologie") ? key.path.split("_morphologie")[0] : "general"
+			)
+		}
+	});
+}
+
+export const geminiKeys = prepareGeminiKeys(rawGeminiKeys);
