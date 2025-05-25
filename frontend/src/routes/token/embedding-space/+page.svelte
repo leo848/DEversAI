@@ -2,7 +2,7 @@
 	import { Client } from '$lib/backend/client';
 	import type { Token } from '$lib/tokenizing/token';
 	import vocabulary from '$lib/tokenizing/fineweb2';
-	import type { Tuple } from '$lib/util/array';
+	import { sortByKey, type Tuple } from '$lib/util/array';
 	import { Color, Gradient } from '$lib/util/color';
 	import ScatterPlot3D from './ScatterPlot3D.svelte';
 	import FullLoader from '$lib/components/FullLoader.svelte';
@@ -61,7 +61,7 @@
 			unknownCategory,
 			paint: (input) => {
 				const categoryIndex = classifier(input);
-				const color = categoryIndex == -1 ? Color.luma(1.0) : Color.Category10[categoryIndex];
+				const color = categoryIndex == -1 || categoryIndex >= 10 ? Color.luma(1.0) : Color.Category10[categoryIndex];
 				return color;
 			}
 		};
@@ -154,20 +154,72 @@
 			: categoryIndex;
 	}
 
+	let geminiClassifier: number[] = $state(new Array(50256).fill(-1));
+	let geminiLabels = $state(["(Leer)"])
+
+	async function loadGeminiKey(key: { path: string, name: string }) {
+		geminiKey = key.path;
+		const result = await client.getGeminiColumn(key.path.split("/"));
+		const counter: Record<number | string, number> = {};
+		for (const entry of result.column) {
+			if (entry == "Andere" || entry == "Rest" || entry == "-1" || entry == "keine" || entry == null) continue;
+			counter[entry] = (counter[entry] ?? 0) + 1;
+		}
+		const topElements = sortByKey([...new Set(result.column)], element => -(counter[element] ?? -1));
+		const sliced = topElements.slice(0, Math.min(topElements.length, 10));
+
+		geminiLabels = [...sliced.map(e => e.toString())];
+
+		const elementToNumber: Record<string | number, number> = {};
+		for (let i = 0; i < sliced.length; i++) {
+			elementToNumber[sliced[i]] = i;
+		}
+
+		for (let i = 0; i < result.column.length; i++) {
+			geminiClassifier[i] = elementToNumber[result.column[i]] ?? -1;
+		}
+
+		paintKey = paintKey;
+	}
+
+	const geminiKeys = [
+		{
+			path: "ist_komplett_vollständig",
+			name: "Vollständigkeit",
+		},
+		{
+			path: "wortart",
+			name: "Wortart",
+		},
+		{
+			path: "kategorie",
+			name: "Kategorie",
+		},
+		{
+			path: "silbenanzahl",
+			name: "Silbenanzahl",
+		},
+		{
+			path: "typische_position_im_wort",
+			name: "Wortposition",
+		}
+	] as const;
+	let geminiKey: string = $state('');
+
 	const option = {
 		continuous: (object: { name: string; metric: Metric }) =>
-			({
+			() => ({
 				type: 'continuous',
 				name: object.name,
 				metric: object.metric,
 				...paintContinuous(object.metric)
 			}) as const,
-		discrete: (object: { name: string; classifier: Metric; labels: string[] }) =>
-			({
+		discrete: (object: { name: string; classifier: Metric; labels: string[] | (() => string[]) }) =>
+			() => ({
 				type: 'discrete',
 				name: object.name,
 				metric: object.classifier,
-				labels: object.labels,
+				labels: (typeof object.labels === "function") ? (object.labels) : (() => object.labels as string[]),
 				...paintDiscrete(object.classifier)
 			}) as const
 	};
@@ -177,15 +229,20 @@
 			name: 'Token-ID',
 			metric: ({ id }) => id
 		}),
-		suffix: option.discrete({
-			name: 'Suffixe',
-			labels: ['⎵', '\\n', '-', '.', '/', '(', ',', ':', '_', '"'],
-			classifier: suffixClassifier([32, 10, 45, 46, 47, 40, 44, 58, 95, 34])
+		suffixChar: option.discrete({
+			name: 'Suffixe (Zeichen)',
+			labels: [32, 45].map(i => String.fromCharCode(i)),
+			classifier: suffixClassifier([32, 45])
+		}),
+		suffixLetter: option.discrete({
+			name: 'Suffixe (Buchstaben)',
+			labels: [110, 116, 114, 101, 105, 115, 108, 104, 103, 97].map(i => String.fromCharCode(i)),
+			classifier: suffixClassifier([110, 116, 114, 101, 105, 115, 108, 104, 103, 97])
 		}),
 		prefix: option.discrete({
 			name: 'Präfixe',
-			labels: ['\\n', '.', '-', '(', ':', ',', '⎵', ')', '?', '!'],
-			classifier: prefixClassifier([10, 46, 45, 40, 58, 44, 32, 41, 63, 33])
+			labels: [115, 100, 83, 103, 97, 98, 101, 65, 66, 119].map(i => String.fromCharCode(i)),
+			classifier: prefixClassifier([115, 100, 83, 103, 97, 98, 101, 65, 66, 119])
 		}),
 		byteCount: option.continuous({
 			name: 'Anzahl Bytes',
@@ -226,28 +283,33 @@
 			name: 'Groß- / Kleinschreibung',
 			labels: ['a b', 'A B', 'A b'],
 			classifier: casingClassifier
+		}),
+		gemini: option.discrete({
+			name: 'LLM-erfasster Eintrag',
+			labels: () => geminiLabels,
+			classifier: ({ id }) => geminiClassifier[id],
 		})
 	} as const satisfies Record<
 		string,
-		{ type: string; name: string; paint: (input: MetricInput) => Color } & (
-			| { type: 'discrete'; labels: string[]; categories: number[]; unknownCategory: number }
+		() => ({ type: string; name: string; paint: (input: MetricInput) => Color } & (
+			| { type: 'discrete'; labels: () => string[]; categories: number[]; unknownCategory: number }
 			| {
 					type: 'continuous';
 					min: number;
 					max: number;
 					histogram: { posts: number[]; values: number[] };
 			  }
-		)
+		))
 	>;
 	const paintKeys = Object.keys(paintOptions) as (keyof typeof paintOptions)[];
 
 	let paintKey = $state('id') as keyof typeof paintOptions;
-	let dimensionality: '2d' | '3d' = $state('3d') as '2d' | '3d';
 
-	let paintOption: (typeof paintOptions)[keyof typeof paintOptions] = $derived(
-		paintOptions[paintKey]
+	let paintOption: ReturnType<(typeof paintOptions)[keyof typeof paintOptions]> = $derived(
+		paintOptions[paintKey]()
 	);
 
+	let dimensionality: '2d' | '3d' = $state('3d') as '2d' | '3d';
 	let pointSize = $state(2);
 
 	let scaleGradient = $derived(
@@ -332,14 +394,26 @@
 				<button
 					class="border-gray block rounded border p-1 transition-all hover:bg-gray-100 active:bg-gray-100"
 					class:bg-gray-100={paintKey == key}
-					onclick={() => (paintKey = key)}>{paintOptions[key].name}</button
+					onclick={() => (paintKey = key)}>{paintOptions[key]().name}</button
 				>
 			{/each}
 		</MenuEntry>
 
+		{#if paintKey == "gemini"}
+			<MenuEntry title="LLM-Schlüssel">
+				{#each geminiKeys as key}
+					<button
+						class="border-gray block rounded border p-1 transition-all hover:bg-gray-100 active:bg-gray-100"
+						class:bg-gray-100={geminiKey == key.path}
+						onclick={() => loadGeminiKey(key)}>{key.name}</button
+					>
+				{/each}
+			</MenuEntry>
+		{/if}
+
 		<MenuEntry title="Legende">
 			{#if paintOption.type === 'discrete'}
-				{@const labels = paintOption.labels}
+				{@const labels = paintOption.labels()}
 				{@const colors = Color.Category10}
 				{@const categoryCounts = paintOption.categories}
 
@@ -401,7 +475,7 @@
 							: {
 									value: paintOption.categories[i] / vocabulary.tokens.length,
 									color: Color.Category10[i],
-									label: paintOption.labels[i]
+									label: paintOption.labels()[i]
 								}
 					)}
 				/>

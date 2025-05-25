@@ -44,6 +44,11 @@ export const LogitsResponse = z.object({
 });
 export type LogitsResponse = z.infer<typeof LogitsResponse>;
 
+export const GeminiColumnResponse = z.object({
+	column: z.array(z.union([z.number(), z.string()]))
+})
+export type GeminiColumnResponse = z.infer<typeof GeminiColumnResponse>;
+
 export const InferenceConfig = z.object({
 	num_tokens: z.number().int().optional(),
 	temperature: z.number().min(0).max(5).optional(),

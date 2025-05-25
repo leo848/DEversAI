@@ -8,7 +8,8 @@ import {
 	LogitsResponse,
 	TokenEmbeddings,
 	TokenInfo,
-	EmbeddingDimInfo
+	EmbeddingDimInfo,
+	GeminiColumnResponse
 } from './types';
 
 const pathUtils = {
@@ -31,9 +32,11 @@ export class Client {
 	httpsBase: string;
 	wsUrl: string;
 	embeddingCache: Record<string, TokenEmbeddings>;
+	geminiColumnCache: Record<string, GeminiColumnResponse>;
 
 	constructor({ base }: { base?: string } = {}) {
 		this.embeddingCache = {};
+		this.geminiColumnCache = {};
 		if (base) {
 			this.httpsBase = `https://${base}/v0`;
 			this.wsUrl = `wss://${base}/ws`;
@@ -94,6 +97,31 @@ export class Client {
 			return tokenEmbeddings.data;
 		} else {
 			return Promise.reject('Could not parse response: ' + tokenEmbeddings.error);
+		}
+	}
+
+	async getGeminiColumn(path: string[]): Promise<GeminiColumnResponse> {
+		const cached = this.geminiColumnCache[path.join("␞")];
+		if (cached != null) {
+			return cached;
+		}
+		const apiPath = pathUtils.join(this.httpsBase, 'gemini-column');
+		const response = await fetch(apiPath, {
+			method: "POST",
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				path,
+			})
+		});
+		const json = await response.json();
+		const geminiColumnResponse = await GeminiColumnResponse.safeParseAsync(json);
+		if (geminiColumnResponse.success) {
+			this.geminiColumnCache[path.join("␞")] = geminiColumnResponse.data;
+			return geminiColumnResponse.data;
+		} else {
+			return Promise.reject('Could not parse response: ' + geminiColumnResponse.error);
 		}
 	}
 
