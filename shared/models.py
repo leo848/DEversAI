@@ -35,3 +35,6 @@ class LogitsRequest(BaseModel):
 
 class LogitsResponse(BaseModel):
     logits: list[float]
+
+class GeminiColumnRequest(BaseModel):
+    path: list[str]
