@@ -133,7 +133,7 @@ def gemini_column(request: GeminiColumnRequest):
         token_id = entry["id"]
         path = [*request.path]
         while path:
-            if not isinstance(entry, dict) or not isinstance(entry, list):
+            if not isinstance(entry, (dict, list)):
                 break
             first = path[0]
             path = path[1:]
