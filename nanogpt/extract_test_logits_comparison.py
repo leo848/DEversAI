@@ -16,6 +16,8 @@ init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g.
 model_name = "anticausal-fw2"
 data_dir = "fw2-tokenized"
 
+file = "fw2-shard-00025.bin"
+
 ckpt_value = 300000
 device = 'cuda:3' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 skip_every = 1
@@ -25,7 +27,6 @@ dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported
 compile = True # use PyTorch 2.0 to compile the model to be faster
 batch_size = 32
 block_size = 1024
-skip_every_block_size = False
 causality = "anticausal" if "anticausal" in model_name else "causal"
 
 exec(open('configurator.py').read()) # overrides from command line or config file
@@ -61,61 +62,60 @@ with torch.no_grad(), ctx:
     directory = f"/data/{data_dir}/"
     if "val" in os.listdir(directory):
         directory += "val/"
-    for file in tqdm(os.listdir(directory)):
-        logits = [[] for _ in range(100)]
-        probs = [[] for _ in range(100)]
-        try:
-            path = os.path.join(directory, file)
-            if not os.path.isfile(path): exit(1)
-            data = np.memmap(path, dtype=np.dtype(">u2"), mode="r")
+    logits = [[] for _ in range(100)]
+    probs = [[] for _ in range(100)]
+    try:
+        path = os.path.join(directory, file)
+        if not os.path.isfile(path): exit(1)
+        data = np.memmap(path, dtype=np.dtype(">u2"), mode="r")
 
-            total_loss = 0
-            num_batches = 0
+        total_loss = 0
+        num_batches = 0
 
-            for start_i in tqdm(list(range(offset, len(data) - block_size - batch_size - 1, block_size if skip_every_block_size else skip_every))):
-                x, y = None, None
-                if causality == "causal":
-                    x = torch.stack( [
-                        torch.from_numpy(
-                            data[i:i + block_size].astype(np.int64)
-                        )
-                        for i in range(start_i, start_i + batch_size)
-                    ])
-                    y = torch.stack([
-                        torch.from_numpy(
-                            data[i + 1: i + 1 + block_size].astype(np.int64)
-                        )
-                        for i in range(start_i, start_i + batch_size)
-                    ])
-                elif causality == "anticausal":
-                    x = torch.stack([
-                        torch.from_numpy(
-                            data[i + 1: i + 1 + block_size][::-1].astype(np.int64)
-                        )
-                        for i in range(start_i, start_i + batch_size)
-                    ])
-                    y = torch.stack( [
-                        torch.from_numpy(
-                            data[i:i + block_size][::-1].astype(np.int64)
-                        )
-                        for i in range(start_i, start_i + batch_size)
-                    ])
+        for start_i in tqdm(list(range(offset, len(data) - block_size - batch_size - 1, block_size + batch_size))):
+            x, y = None, None
+            if causality == "causal":
+                x = torch.stack( [
+                    torch.from_numpy(
+                        data[i:i + block_size].astype(np.int64)
+                    )
+                    for i in range(start_i, start_i + batch_size)
+                ])
+                y = torch.stack([
+                    torch.from_numpy(
+                        data[i + 1: i + 1 + block_size].astype(np.int64)
+                    )
+                    for i in range(start_i, start_i + batch_size)
+                ])
+            elif causality == "anticausal":
+                x = torch.stack([
+                    torch.from_numpy(
+                        data[i + 1: i + 1 + block_size][::-1].astype(np.int64)
+                    )
+                    for i in range(start_i, start_i + batch_size)
+                ])
+                y = torch.stack( [
+                    torch.from_numpy(
+                        data[i:i + block_size][::-1].astype(np.int64)
+                    )
+                    for i in range(start_i, start_i + batch_size)
+                ])
 
-                x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
-                model_logits, _ = model(x, y)
-                model_logits = model_logits[:, -1, :]
-                probs = F.softmax(model_logits, dim=-1)
-                top_logits, top_values = torch.topk(model_logits, 100)
-                for i in range(100):
-                    logits[i] += top_logits[:, i].tolist()
-        except Exception as e:
-            print(f"Exception: {e}")
-        logits_numpy = np.array(logits)
-        mean = np.mean(logits, axis=1)
-        filename = f"/output/{model_name}/{file}-logits.npy"
-        while os.path.isfile(filename):
-            filename = filename.replace("logits", "logits-2")
-        np.save(filename, logits_numpy)
-        print(f"Saved {len(logits_numpy)} loss entries (mean {mean}) to {filename}")
+            x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
+            model_logits, _ = model(x, y)
+            model_logits = model_logits[:, -1, :]
+            probs = F.softmax(model_logits, dim=-1)
+            top_logits, top_values = torch.topk(model_logits, 100)
+            for i in range(100):
+                logits[i] += top_logits[:, i].tolist()
+    except Exception as e:
+        print(f"Exception: {e}")
+    logits_numpy = np.array(logits)
+    mean = np.mean(logits, axis=1)
+    filename = f"/output/{model_name}/{file}-logits.npy"
+    while os.path.isfile(filename):
+        filename = filename.replace("logits", "logits-2")
+    np.save(filename, logits_numpy)
+    print(f"Saved {len(logits_numpy)} loss entries (mean {mean}) to {filename}")
 
 
