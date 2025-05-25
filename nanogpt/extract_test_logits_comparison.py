@@ -20,13 +20,14 @@ file = "fw2-shard-00025.bin"
 
 ckpt_value = 300000
 device = 'cuda:3' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
-skip_every = 1
+skip_every = 200_000
 offset = 2
 
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
 compile = True # use PyTorch 2.0 to compile the model to be faster
 batch_size = 32
 block_size = 1024
+skip_every_block_size = False
 causality = "anticausal" if "anticausal" in model_name else "causal"
 
 exec(open('configurator.py').read()) # overrides from command line or config file
@@ -72,7 +73,7 @@ with torch.no_grad(), ctx:
         total_loss = 0
         num_batches = 0
 
-        for start_i in tqdm(list(range(offset, len(data) - block_size - batch_size - 1, block_size + batch_size))):
+        for start_i in tqdm(list(range(offset, len(data) - block_size - batch_size - 1, block_size if skip_every_block_size else skip_every))):
             x, y = None, None
             if causality == "causal":
                 x = torch.stack( [
