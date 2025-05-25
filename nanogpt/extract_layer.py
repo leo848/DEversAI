@@ -22,7 +22,7 @@ assert init_from == "resume"
 
 exec(open('configurator.py').read()) # overrides from command line or config file
 
-for model_id in tqdm(bracex.expand("{anti,}causal-fw2-{laws,plenar}1")):
+for model_id in tqdm(bracex.expand("{anti,}causal-fw2-{gutenberg,wikipedia}1")):
     print(model_id)
     model_name = model_id + ".pt"
     ckpt_path = os.path.join(out_dir, model_name)

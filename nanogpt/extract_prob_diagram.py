@@ -41,7 +41,5 @@ def main():
     with open("output/causal-fw2-numbers-encoding.json", "w") as f:
         json.dump(result, f)
 
-
-
 if __name__ == "__main__":
     main()

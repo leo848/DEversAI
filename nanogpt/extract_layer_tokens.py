@@ -2,7 +2,7 @@ from vocabulary import Vocabulary
 import json
 
 def main():
-    vocab = Vocabulary.load("german-complete.vocab")
+    vocab = Vocabulary.load("fineweb2.vocab")
     results = []
     for token in vocab.tokens:
         results.append(str(token))

@@ -24,7 +24,7 @@ def pca_variance(file):
 def main():
     # reference_variance = pca_variance("output/causal1.pt-embedding-768d.npy")
     result = {}
-    for file in tqdm([*bracex.expand("output/{anti,}causal-fw2{,-laws1,-plenar1}-embedding-768d.npy"), None]):
+    for file in tqdm([*bracex.expand("output/{anti,}causal-fw2{,-laws1,-plenar1,-gutenberg1,-wikipedia1}-embedding-768d.npy"), None]):
         variance = pca_variance(file)
         if file is not None:
             key = file.split("-em")[0].split("/")[-1]
