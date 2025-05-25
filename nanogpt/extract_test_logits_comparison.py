@@ -103,8 +103,11 @@ with torch.no_grad(), ctx:
 
                 x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
                 model_logits, _ = model(x, y)
+                print(model_logits.shape)
                 probs = F.softmax(model_logits, dim=-1)
+                print(probs.shape)
                 top_logits, top_values = torch.topk(model_logits, 100)
+                print(top_logits.shape, top_values.shape)
                 for i in range(100):
                     logits[i] += list(top_logits[i])
         except Exception as e:
