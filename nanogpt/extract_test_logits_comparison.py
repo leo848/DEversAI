@@ -17,7 +17,7 @@ model_name = "anticausal-fw2"
 data_dir = "fw2-tokenized"
 
 ckpt_value = 300000
-device = 'cuda:0' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
+device = 'cuda:3' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
 skip_every = 1
 offset = 2
 
@@ -104,7 +104,7 @@ with torch.no_grad(), ctx:
                 x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
                 model_logits, _ = model(x, y)
                 probs = F.softmax(model_logits, dim=-1)
-                top_tokens, top_logits = torch.topk(model_logits, 100)
+                top_logits, top_values = torch.topk(model_logits, 100)
                 for i in range(100):
                     logits[i] += list(top_logits[i])
         except Exception as e:
