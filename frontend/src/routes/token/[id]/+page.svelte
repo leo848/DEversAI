@@ -14,7 +14,7 @@
 	import EmbeddingCircles from '$lib/components/EmbeddingCircles.svelte';
 	import TokenOccurrence from './TokenOccurrence.svelte';
 	import AugmentedTokenList from '$lib/components/AugmentedTokenList.svelte';
-	import type {ModelId} from '$lib/backend/models';
+	import GeminiDisplay from '$lib/components/GeminiDisplay.svelte';
 
 	const tokenIndex = $derived(+$page.params.id);
 	const token = $derived(vocabulary.tokens[tokenIndex]);
@@ -162,7 +162,7 @@
 		</div>
 	</BorderSection>
 	<div class="grid grid-cols-2 gap-8">
-		<div>
+		<div class="flex flex-col gap-4">
 			<BorderSection title="Embedding" open={false}>
 				<div class="flex flex-col gap-4">
 					<div class="flex flex-row">
@@ -186,6 +186,14 @@
 					</div>
 				</div>
 			</BorderSection>
+			{#await tokenData then tokenData}
+				{@const info = tokenData.gemini_info}
+				{#if info}
+					<BorderSection title="Informationen (LLM-erzeugt)" open={false}>
+						<GeminiDisplay info={info} />
+					</BorderSection>
+				{/if}
+			{/await}
 		</div>
 		<div class="grid gap-8">
 			<BorderSection title="Ähnliche Tokens">

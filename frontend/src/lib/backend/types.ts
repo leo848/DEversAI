@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import {GeminiInfo} from './geminiTypes';
 
 export const TokenInfo = z.object({
 	id: z.number(),
@@ -20,7 +21,8 @@ export const TokenInfo = z.object({
 			neighbors: z.array(z.number().int().nonnegative()),
 			distances: z.array(z.number().finite())
 		})
-	)
+	),
+	gemini_info: z.optional(GeminiInfo),
 });
 export type TokenInfo = z.infer<typeof TokenInfo>;
 
