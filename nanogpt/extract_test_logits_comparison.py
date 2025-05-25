@@ -103,6 +103,7 @@ with torch.no_grad(), ctx:
 
                 x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
                 model_logits, _ = model(x, y)
+                model_logits = model_logits[:, -1, :]
                 print(model_logits.shape)
                 probs = F.softmax(model_logits, dim=-1)
                 print(probs.shape)
