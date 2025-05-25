@@ -13,7 +13,7 @@ import bracex
 
 # -----------------------------------------------------------------------------
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
-model_name = "anticausal-fw2"
+model_name = "causal-fw2"
 data_dir = "fw2-tokenized"
 
 file = "fw2-shard-00025.bin"
