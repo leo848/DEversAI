@@ -16,11 +16,11 @@ init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g.
 model_name = "causal-fw2"
 data_dir = "fw2-tokenized"
 
-file = "fw2-shard-00025.bin"
+file = "fw2-shard-00015.bin"
 
 ckpt_value = 300000
 device = 'cuda:3' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1', etc.
-skip_every = 200_000
+skip_every = 100_000
 offset = 2
 
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32' or 'bfloat16' or 'float16'
@@ -105,10 +105,12 @@ with torch.no_grad(), ctx:
             x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
             model_logits, _ = model(x, y)
             model_logits = model_logits[:, -1, :]
-            probs = F.softmax(model_logits, dim=-1)
-            top_logits, top_values = torch.topk(model_logits, 100)
+            model_probs = F.softmax(model_logits, dim=-1)
+            top_logits, top_indices = torch.topk(model_logits, 100)
+            top_probs = torch.gather(model_probs, 1, top_indices)
             for i in range(100):
                 logits[i] += top_logits[:, i].tolist()
+                probs[i] += top_probs[:, i].tolist()
     except Exception as e:
         print(f"Exception: {e}")
     logits_numpy = np.array(logits)
@@ -117,6 +119,13 @@ with torch.no_grad(), ctx:
     while os.path.isfile(filename):
         filename = filename.replace("logits", "logits-2")
     np.save(filename, logits_numpy)
-    print(f"Saved {len(logits_numpy)} loss entries (mean {mean}) to {filename}")
+    probs_numpy = np.array(probs)
+    mean_probs = np.mean(probs_numpy, axis=1)
+    filename_probs = f"/output/{model_name}/{file}-probs.npy"
+    while os.path.isfile(filename_probs):
+        filename_probs = filename_probs.replace("probs", "probs-2")
+    np.save(filename_probs, probs_numpy)
+    print(f"Saved {len(logits_numpy)} logit entries (mean {mean}) to {filename}")
+    print(f"Saved {len(probs_numpy)} prob entries (mean {mean_probs}) to {filename_probs}")
 
 
