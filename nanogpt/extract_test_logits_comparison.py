@@ -110,7 +110,7 @@ with torch.no_grad(), ctx:
                 top_logits, top_values = torch.topk(model_logits, 100)
                 print(top_logits.shape, top_values.shape)
                 for i in range(100):
-                    logits[i] += list(top_logits[:, i])
+                    logits[i] += top_logits[:, i].tolist()
         except Exception as e:
             print(f"Exception: {e}")
         logits_numpy = np.array(logits)
