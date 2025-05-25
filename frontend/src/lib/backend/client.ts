@@ -101,24 +101,24 @@ export class Client {
 	}
 
 	async getGeminiColumn(path: string[]): Promise<GeminiColumnResponse> {
-		const cached = this.geminiColumnCache[path.join("␞")];
+		const cached = this.geminiColumnCache[path.join('␞')];
 		if (cached != null) {
 			return cached;
 		}
 		const apiPath = pathUtils.join(this.httpsBase, 'gemini-column');
 		const response = await fetch(apiPath, {
-			method: "POST",
+			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
-				path,
+				path
 			})
 		});
 		const json = await response.json();
 		const geminiColumnResponse = await GeminiColumnResponse.safeParseAsync(json);
 		if (geminiColumnResponse.success) {
-			this.geminiColumnCache[path.join("␞")] = geminiColumnResponse.data;
+			this.geminiColumnCache[path.join('␞')] = geminiColumnResponse.data;
 			return geminiColumnResponse.data;
 		} else {
 			return Promise.reject('Could not parse response: ' + geminiColumnResponse.error);

@@ -5,8 +5,8 @@
 	import TokenComponent from './Token.svelte';
 	import Tooltip from './Tooltip.svelte';
 	import Histogram from './Histogram.svelte';
-	import {range} from 'd3';
-	import {Gradient} from '$lib/util/color';
+	import { range } from 'd3';
+	import { Gradient } from '$lib/util/color';
 
 	const {
 		tokens,
@@ -98,7 +98,10 @@
 			{/each}
 		</div>
 	{:else if viewType == 'barChart' && barChartMap != null}
-		<Histogram posts={range(0, tokens.length+1)} values={tokens.map((_, index) => barChartMap(values[index][fields[0].key]))} colorGradient={Gradient.Viridis.reverse()}>
-		</Histogram>
+		<Histogram
+			posts={range(0, tokens.length + 1)}
+			values={tokens.map((_, index) => barChartMap(values[index][fields[0].key]))}
+			colorGradient={Gradient.Viridis.reverse()}
+		></Histogram>
 	{/if}
 </div>

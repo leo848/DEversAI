@@ -18,7 +18,11 @@
 	const client = new Client();
 	let modelDirectionality = $state('anticausal') as 'anticausal' | 'augmented' | 'causal';
 	let modelFinetune = $state('') as '' | 'laws1' | 'plenar1';
-	let modelName = $derived(modelDirectionality + "-fw2" + (modelFinetune && modelDirectionality != "augmented" ? '-' + modelFinetune : ''));
+	let modelName = $derived(
+		modelDirectionality +
+			'-fw2' +
+			(modelFinetune && modelDirectionality != 'augmented' ? '-' + modelFinetune : '')
+	);
 
 	const embeddingData = $derived(client.getTokenEmbeddings(modelName));
 
@@ -62,7 +66,10 @@
 			unknownCategory,
 			paint: (input) => {
 				const categoryIndex = classifier(input);
-				const color = categoryIndex == -1 || categoryIndex >= 10 ? Color.luma(1.0) : Color.Category10[categoryIndex];
+				const color =
+					categoryIndex == -1 || categoryIndex >= 10
+						? Color.luma(1.0)
+						: Color.Category10[categoryIndex];
 				return color;
 			}
 		};
@@ -156,27 +163,26 @@
 	}
 
 	let geminiClassifier: number[] = $state(new Array(50256).fill(-1));
-	let geminiLabels = $state(["(Leer)"])
+	let geminiLabels = $state(['(Leer)']);
 
-	async function loadGeminiKey(key: { path: string, name: string }) {
-		const blacklist = new Set([
-			"andere",
-			"rest",
-			"-1",
-			-1,
-			"keine",
-			null,
-			undefined,
-		])
+	async function loadGeminiKey(key: { path: string; name: string }) {
+		const blacklist = new Set(['andere', 'rest', '-1', -1, 'keine', null, undefined]);
 		geminiKey = key.path;
-		const result = await client.getGeminiColumn(key.path.split("/"));
+		const result = await client.getGeminiColumn(key.path.split('/'));
 		const counter: Record<number | string, number> = {};
 		for (const entry of result.column) {
 			if (entry == null || blacklist.has(entry?.toString()?.toLowerCase())) continue;
 			counter[entry] = (counter[entry] ?? 0) + 1;
 		}
-		const topElements = sortByKey([...new Set(result.column)], element => -(counter[element ?? -1] ?? -1));
-		const sliced = topElements.slice(0, Math.min(topElements.length, 10)).map(e => e?.toString()).filter(str => !blacklist.has(str)).map(str => str as string);
+		const topElements = sortByKey(
+			[...new Set(result.column)],
+			(element) => -(counter[element ?? -1] ?? -1)
+		);
+		const sliced = topElements
+			.slice(0, Math.min(topElements.length, 10))
+			.map((e) => e?.toString())
+			.filter((str) => !blacklist.has(str))
+			.map((str) => str as string);
 
 		geminiLabels = [...sliced];
 
@@ -193,24 +199,26 @@
 	}
 
 	let geminiKey: string = $state('');
-	let geminiKeyCategory: string = $state("general")
+	let geminiKeyCategory: string = $state('general');
 
 	const option = {
-		continuous: (object: { name: string; metric: Metric }) =>
-			() => ({
+		continuous: (object: { name: string; metric: Metric }) => () =>
+			({
 				type: 'continuous',
 				name: object.name,
 				metric: object.metric,
 				...paintContinuous(object.metric)
 			}) as const,
-		discrete: (object: { name: string; classifier: Metric; labels: string[] | (() => string[]) }) =>
-			() => ({
-				type: 'discrete',
-				name: object.name,
-				metric: object.classifier,
-				labels: (typeof object.labels === "function") ? (object.labels) : (() => object.labels as string[]),
-				...paintDiscrete(object.classifier)
-			}) as const
+		discrete:
+			(object: { name: string; classifier: Metric; labels: string[] | (() => string[]) }) => () =>
+				({
+					type: 'discrete',
+					name: object.name,
+					metric: object.classifier,
+					labels:
+						typeof object.labels === 'function' ? object.labels : () => object.labels as string[],
+					...paintDiscrete(object.classifier)
+				}) as const
 	};
 
 	const paintOptions = {
@@ -220,17 +228,17 @@
 		}),
 		suffixChar: option.discrete({
 			name: 'Suffixe (Zeichen)',
-			labels: [32, 45].map(i => String.fromCharCode(i)),
+			labels: [32, 45].map((i) => String.fromCharCode(i)),
 			classifier: suffixClassifier([32, 45])
 		}),
 		suffixLetter: option.discrete({
 			name: 'Suffixe (Buchstaben)',
-			labels: [110, 116, 114, 101, 105, 115, 108, 104, 103, 97].map(i => String.fromCharCode(i)),
+			labels: [110, 116, 114, 101, 105, 115, 108, 104, 103, 97].map((i) => String.fromCharCode(i)),
 			classifier: suffixClassifier([110, 116, 114, 101, 105, 115, 108, 104, 103, 97])
 		}),
 		prefix: option.discrete({
 			name: 'Präfixe',
-			labels: [115, 100, 83, 103, 97, 98, 101, 65, 66, 119].map(i => String.fromCharCode(i)),
+			labels: [115, 100, 83, 103, 97, 98, 101, 65, 66, 119].map((i) => String.fromCharCode(i)),
 			classifier: prefixClassifier([115, 100, 83, 103, 97, 98, 101, 65, 66, 119])
 		}),
 		byteCount: option.continuous({
@@ -276,11 +284,11 @@
 		gemini: option.discrete({
 			name: 'LLM-erfasster Eintrag',
 			labels: () => geminiLabels,
-			classifier: ({ id }) => geminiClassifier[id],
+			classifier: ({ id }) => geminiClassifier[id]
 		})
 	} as const satisfies Record<
 		string,
-		() => ({ type: string; name: string; paint: (input: MetricInput) => Color } & (
+		() => { type: string; name: string; paint: (input: MetricInput) => Color } & (
 			| { type: 'discrete'; labels: () => string[]; categories: number[]; unknownCategory: number }
 			| {
 					type: 'continuous';
@@ -288,7 +296,7 @@
 					max: number;
 					histogram: { posts: number[]; values: number[] };
 			  }
-		))
+		)
 	>;
 	const paintKeys = Object.keys(paintOptions) as (keyof typeof paintOptions)[];
 
@@ -346,9 +354,9 @@
 				>
 					3D
 				</button>
-				<div class="grid grid-cols-5 col-span-2 gap-4">
+				<div class="col-span-2 grid grid-cols-5 gap-4">
 					<button
-						class="col-span-2 align-center rounded border border-gray-200 p-3 text-center transition-all hover:bg-gray-100 active:bg-gray-100"
+						class="align-center col-span-2 rounded border border-gray-200 p-3 text-center transition-all hover:bg-gray-100 active:bg-gray-100"
 						class:bg-gray-100={modelDirectionality == 'causal'}
 						onclick={() => (modelDirectionality = 'causal')}
 					>
@@ -358,11 +366,11 @@
 						class="align-center rounded border border-gray-200 p-3 text-center transition-all hover:bg-gray-100 active:bg-gray-100"
 						class:bg-gray-100={modelDirectionality == 'augmented'}
 						onclick={() => (modelDirectionality = 'augmented')}
-						>
+					>
 						+
 					</button>
 					<button
-						class="col-span-2 align-center rounded border border-gray-200 p-3 text-center transition-all hover:bg-gray-100 active:bg-gray-100"
+						class="align-center col-span-2 rounded border border-gray-200 p-3 text-center transition-all hover:bg-gray-100 active:bg-gray-100"
 						class:bg-gray-100={modelDirectionality == 'anticausal'}
 						onclick={() => (modelDirectionality = 'anticausal')}
 					>
@@ -388,7 +396,7 @@
 			{/each}
 		</MenuEntry>
 
-		{#if paintKey == "gemini"}
+		{#if paintKey == 'gemini'}
 			<MenuEntry title="LLM-Schlüssel">
 				<select bind:value={geminiKeyCategory}>
 					<option value="general">Allgemein</option>
@@ -398,7 +406,7 @@
 					<option value="pronomen">Präposition</option>
 					<option value="other">Weitere</option>
 				</select>
-				{#each geminiKeys.filter(key => key.category == geminiKeyCategory) as key}
+				{#each geminiKeys.filter((key) => key.category == geminiKeyCategory) as key}
 					<button
 						class="border-gray block rounded border p-1 transition-all hover:bg-gray-100 active:bg-gray-100"
 						class:bg-gray-100={geminiKey == key.path}

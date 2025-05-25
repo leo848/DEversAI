@@ -190,7 +190,7 @@
 				{@const info = tokenData.gemini_info}
 				{#if info}
 					<BorderSection title="Informationen (LLM-erzeugt)" open={false}>
-						<GeminiDisplay info={info} />
+						<GeminiDisplay {info} />
 					</BorderSection>
 				{/if}
 			{/await}
@@ -204,7 +204,10 @@
 							{#await tokenData}
 								<EmergentSpinner />
 							{:then tokenData}
-								{@const { neighbors, distances } = tokenData.nearest_neighbors[modelId] ?? { neighbors: [], distances: [] }}
+								{@const { neighbors, distances } = tokenData.nearest_neighbors[modelId] ?? {
+									neighbors: [],
+									distances: []
+								}}
 								<AugmentedTokenList
 									tokens={neighbors.map((id) => vocabulary.tokens[id])}
 									fields={[
@@ -214,7 +217,7 @@
 									values={neighbors.map((_, i) => ({ dist: distances[i], sim: 1 - distances[i] }))}
 									hueKey="sim"
 									hueMap={(x) => x ** 4}
-									 barChartMap={x => 1 - x}
+									barChartMap={(x) => 1 - x}
 								>
 									{#snippet tooltip(token, rank)}
 										<div class="flex flex-col gap-4">

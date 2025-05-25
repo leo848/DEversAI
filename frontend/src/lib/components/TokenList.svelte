@@ -44,10 +44,10 @@
 		dim: 0
 	});
 	let embeddingInfo = $derived.by(() => {
-		if (sortKeyEmbedding.modelName === "cca") {
+		if (sortKeyEmbedding.modelName === 'cca') {
 			return client.getCcaDimInfo(sortKeyEmbedding.dim);
 		} else {
-			return client.getEmbeddingDimInfo(sortKeyEmbedding.modelName, sortKeyEmbedding.dim)
+			return client.getEmbeddingDimInfo(sortKeyEmbedding.modelName, sortKeyEmbedding.dim);
 		}
 	});
 

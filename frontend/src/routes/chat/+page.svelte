@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Client } from '$lib/backend/client';
 	import BorderSection from '$lib/components/BorderSection.svelte';
-	import {models, type ModelId} from '$lib/backend/models';
+	import { models, type ModelId } from '$lib/backend/models';
 	import EmergentSpinner from '$lib/components/EmergentSpinner.svelte';
 	import TopLogits from '$lib/components/TopLogits.svelte';
 	import vocabs from '$lib/tokenizing/vocabs';
@@ -29,11 +29,12 @@
 	});
 
 	let logitsInference = $state({
-		anticausal: () => client.modelLogits("anticausal" + options.modelId, tokens.anticausal.toReversed()),
-		causal: () => client.modelLogits("causal" + options.modelId, tokens.causal)
+		anticausal: () =>
+			client.modelLogits('anticausal' + options.modelId, tokens.anticausal.toReversed()),
+		causal: () => client.modelLogits('causal' + options.modelId, tokens.causal)
 	});
 
-	const generate = $state((causality: "anticausal" | "causal") => {
+	const generate = $state((causality: 'anticausal' | 'causal') => {
 		const tokenInput = {
 			anticausal: (it: Token[]) => it.toReversed(),
 			causal: (it: Token[]) => it
@@ -48,10 +49,11 @@
 			inProgress.ongoing = true;
 			outer: for await (const tokens of gen) {
 				for (const token of tokens) {
-					if (token == 0xff && options.respectEot || token == -1) break outer;
+					if ((token == 0xff && options.respectEot) || token == -1) break outer;
 					({
 						causal: () => (inputString += vocabulary(options.modelId).tokens[token].toString()),
-						anticausal: () => (inputString = vocabulary(options.modelId).tokens[token].toString() + inputString)
+						anticausal: () =>
+							(inputString = vocabulary(options.modelId).tokens[token].toString() + inputString)
 					})[causality]();
 				}
 			}
@@ -69,15 +71,13 @@
 		maxTokens_log: Math.log(200),
 		syntheticWait_millis: 0,
 		respectEot: true,
-		modelId: "-fw2" as "1" | "-fw2",
+		modelId: '-fw2' as '1' | '-fw2'
 	});
 
 	function refreshModel(causality: 'anticausal' | 'causal') {
 		processString[causality] = inputString;
 		tokens[causality] = vocabulary(options.modelId).tokenize(processString[causality]);
-		let modelInput = causality == "causal"
-			? tokens[causality]
-			: tokens[causality].toReversed();
+		let modelInput = causality == 'causal' ? tokens[causality] : tokens[causality].toReversed();
 		logitsInference[causality] = () => client.modelLogits(causality + options.modelId, modelInput);
 	}
 </script>
@@ -124,7 +124,7 @@
 						{:then logitsResponse}
 							<TopLogits
 								{logitsResponse}
-		   						vocabulary={vocabulary(options.modelId)}
+								vocabulary={vocabulary(options.modelId)}
 								temperature={options.temperature}
 								topK={Math.floor(Math.exp(options.topK_log))}
 								ontokenclick={(token) => {
@@ -150,7 +150,7 @@
 						{:then logitsResponse}
 							<TopLogits
 								{logitsResponse}
-		   						vocabulary={vocabulary(options.modelId)}
+								vocabulary={vocabulary(options.modelId)}
 								temperature={options.temperature}
 								topK={Math.floor(Math.exp(options.topK_log))}
 								ontokenclick={(token) => {

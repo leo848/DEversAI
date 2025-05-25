@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type {ModelId} from "$lib/backend/models";
+	import type { ModelId } from '$lib/backend/models';
 
 	let {
 		value = $bindable()
@@ -10,7 +10,7 @@
 			topK_log: number;
 			syntheticWait_millis: number;
 			respectEot: boolean;
-			modelId: ModelId,
+			modelId: ModelId;
 		};
 	} = $props();
 </script>
@@ -19,18 +19,10 @@
 	<div class="flex flex-col">
 		<div>Ausgewähltes Modell</div>
 		<select bind:value={value.modelId}>
-			<option value="1">
-				OSCAR (1)
-			</option>
-			<option value="-fw2">
-				FineWeb (2)
-			</option>
-			<option value="-fw2-laws1">
-				FineWeb / Finetune Gesetzestexte
-			</option>
-			<option value="-fw2-wikipedia1">
-				FineWeb / Finetune Wikipedia
-			</option>
+			<option value="1"> OSCAR (1) </option>
+			<option value="-fw2"> FineWeb (2) </option>
+			<option value="-fw2-laws1"> FineWeb / Finetune Gesetzestexte </option>
+			<option value="-fw2-wikipedia1"> FineWeb / Finetune Wikipedia </option>
 		</select>
 	</div>
 	<div class="flex flex-col">

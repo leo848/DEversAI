@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import {GeminiInfo} from './geminiTypes';
+import { GeminiInfo } from './geminiTypes';
 
 export const TokenInfo = z.object({
 	id: z.number(),
@@ -22,7 +22,7 @@ export const TokenInfo = z.object({
 			distances: z.array(z.number().finite())
 		})
 	),
-	gemini_info: z.optional(GeminiInfo),
+	gemini_info: z.optional(GeminiInfo)
 });
 export type TokenInfo = z.infer<typeof TokenInfo>;
 
@@ -46,7 +46,7 @@ export type LogitsResponse = z.infer<typeof LogitsResponse>;
 
 export const GeminiColumnResponse = z.object({
 	column: z.array(z.union([z.number(), z.string()]).nullable())
-})
+});
 export type GeminiColumnResponse = z.infer<typeof GeminiColumnResponse>;
 
 export const InferenceConfig = z.object({

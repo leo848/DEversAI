@@ -4,7 +4,7 @@
 	import { sortByKey } from '$lib/util/array';
 	import TokenComponent from './Token.svelte';
 	import AugmentedTokenList from './AugmentedTokenList.svelte';
-	import type {Vocabulary} from '$lib/tokenizing/vocabulary';
+	import type { Vocabulary } from '$lib/tokenizing/vocabulary';
 
 	const {
 		logitsResponse,
