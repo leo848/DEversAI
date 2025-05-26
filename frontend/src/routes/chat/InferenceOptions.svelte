@@ -17,12 +17,14 @@
 
 <div class="flex flex-col gap-4 text-lg">
 	<div class="flex flex-col">
-		<div>Ausgewähltes Modell</div>
+		<div>Ausgewähltes Modellpaar</div>
 		<select bind:value={value.modelId}>
 			<option value="1"> OSCAR (1) </option>
 			<option value="-fw2"> FineWeb (2) </option>
-			<option value="-fw2-laws1"> FineWeb / Finetune Gesetzestexte </option>
-			<option value="-fw2-wikipedia1"> FineWeb / Finetune Wikipedia </option>
+			<option value="-fw2-laws1"> FineWeb (2) / Finetune Gesetzestexte </option>
+			<option value="-fw2-plenar1"> FineWeb (2) / Finetune Plenarprotokolle </option>
+			<option value="-fw2-gutenberg1"> FineWeb (2) / Finetune Gutenberg </option>
+			<option value="-fw2-wikipedia1"> FineWeb (2) / Finetune Wikipedia </option>
 		</select>
 	</div>
 	<div class="flex flex-col">

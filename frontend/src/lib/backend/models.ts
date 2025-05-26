@@ -10,6 +10,12 @@ export const models = {
 	},
 	'-fw2-wikipedia1': {
 		vocab: 'fineweb2'
+	},
+	'-fw2-gutenberg1': {
+		vocab: 'fineweb2'
+	},
+	'-fw2-plenar1': {
+		vocab: 'fineweb2'
 	}
 } as const;
 
