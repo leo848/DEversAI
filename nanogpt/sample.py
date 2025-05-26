@@ -12,7 +12,7 @@ from vocabulary import Vocabulary
 from torch.nn import functional as F
 
 # -----------------------------------------------------------------------------
-model_name = "anticausal-fw2.pt"
+model_name = "causal-fw2-plenar1.pt"
 vocab_file = "fineweb2.vocab"
 
 compile = False # use PyTorch 2.0 to compile the model to be faster
@@ -22,7 +22,7 @@ causality = "anticausal" if "anticausal" in model_name else "causal" # 'causal' 
 show_probs = False
 show_probs_tries = 1
 
-show_token_generation_probs = True
+show_token_generation_probs = False
 
 show_samples_json = True
 
