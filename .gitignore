@@ -5,6 +5,7 @@ wikidata/
 **/*.vocab
 **/*.dump
 **/*.gz
+**/*.stl
 **/*base64.txt
 !**/*.base64.txt
 
