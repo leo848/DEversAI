@@ -17,7 +17,7 @@
 
 	const client = new Client();
 	let modelDirectionality = $state('anticausal') as 'anticausal' | 'augmented' | 'causal';
-	let modelFinetune = $state('') as '' | 'laws1' | 'plenar1';
+	let modelFinetune = $state('') as '' | 'laws1' | 'plenar1' | 'gutenberg1' | 'wikipedia1';
 	let modelName = $derived(
 		modelDirectionality +
 			'-fw2' +
@@ -382,6 +382,8 @@
 					<option value="">Basis</option>
 					<option value="laws1">Gesetzestexte</option>
 					<option value="plenar1">Plenarprotokolle</option>
+					<option value="gutenberg1">Gutenberg</option>
+					<option value="wikipedia1">Wikipedia</option>
 				</select>
 			</div>
 		</MenuEntry>

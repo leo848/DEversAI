@@ -12,7 +12,7 @@ from vocabulary import Vocabulary
 from torch.nn import functional as F
 
 # -----------------------------------------------------------------------------
-model_name = "causal-fw2-plenar1.pt"
+model_name = "anticausal-fw2-plenar1.pt"
 vocab_file = "fineweb2.vocab"
 
 compile = False # use PyTorch 2.0 to compile the model to be faster
@@ -24,12 +24,12 @@ show_probs_tries = 1
 
 show_token_generation_probs = False
 
-show_samples_json = True
+show_samples_json = False
 
 # config
 
-num_samples = 128 # number of samples to draw
-max_new_tokens = int(150) # number of tokens generated in each sample
+num_samples = 16 # number of samples to draw
+max_new_tokens = int(350) # number of tokens generated in each sample
 temperature = 0.7 # 1.0 = no change, < 1.0 = less random, > 1.0 = more random, in predictions
 top_k = 200 # retain only the top_k most likely tokens, clamp others to have 0 probability
 
