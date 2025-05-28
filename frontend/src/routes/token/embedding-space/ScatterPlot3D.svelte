@@ -70,7 +70,8 @@
 					smooth: true
 				},
 				doubleClickZoom: false
-			}
+			},
+			near: 0.001,
 		});
 
 		deck = new Deck({
