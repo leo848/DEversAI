@@ -86,12 +86,12 @@
 	<div class="text-4xl font-bold">Inferenz</div>
 
 	<div class="grid grid-cols-12 gap-4">
-		<div class="col-span-4">
+		<div class="md:col-span-4 col-span-12">
 			<BorderSection title="Einstellungen">
 				<InferenceOptions bind:value={options} />
 			</BorderSection>
 		</div>
-		<div class="col-span-8 grid w-full gap-4">
+		<div class="md:col-span-8 col-span-12 grid w-full gap-4">
 			<SimpleInferenceButton
 				causality="anticausal"
 				onclick={generate('anticausal')}
@@ -110,7 +110,7 @@
 				disabled={inProgress.ongoing}
 			/>
 			<div class="grid grid-cols-12 gap-4">
-				<div class="col-span-6">
+				<div class="md:col-span-6">
 					<BorderSection title="Rückinferenz" open={false}>
 						{#if inputString != processString.anticausal}
 							<div class="w-full p-2 text-xl" transition:slide={{ axis: 'y' }}>
@@ -136,7 +136,7 @@
 						{/await}
 					</BorderSection>
 				</div>
-				<div class="col-span-6">
+				<div class="md:col-span-6">
 					<BorderSection title="Hininferenz" open={false}>
 						{#if inputString != processString.causal}
 							<div class="w-full p-2 text-xl" transition:slide={{ axis: 'y' }}>

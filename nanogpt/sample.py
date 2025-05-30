@@ -12,7 +12,7 @@ from vocabulary import Vocabulary
 from torch.nn import functional as F
 
 # -----------------------------------------------------------------------------
-model_name = "anticausal-fw2-plenar1.pt"
+model_name = "causal-fw2-wikipedia1.pt"
 vocab_file = "fineweb2.vocab"
 
 compile = False # use PyTorch 2.0 to compile the model to be faster
