@@ -45,7 +45,7 @@
 		{#each subPages as page}
 			<a
 				href={page.link}
-				class="bg-gradient flex flex-row justify-between gap-8 rounded-xl p-8 transition-all"
+				class="col-span-2 md:col-span-1 bg-gradient flex flex-row justify-between gap-8 rounded-xl p-8 transition-all"
 			>
 				<div>
 					<div class="text-4xl font-bold">{page.title}</div>

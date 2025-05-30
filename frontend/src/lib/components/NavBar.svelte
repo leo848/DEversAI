@@ -14,9 +14,9 @@
 					class="group/link flex flex-row gap-4"
 				>
 					<div
-						class="relative inline-block rounded-xl bg-white bg-opacity-50 xl:p-2 p-1 transition-all group-hover/link:bg-opacity-100"
+						class="relative inline-block rounded-xl bg-white bg-opacity-50 md:p-2 p-1 transition-all group-hover/link:bg-opacity-100"
 					>
-						<Icon {...page.icon} class="xl:text-4xl text-2xl" />
+						<Icon {...page.icon} class="md:text-4xl text-2xl" />
 						{#if extern}
 							<div
 								class="align-center absolute -end-2 -top-2 inline-flex md:h-6 md:w-6 h-3 w-3 items-center justify-center rounded-xl bg-white bg-opacity-40 group-hover/link:bg-opacity-90"
