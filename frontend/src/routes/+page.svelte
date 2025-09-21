@@ -13,7 +13,7 @@ In der entwickelten interaktiven Webanwendung kann die KI ausprobiert und getest
 </script>
 
 <div class="container min-h-[100vh] min-w-full bg-slate-100 py-8">
-	<div class="prose mx-auto rounded-xl bg-white p-8 shadow-lg">
+	<div class="prose mx-auto rounded-xl bg-white p-8 shadow-lg max-h-full">
 		<h1>{title}</h1>
 		{#each shortDesc.split('\n\n') as par}
 			<p>{par}</p>
