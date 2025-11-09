@@ -73,7 +73,7 @@
 			<div class="flex flex-col gap-2">
 				{#each [
 					{ name: "Mittelwert μ", key: "mean", sigs: 0 },
-					{ name: "Modus Dₒ", key: "mode", sigs: 0 },
+					{ name: "Modus D₁", key: "mode", sigs: 0 },
 					{ name: "Standardabweichung σ", key: "std", sigs: 1 },
 					{ name: "Schiefe γₘ", key: "skew", sigs: 1 },
 					] as parameter}
