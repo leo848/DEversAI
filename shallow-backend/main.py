@@ -238,4 +238,8 @@ async def model_logits(model_name: str, request: LogitsRequest):
 
 @app.post("/v0/birthyear")
 async def birthyear(request: BirthyearRequest):
-    return requests.post(DEEP_URL_HTTP + "/birthyear", json=jsonable_encoder(request)).json()
+    response =  requests.post(
+        DEEP_URL_HTTP + "/birthyear",
+        json=jsonable_encoder(request)
+    )
+    return response.json()

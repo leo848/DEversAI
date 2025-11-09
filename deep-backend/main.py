@@ -85,7 +85,7 @@ async def async_infer(model_name: str, input_tensor):
 
 
 @app.post("/model/{model_id}/logits")
-async def model_logits(model_id: str, request: LogitsRequest):
+async def model_logits(model_id: str, request: LogitsRequest) -> LogitsResponse:
     if model_id not in MODELS:
         raise HTTPException(404, "Model not found")
 
