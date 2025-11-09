@@ -131,7 +131,7 @@ async def birthyear(request: BirthyearRequest) -> BirthyearResponse:
         if not re.match(NECESSARY_EXPR, string):
             continue
 
-        model_x = torch.tensor([vocab.encode(input_string)]).to("cuda")
+        model_x = torch.tensor([vocab.encode(input_string)]).to(next(model.parameters()).device)
         model_y, _ = model(model_x)
 
         probs_vorname = F.softmax(model_y[0][0] + token_mask, dim=-1)
