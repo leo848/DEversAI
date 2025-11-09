@@ -106,16 +106,18 @@ async def birthyear(request: BirthyearRequest) -> BirthyearResponse:
 
     vocab = Vocabulary.load("fineweb2.vocab")
 
-    token_mask = torch.zeros(50304).to("cuda")
+    model_id = "causal-fw2-wikipedia1"
+    if model_id not in MODELS:
+        raise HTTPException(404, "Model not found")
+    model = MODELS[model_id]
+    device = next(model.parameters()).device
+
+    token_mask = torch.zeros(50304).to(device)
     for token in range(50256):
         string = vocab.decode([token])
         if not re.match(INCLUDE_EXPR, string):
             token_mask[token] = -inf
 
-    model_id = "causal-fw2-wikipedia1"
-    if model_id not in MODELS:
-        raise HTTPException(404, "Model not found")
-    model = MODELS[model_id]
 
     results = defaultdict(float)
     continuations: set[tuple[tuple[int, ...], float]] = {((), 1.0)}
@@ -131,7 +133,7 @@ async def birthyear(request: BirthyearRequest) -> BirthyearResponse:
         if not re.match(NECESSARY_EXPR, string):
             continue
 
-        model_x = torch.tensor([vocab.encode(input_string)]).to(next(model.parameters()).device)
+        model_x = torch.tensor([vocab.encode(input_string)]).to(device)
         model_y, _ = model(model_x)
 
         probs_vorname = F.softmax(model_y[0][0] + token_mask, dim=-1)
