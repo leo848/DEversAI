@@ -9,7 +9,9 @@ import {
 	TokenEmbeddings,
 	TokenInfo,
 	EmbeddingDimInfo,
-	GeminiColumnResponse
+	GeminiColumnResponse,
+	BirthyearResponse,
+	BirthyearRequest,
 } from './types';
 
 const pathUtils = {
@@ -122,6 +124,24 @@ export class Client {
 			return geminiColumnResponse.data;
 		} else {
 			return Promise.reject('Could not parse response: ' + geminiColumnResponse.error);
+		}
+	}
+
+	async getBirthyear(request: BirthyearRequest): Promise<BirthyearResponse> {
+		const apiPath = pathUtils.join(this.httpsBase, 'birthyear');
+		const response = await fetch(apiPath, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(request),
+		});
+		const json = await response.json();
+		const birthyearResponse = await BirthyearResponse.safeParseAsync(json);
+		if (birthyearResponse.success) {
+			return birthyearResponse.data;
+		} else {
+			return Promise.reject("Could not parse response: " + birthyearResponse.error);
 		}
 	}
 

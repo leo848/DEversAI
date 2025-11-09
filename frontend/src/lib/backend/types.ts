@@ -75,3 +75,22 @@ export const InferenceResponse = z.object({
 	done: z.optional(z.boolean())
 });
 export type InferenceResponse = z.infer<typeof InferenceResponse>;
+
+export const BirthyearRequest = z.object({
+	first_name: z.string(),
+	last_name: z.string().optional(),
+	day: z.string().optional()
+})
+export type BirthyearRequest = z.infer<typeof BirthyearRequest>;
+
+export const BirthyearResponse = z.object({
+	year_data: z.record(z.number().int(), z.string()),
+	decade_results: z.record(z.number().int(), z.string()),
+	stats: z.object({
+		mean: z.number(),
+		mode: z.number(),
+		std: z.number(),
+		skew: z.number(),
+	})
+})
+export type BirthyearResponse = z.infer<typeof BirthyearResponse>;
