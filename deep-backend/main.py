@@ -59,6 +59,7 @@ for model in MODEL_LOCATIONS:
         device=device,
         compile=False,
     )
+    MODELS[model.name].eval()
     STREAMS[model.name] = torch.cuda.Stream(device=torch.device(device))
 
 app = FastAPI()
