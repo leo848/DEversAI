@@ -69,12 +69,13 @@
 
 	<div class="grid grid-cols-12 gap-8">
 		<div class="col-span-6 xl:col-span-4">
+			<div class="text-xl font-bold">Kenngrößen</div>
 			<div class="flex flex-col gap-2">
 				{#each [
-					{ name: "Mittelwert", key: "mean", sigs: 0 },
-					{ name: "Modus", key: "mode", sigs: 0 },
-					{ name: "Standardabweichung", key: "std", sigs: 1 },
-					{ name: "Schiefe", key: "skew", sigs: 1 },
+					{ name: "Mittelwert μ", key: "mean", sigs: 0 },
+					{ name: "Modus Dₒ", key: "mode", sigs: 0 },
+					{ name: "Standardabweichung σ", key: "std", sigs: 1 },
+					{ name: "Schiefe γₘ", key: "skew", sigs: 1 },
 					] as parameter}
 					{@const value = data == null ? null : data.stats[parameter.key]}
 					<div class="flex bg-gray-100 border-2 border-gray-200 p-2 rounded-lg text-xl">
@@ -94,6 +95,7 @@
 			</div>
 		</div>
 		<div class="col-span-12 xl:col-span-8">
+			<div class="text-xl font-bold">Histogramm</div>
 			{#if data != null}
 				<Histogram
 				 startYear={1850}
