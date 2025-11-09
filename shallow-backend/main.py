@@ -10,7 +10,7 @@ import numpy as np
 import json
 import websockets
 import requests
-from models import GeminiColumnRequest, LogitsRequest, RequestUnion, InferenceRequest
+from models import GeminiColumnRequest, LogitsRequest, RequestUnion, InferenceRequest, BirthyearRequest
 from vocabulary import Vocabulary
 from validate import validate_model_name
 from sklearn.neighbors import NearestNeighbors
@@ -235,3 +235,7 @@ async def model_logits(model_name: str, request: LogitsRequest):
         DEEP_URL_HTTP + "/model/" + model_name + "/logits",
         json=jsonable_encoder(request),
     ).json()
+
+@app.post("/v0/birthyear")
+async def birthyear(request: BirthyearRequest):
+    return requests.post(DEEP_URL_HTTP + "/birthday/", json=jsonable_encoder(request)).json()
