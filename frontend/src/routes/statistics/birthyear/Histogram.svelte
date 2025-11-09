@@ -125,7 +125,7 @@
 	});
 </script>
 
-<div class="chart-container" style:width="{width}px">
+<div class="chart-container bg-gray-100 rounded-xl border-2 border-gray-200 p-4" style:width="{width}px">
 	<div class="header">
 		<span class="stats">
 			(µ ≈ {Math.round(stats.mean)}, D₁ = {Math.round(stats.mode)}, σ ≈ {Math.round(stats.std)},
@@ -167,15 +167,6 @@
 </div>
 
 <style>
-	.chart-container {
-		background-color: #f8f8f8;
-		border: 1px solid #eee;
-		border-radius: 1em;
-		padding: 1em;
-		display: inline-block;
-		margin: 0.5em;
-	}
-
 	.header {
 		margin-bottom: 0.5em;
 	}
