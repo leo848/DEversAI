@@ -1,6 +1,8 @@
 from dataclasses import dataclass
+import heapq
 import datetime
 from math import inf
+import math
 from collections import defaultdict
 import numpy as np
 from torch.nn import functional as F
@@ -98,6 +100,7 @@ async def model_logits(model_id: str, request: LogitsRequest) -> LogitsResponse:
     return LogitsResponse(logits=logits[0][0])  # Adjust indexing based on model output
 
 
+
 @app.post("/birthyear")
 async def birthyear(request: BirthyearRequest) -> BirthyearResponse:
     INCLUDE_EXPR = re.compile(r"^[0-9]+ ?")
@@ -105,52 +108,43 @@ async def birthyear(request: BirthyearRequest) -> BirthyearResponse:
     NECESSARY_EXPR = re.compile(r"^[0-9]{0,3}$")
 
     vocab = Vocabulary.load("fineweb2.vocab")
-
     model_id = "causal-fw2-wikipedia1"
     if model_id not in MODELS:
         raise HTTPException(404, "Model not found")
     model = MODELS[model_id]
     device = next(model.parameters()).device
 
-    token_mask = torch.zeros(50304).to(device)
+    token_mask = torch.zeros(50304, device=device)
     for token in range(50256):
         string = vocab.decode([token])
         if not re.match(INCLUDE_EXPR, string):
-            token_mask[token] = -inf
+            token_mask[token] = -float("inf")
 
+    continuations = [(-0.0, ())]
 
     results = defaultdict(float)
-    continuations: set[tuple[tuple[int, ...], float]] = {((), 1.0)}
     while continuations:
-        (tokens, prob) = continuations.pop()
-        if prob < 1e-4:
+        neg_log_prob, tokens = heapq.heappop(continuations)
+        log_prob = -neg_log_prob
+        if log_prob < math.log(1e-4):
             continue
         string = vocab.decode(list(tokens))
         input_string = f"# {request.first_name} {request.last_name}\n\n{request.first_name} {request.last_name} (* {request.day} {string}"
         if re.match(COMPLETE_YEAR, string):
             year = int(string[:4])
-            results[year] += prob
+            results[year] += math.exp(log_prob)
         if not re.match(NECESSARY_EXPR, string):
             continue
 
-        model_x = torch.tensor([vocab.encode(input_string)]).to(device)
+        model_x = torch.tensor([vocab.encode(input_string)], device=device)
         model_y, _ = model(model_x)
-
-        probs_vorname = F.softmax(model_y[0][0] + token_mask, dim=-1)
-        top_probs, top_tokens = torch.topk(probs_vorname, 100)
-
-        new_continuations = {
-            (
-                int(token.item()),
-                prob.item(),
-            )
-            for (token, prob) in zip(top_tokens, top_probs)
-        }
-        for new_token, new_prob in new_continuations:
-            continuations.add((tokens + (new_token,), prob * new_prob))
+        probs = F.log_softmax(model_y[0][0] + token_mask, dim=-1)
+        top_probs, top_tokens = torch.topk(probs, 100)
+        for token, token_log_prob in zip(top_tokens, top_probs):
+            heapq.heappush(continuations, (-(log_prob + token_log_prob.item()), tokens + (int(token.item()),)))
 
     prob_sum = sum(results.values())
-    results = {year: prob / prob_sum for (year, prob) in results.items()}
+    results = {year: prob / prob_sum for year, prob in results.items()}
     decade_results = defaultdict(float)
     for year, prob in results.items():
         decade_results[year // 10 * 10] += prob
