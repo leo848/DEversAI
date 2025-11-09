@@ -1,6 +1,7 @@
 <script lang="ts">
 	import * as d3 from 'd3';
 	import { Gradient } from '$lib/util/color';
+	import { onMount } from 'svelte';
 
 	const {
 		startYear,
@@ -8,8 +9,7 @@
 		stats,
 		data,
 		step = 10,
-		width = 600,
-		height = 200
+		width = 600
 	}: {
 		startYear: number;
 		endYear: number;
@@ -47,9 +47,10 @@
 		return processed;
 	});
 
-	const padding = { top: 10, right: 10, bottom: 30, left: 40 };
+	const padding = { top: 10, right: 30, bottom: 30, left: 40 };
 
 	const yMax = $derived(Math.max(0.101, d3.max(processedData, (d) => d.value) ?? 0));
+	const height = $derived(yMax * 1500);
 
 	const yScale = $derived(
 		d3
@@ -73,6 +74,55 @@
 		const t = (index - 1) / (processedData.length - 2);
 		return colorGradient.sample(t).toString();
 	}
+
+	let svgElement: SVGSVGElement;
+
+	$effect(() => {
+		if (!svgElement) return;
+
+		const t = d3.transition().duration(750);
+
+		d3.select(svgElement).transition(t).attr('height', height);
+
+		d3.select(svgElement)
+			.select('.bars-container')
+			.selectAll('rect')
+			.data(processedData, (d: any) => d.year)
+			.join(
+				(enter) =>
+					enter
+						.append('rect')
+						.attr('x', (d) => xScale(d.year)!)
+						.attr('y', yScale(0))
+						.attr('width', xScale.bandwidth())
+						.attr('height', 0)
+						.attr('fill', (d, i) => getBarColor(d, i))
+						.attr('stroke', 'black')
+						.call((selection) =>
+							selection
+								.transition(t)
+								.attr('y', (d) => yScale(d.value))
+								.attr('height', (d) => yScale(0) - yScale(d.value))
+						),
+				(update) =>
+					update.call((selection) =>
+						selection
+							.transition(t)
+							.attr('x', (d) => xScale(d.year)!)
+							.attr('width', xScale.bandwidth())
+							.attr('y', (d) => yScale(d.value))
+							.attr('height', (d) => yScale(0) - yScale(d.value))
+					),
+				(exit) =>
+					exit.call((selection) =>
+						selection
+							.transition(t)
+							.attr('y', yScale(0))
+							.attr('height', 0)
+							.remove()
+					)
+			);
+	});
 </script>
 
 <div class="chart-container" style:width="{width}px">
@@ -83,7 +133,7 @@
 		</span>
 	</div>
 
-	<svg {width} {height} class="chart-svg">
+	<svg bind:this={svgElement} {width} {height} class="chart-svg">
 		<!-- y grid lines -->
 		{#each yScale.ticks(4) as tick}
 			{#if tick > 0}
@@ -99,16 +149,7 @@
 			<line x1={padding.left} x2={width - padding.right}></line>
 		</g>
 
-		{#each processedData as d, i}
-			<rect
-				x={xScale(d.year)}
-				y={yScale(d.value)}
-				width={xScale.bandwidth()}
-				height={yScale(0) - yScale(d.value)}
-				fill={getBarColor(d, i)}
-				stroke="black"
-			/>
-		{/each}
+		<g class="bars-container"></g>
 
 		{#each processedData as d}
 			{@const yearNum = parseInt(d.year)}
