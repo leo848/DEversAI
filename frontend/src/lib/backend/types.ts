@@ -84,8 +84,8 @@ export const BirthyearRequest = z.object({
 export type BirthyearRequest = z.infer<typeof BirthyearRequest>;
 
 export const BirthyearResponse = z.object({
-	year_data: z.record(z.number().int(), z.string()),
-	decade_results: z.record(z.number().int(), z.string()),
+	year_data: z.record(z.coerce.number(), z.number()),
+	decade_results: z.record(z.coerce.number(), z.number()),
 	stats: z.object({
 		mean: z.number(),
 		mode: z.number(),
