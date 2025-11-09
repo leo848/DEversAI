@@ -104,7 +104,7 @@ async def birthyear(request: BirthyearRequest) -> BirthyearResponse:
     COMPLETE_YEAR = re.compile(r"^[0-9]{4}")
     NECESSARY_EXPR = re.compile(r"^[0-9]{0,3}$")
 
-    vocab = Vocabulary.load("german-fw2.vocab")
+    vocab = Vocabulary.load("fineweb2.vocab")
 
     token_mask = torch.zeros(50304).to("cuda")
     for token in range(50256):
