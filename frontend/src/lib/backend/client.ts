@@ -35,10 +35,12 @@ export class Client {
 	wsUrl: string;
 	embeddingCache: Record<string, TokenEmbeddings>;
 	geminiColumnCache: Record<string, GeminiColumnResponse>;
+	birthyearCache: Record<string, BirthyearResponse>;
 
 	constructor({ base }: { base?: string } = {}) {
 		this.embeddingCache = {};
 		this.geminiColumnCache = {};
+		this.birthyearCache = {};
 		if (base) {
 			this.httpsBase = `https://${base}/v0`;
 			this.wsUrl = `wss://${base}/ws`;
@@ -104,9 +106,7 @@ export class Client {
 
 	async getGeminiColumn(path: string[]): Promise<GeminiColumnResponse> {
 		const cached = this.geminiColumnCache[path.join('␞')];
-		if (cached != null) {
-			return cached;
-		}
+		if (cached != null) return cached;
 		const apiPath = pathUtils.join(this.httpsBase, 'gemini-column');
 		const response = await fetch(apiPath, {
 			method: 'POST',
@@ -128,6 +128,8 @@ export class Client {
 	}
 
 	async getBirthyear(request: BirthyearRequest): Promise<BirthyearResponse> {
+		const cached = this.birthyearCache[JSON.stringify(request)];
+		if (cached != null) return cached;
 		const apiPath = pathUtils.join(this.httpsBase, 'birthyear');
 		const response = await fetch(apiPath, {
 			method: 'POST',
@@ -139,6 +141,7 @@ export class Client {
 		const json = await response.json();
 		const birthyearResponse = await BirthyearResponse.safeParseAsync(json);
 		if (birthyearResponse.success) {
+			this.birthyearCache[JSON.stringify(request)] = birthyearResponse.data;
 			return birthyearResponse.data;
 		} else {
 			return Promise.reject("Could not parse response: " + birthyearResponse.error);
