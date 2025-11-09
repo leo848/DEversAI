@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { BirthyearResponse } from "$lib/backend/types";
 	import { Client } from '$lib/backend/client';
+	import Histogram from './Histogram.svelte';
 
 	const client = new Client();
 
@@ -13,8 +14,6 @@
 			first_name: firstName,
 		})
 	}
-
-	$effect(() => console.log(data))
 </script>
 
 <div class="m-4 flex flex-col gap-8 xl:mx-16">
@@ -33,5 +32,12 @@
 		>
 	</div>
 
-	<code>{JSON.stringify(data)}</code>
+	{#if data != null}
+		<Histogram
+		 startYear={1850}
+		 endYear={2010}
+		 stats={data.stats}
+		  data={data.decade_results}
+		 />
+	{/if}
 </div>
