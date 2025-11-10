@@ -9,7 +9,7 @@
 		stats,
 		data,
 		step = 10,
-		width = 600
+		width = 800
 	}: {
 		startYear: number;
 		endYear: number;

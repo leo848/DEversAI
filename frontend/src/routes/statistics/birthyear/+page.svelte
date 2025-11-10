@@ -98,7 +98,7 @@
 			<div class="text-xl font-bold">Histogramm</div>
 			{#if data != null}
 				<Histogram
-				 startYear={1850}
+				 startYear={1800}
 				 endYear={2010}
 				 stats={data.stats}
 				  data={data.decade_results}
