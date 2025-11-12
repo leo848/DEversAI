@@ -93,6 +93,12 @@
 					</div>
 				{/each}
 			</div>
+			{#if data != null}
+				<div class="text-sm opacity-50 mt-4">
+					Anteil gültiger Ausgaben nach Token-Filter
+					<span>{(data.prob_sum * 100).toFixed(1)}%</span>
+				</div>
+			{/if}
 		</div>
 		<div class="col-span-12 xl:col-span-8">
 			<div class="text-xl font-bold">Histogramm</div>
