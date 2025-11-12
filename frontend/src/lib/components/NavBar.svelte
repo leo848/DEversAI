@@ -3,7 +3,7 @@
 	import Icon from '@iconify/svelte';
 </script>
 
-<nav class="group/navbar min-h-[100vh] md:w-20 w-12 transition-all duration-300 hover:w-64">
+<nav class="group/navbar min-h-[100vh] w-12 transition-all duration-300 hover:w-64 md:w-20">
 	<div class="fancy-gradient-bg flex h-full w-full flex-col gap-4 overflow-hidden p-2">
 		{#each pages as page, index}
 			{@const extern = !page.link.startsWith('/') || page.link.endsWith('pdf')}
@@ -14,12 +14,12 @@
 					class="group/link flex flex-row gap-4"
 				>
 					<div
-						class="relative inline-block rounded-xl bg-white bg-opacity-50 md:p-2 p-1 transition-all group-hover/link:bg-opacity-100"
+						class="relative inline-block rounded-xl bg-white bg-opacity-50 p-1 transition-all group-hover/link:bg-opacity-100 md:p-2"
 					>
-						<Icon {...page.icon} class="md:text-4xl text-2xl" />
+						<Icon {...page.icon} class="text-2xl md:text-4xl" />
 						{#if extern}
 							<div
-								class="align-center absolute -end-2 -top-2 inline-flex md:h-6 md:w-6 h-3 w-3 items-center justify-center rounded-xl bg-white bg-opacity-40 group-hover/link:bg-opacity-90"
+								class="align-center absolute -end-2 -top-2 inline-flex h-3 w-3 items-center justify-center rounded-xl bg-white bg-opacity-40 group-hover/link:bg-opacity-90 md:h-6 md:w-6"
 							>
 								<Icon icon="iconamoon:arrow-top-right-1-bold" width="1.5rem" />
 							</div>

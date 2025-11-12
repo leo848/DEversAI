@@ -115,21 +115,20 @@
 					),
 				(exit) =>
 					exit.call((selection) =>
-						selection
-							.transition(t)
-							.attr('y', yScale(0))
-							.attr('height', 0)
-							.remove()
+						selection.transition(t).attr('y', yScale(0)).attr('height', 0).remove()
 					)
 			);
 	});
 </script>
 
-<div class="chart-container bg-gray-100 rounded-xl border-2 border-gray-200 p-4" style:width="{width}px">
+<div
+	class="chart-container rounded-xl border-2 border-gray-200 bg-gray-100 p-4"
+	style:width="{width}px"
+>
 	<div class="header">
 		<span class="stats">
-			(µ ≈ {Math.round(stats.mean)}, D₁ = {Math.round(stats.mode)}, σ ≈ {Math.round(stats.std)},
-			γₘ ≈ {stats.skew.toFixed(1)})
+			(µ ≈ {Math.round(stats.mean)}, D₁ = {Math.round(stats.mode)}, σ ≈ {Math.round(stats.std)}, γₘ
+			≈ {stats.skew.toFixed(1)})
 		</span>
 	</div>
 

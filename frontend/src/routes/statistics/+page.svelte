@@ -8,15 +8,17 @@
 			icon: {
 				icon: 'iconoir:birthday-cake'
 			},
-			description: 'Visualisiere die Wahrscheinlichkeitsverteilung über Geburtsjahre abhängig vom Vornamen.'
+			description:
+				'Visualisiere die Wahrscheinlichkeitsverteilung über Geburtsjahre abhängig vom Vornamen.'
 		},
 		{
-			title: "Forcing",
+			title: 'Forcing',
 			link: '/statistics/forcing',
 			icon: {
 				icon: 'meteor-icons:chain'
 			},
-			description: 'Zwinge das Modell dazu, bestimmten Text auszugeben, und überprüfe so semantische und syntaktische Kohärenz',
+			description:
+				'Zwinge das Modell dazu, bestimmten Text auszugeben, und überprüfe so semantische und syntaktische Kohärenz'
 		}
 	];
 </script>
@@ -28,7 +30,7 @@
 		{#each subPages as page}
 			<a
 				href={page.link}
-				class="col-span-2 md:col-span-1 bg-gradient flex flex-row justify-between gap-8 rounded-xl p-8 transition-all"
+				class="bg-gradient col-span-2 flex flex-row justify-between gap-8 rounded-xl p-8 transition-all md:col-span-1"
 			>
 				<div>
 					<div class="text-4xl font-bold">{page.title}</div>

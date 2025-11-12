@@ -71,7 +71,7 @@
 				},
 				doubleClickZoom: false
 			},
-			near: 0.001,
+			near: 0.001
 		});
 
 		deck = new Deck({

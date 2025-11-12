@@ -1,17 +1,17 @@
 <script lang="ts">
-	import { BirthyearResponse } from "$lib/backend/types";
+	import { BirthyearResponse } from '$lib/backend/types';
 	import EmergentSpinner from '$lib/components/EmergentSpinner.svelte';
 	import { Client } from '$lib/backend/client';
 	import { fade } from 'svelte/transition';
-	import { germanMonths } from "$lib/util/calendar";
+	import { germanMonths } from '$lib/util/calendar';
 	import Histogram from './Histogram.svelte';
 
 	const client = new Client();
 
-	let firstName = $state("");
-	let lastName = $state("Müller");
+	let firstName = $state('');
+	let lastName = $state('Müller');
 
-	let inputMonth = $state("September");
+	let inputMonth = $state('September');
 	let inputDay = $state(20);
 
 	let data: null | BirthyearResponse = $state(null);
@@ -24,8 +24,8 @@
 			data = await client.getBirthyear({
 				first_name: firstName,
 				last_name: lastName,
-				day: `${inputDay}. ${inputMonth}`,
-			})
+				day: `${inputDay}. ${inputMonth}`
+			});
 		} finally {
 			loading = false;
 		}
@@ -56,29 +56,22 @@
 	</div>
 
 	<div class="w-full p-2 text-xl" transition:slide={{ axis: 'y' }}>
-		<button class="rounded bg-fire-400 p-2" disabled={loading} onclick={refreshData}
-		  >
-		  {#if loading}
-			  <EmergentSpinner />
-		  {:else}
-		  Aktualisieren
-		  {/if}
-		</button
-		>
+		<button class="rounded bg-fire-400 p-2" disabled={loading} onclick={refreshData}>
+			{#if loading}
+				<EmergentSpinner />
+			{:else}
+				Aktualisieren
+			{/if}
+		</button>
 	</div>
 
 	<div class="grid grid-cols-12 gap-8">
 		<div class="col-span-6 xl:col-span-4">
 			<div class="text-xl font-bold">Kenngrößen</div>
 			<div class="flex flex-col gap-2">
-				{#each [
-					{ name: "Mittelwert μ", key: "mean", sigs: 0 },
-					{ name: "Modus D₁", key: "mode", sigs: 0 },
-					{ name: "Standardabweichung σ", key: "std", sigs: 1 },
-					{ name: "Schiefe γₘ", key: "skew", sigs: 1 },
-					] as parameter}
+				{#each [{ name: 'Mittelwert μ', key: 'mean', sigs: 0 }, { name: 'Modus D₁', key: 'mode', sigs: 0 }, { name: 'Standardabweichung σ', key: 'std', sigs: 1 }, { name: 'Schiefe γₘ', key: 'skew', sigs: 1 }] as parameter}
 					{@const value = data == null ? null : data.stats[parameter.key]}
-					<div class="flex bg-gray-100 border-2 border-gray-200 p-2 rounded-lg text-xl">
+					<div class="flex rounded-lg border-2 border-gray-200 bg-gray-100 p-2 text-xl">
 						<div>
 							{parameter.name}
 						</div>
@@ -94,10 +87,9 @@
 				{/each}
 			</div>
 			{#if data != null}
-				<div class="text-sm opacity-50 mt-4">
+				<div class="mt-4 text-sm opacity-50">
 					Anteil gültiger Ausgaben:
-					<span>{(100 - data.discarded_prob_ratio * 100).toFixed(2)}%</span>,
-					gefiltert: 
+					<span>{(100 - data.discarded_prob_ratio * 100).toFixed(2)}%</span>, gefiltert:
 					<span>{(data.prob_sum * 100).toFixed(2)}%</span>
 				</div>
 			{/if}
@@ -105,12 +97,7 @@
 		<div class="col-span-12 xl:col-span-8">
 			<div class="text-xl font-bold">Histogramm</div>
 			{#if data != null}
-				<Histogram
-				 startYear={1800}
-				 endYear={2010}
-				 stats={data.stats}
-				  data={data.decade_results}
-				 />
+				<Histogram startYear={1800} endYear={2010} stats={data.stats} data={data.decade_results} />
 			{/if}
 		</div>
 	</div>
