@@ -74,7 +74,7 @@ async def root():
     return {"message": "Hello, world!"}
 
 
-async def async_infer(model_name: str, input_tensor):
+async def async_infer(model_name: str, input_tensor, return_all_logits=False):
     """Runs inference asynchronously using CUDA streams"""
     model = MODELS[model_name]
     stream = STREAMS[model_name]
@@ -84,7 +84,7 @@ async def async_infer(model_name: str, input_tensor):
 
     with torch.no_grad():
         with torch.cuda.stream(stream):
-            logits, _ = model.forward(input_tensor)
+            logits, _ = model.forward(input_tensor, return_all_logits=return_all_logits)
 
     stream.synchronize()
 
@@ -131,36 +131,26 @@ async def forcing(model_id: str, request: ForcingRequest) -> ForcingResponse:
     if model_id not in MODELS:
         raise HTTPException(status_code=404, detail="Model not found")
 
-    if not request.token_input:
-        raise HTTPException(status_code=400, detail="token_ids cannot be empty.")
+    if len(request.token_input) < 2:
+        raise HTTPException(status_code=400, detail="at least two tokens required")
+
+    context_tensor = torch.tensor([request.token_input[:-1]], dtype=torch.long)
+
+    logits_np = await async_infer(model_id, context_tensor, return_all_logits=True)
+    logits = torch.from_numpy(np.array(logits_np)).squeeze(0)
+
+    if logits.dim() == 1:
+        logits = logits.unsqueeze(0)
 
     total_logprob = 0.0
     step_results = []
 
-    # 1. Handle the first token from an empty context
-    empty_context_tensor = torch.tensor([[]], dtype=torch.long)
-    logits_np_first = await async_infer(model_id, empty_context_tensor)
-    logits_first = torch.from_numpy(np.array(logits_np_first)).squeeze(0)
+    for i in range(logits.shape[0]):
+        target_token_id = request.token_input[i + 1]
+        step_result = analyze_logits_for_target(logits[i], target_token_id)
 
-    first_step_result = analyze_logits_for_target(logits_first, request.token_input[0])
-    step_results.append(first_step_result)
-    total_logprob += first_step_result.logit
-
-    # 2. Handle the rest of the tokens in a single batch, if they exist
-    if len(request.token_input) > 1:
-        rest_context_tensor = torch.tensor([request.token_input[:-1]], dtype=torch.long)
-        logits_np_rest = await async_infer(model_id, rest_context_tensor)
-        logits_rest = torch.from_numpy(np.array(logits_np_rest)).squeeze(0)
-
-        # Ensure tensor is 2D for single-step context
-        if logits_rest.dim() == 1:
-            logits_rest = logits_rest.unsqueeze(0)
-
-        for i in range(logits_rest.shape[0]):
-            target_token_id = request.token_input[i + 1]
-            step_result = analyze_logits_for_target(logits_rest[i], target_token_id)
-            step_results.append(step_result)
-            total_logprob += step_result.logit
+        step_results.append(step_result)
+        total_logprob += step_result.logit
 
     return ForcingResponse(
         total_logprob=total_logprob,
