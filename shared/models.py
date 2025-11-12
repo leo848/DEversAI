@@ -67,3 +67,4 @@ class BirthyearResponse(BaseModel):
     stats: BirthyearStats
     decade_results: dict[int, float]
     prob_sum: float
+    discarded_prob_ratio: float

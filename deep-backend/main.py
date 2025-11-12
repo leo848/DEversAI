@@ -124,6 +124,10 @@ async def birthyear(request: BirthyearRequest) -> BirthyearResponse:
     continuations = [(-0.0, ())]
 
     results = defaultdict(float)
+
+    # Verworfene Wahrscheinlichkeitsmasse
+    total_discarded_prob_mass = 0.0
+
     while continuations:
         neg_log_prob, tokens = heapq.heappop(continuations)
         log_prob = -neg_log_prob
@@ -139,6 +143,15 @@ async def birthyear(request: BirthyearRequest) -> BirthyearResponse:
 
         model_x = torch.tensor([vocab.encode(input_string)], device=device)
         model_y, _ = model(model_x)
+
+        # Berechnung der Konfidenz ohne Tokenmaske
+        with torch.no_grad():
+            current_path_prob = math.exp(log_prob)
+            next_token_probs = F.softmax(model_y[0][0], dim=-1)
+            is_masked = token_mask == -inf
+            discarded_mass_step = torch.sum(next_token_probs[is_masked]).item()
+            total_discarded_prob_mass += current_path_prob * discarded_mass_step
+
         probs = F.log_softmax(model_y[0][0] + token_mask, dim=-1)
         top_probs, top_tokens = torch.topk(probs, 100)
         for token, token_log_prob in zip(top_tokens, top_probs):
@@ -166,11 +179,18 @@ async def birthyear(request: BirthyearRequest) -> BirthyearResponse:
         skew=float(stats_skew),
     )
 
+    total_explored_prob = prob_sum + total_discarded_prob_mass
+    if total_explored_prob > 1e-6:
+        discarded_prob_ratio = total_discarded_prob_mass / total_explored_prob
+    else:
+        discarded_prob_ratio = 0.0
+
     return BirthyearResponse(
         year_data=results,
         decade_results=decade_results,
         stats=stats,
         prob_sum=prob_sum,
+        discarded_prob_ratio=discarded_prob_ratio
     )
 
 
