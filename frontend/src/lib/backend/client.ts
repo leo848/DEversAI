@@ -12,7 +12,7 @@ import {
 	GeminiColumnResponse,
 	BirthyearResponse,
 	BirthyearRequest,
-	ForcedResponse,
+	ForcingResponse,
 } from './types';
 import type {ZodSchema} from 'zod';
 
@@ -170,8 +170,8 @@ export class Client {
 		}
 	}
 
-	async modelForcing(modelName: string, tokens: Token[]): Promise<ForcedResponse> {
-		return this.#getModelTokens("forcing", ForcedResponse, modelName, tokens);
+	async modelForcing(modelName: string, tokens: Token[]): Promise<ForcingResponse> {
+		return this.#getModelTokens("forcing", ForcingResponse, modelName, tokens);
 	}
 
 	async modelLogits(modelName: string, tokens: Token[]): Promise<LogitsResponse> {

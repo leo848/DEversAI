@@ -10,6 +10,14 @@
 			},
 			description: 'Visualisiere die Wahrscheinlichkeitsverteilung über Geburtsjahre abhängig vom Vornamen.'
 		},
+		{
+			title: "Forcing",
+			link: '/statistics/forcing',
+			icon: {
+				icon: 'meteor-icons:chain'
+			},
+			description: 'Zwinge das Modell dazu, bestimmten Text auszugeben, und überprüfe so semantische und syntaktische Kohärenz',
+		}
 	];
 </script>
 
