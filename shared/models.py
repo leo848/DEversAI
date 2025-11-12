@@ -66,3 +66,4 @@ class BirthyearResponse(BaseModel):
     year_data: dict[int, float]
     stats: BirthyearStats
     decade_results: dict[int, float]
+    prob_sum: float

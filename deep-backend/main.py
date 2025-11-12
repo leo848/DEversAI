@@ -170,6 +170,7 @@ async def birthyear(request: BirthyearRequest) -> BirthyearResponse:
         year_data=results,
         decade_results=decade_results,
         stats=stats,
+        prob_sum=prob_sum,
     )
 
 
