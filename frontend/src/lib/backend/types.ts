@@ -62,7 +62,7 @@ export const InferenceRequest = z.object({
 	action: z.object({
 		type: z.literal('autoregressiveInference'),
 		model_id: z.string(),
-		token_input: z.array(z.number()),
+		token_input: z.array(z.number().int()),
 		config: InferenceConfig
 	})
 });
@@ -96,3 +96,20 @@ export const BirthyearResponse = z.object({
 	discarded_prob_ratio: z.number(),
 })
 export type BirthyearResponse = z.infer<typeof BirthyearResponse>;
+
+export const ForcedRequest = z.object({
+	token_input: z.array(z.number().int()),
+});
+export type ForcedRequest = z.infer<typeof ForcedRequest>;
+
+export const ForcedResponse = z.object({
+	total_logprob: z.number(),
+	steps: z.array(z.object({
+		logit: z.number(),
+		k: z.number().int(),
+		alternatives: z.array(z.object({
+			token_id: z.number().int(),
+			logit: z.number(),
+		})),
+	}))
+})
