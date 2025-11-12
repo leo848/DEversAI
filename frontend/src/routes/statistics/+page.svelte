@@ -6,7 +6,7 @@
 			title: 'Geburtsjahr',
 			link: '/statistics/birthyear',
 			icon: {
-				icon: 'ic:round-list'
+				icon: 'iconoir:birthday-cake'
 			},
 			description: 'Visualisiere die Wahrscheinlichkeitsverteilung über Geburtsjahre abhängig vom Vornamen.'
 		},
