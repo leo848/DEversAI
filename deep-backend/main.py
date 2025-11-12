@@ -19,6 +19,10 @@ from models import (
     InferenceResponse,
     LogitsRequest,
     BirthyearStats,
+    ForcedTokenStep,
+    ForcedAlternativeToken,
+    ForcedSequenceRequest,
+    ForcedSequenceResponse
 )
 from vocabulary import Vocabulary
 from gpt import GPT
@@ -86,6 +90,28 @@ async def async_infer(model_name: str, input_tensor):
 
     return logits.detach().cpu().numpy().tolist()
 
+def analyze_logits_for_target(
+    logits_vector: torch.Tensor, target_token_id: int
+) -> ForcedTokenStep:
+    log_probs = F.log_softmax(logits_vector, dim=-1)
+
+    target_log_prob = log_probs[target_token_id].item()
+
+    sorted_indices = torch.argsort(log_probs, descending=True)
+    rank = (sorted_indices == target_token_id).nonzero(as_tuple=True)[0].item()
+
+    top_log_probs, top_token_ids = torch.topk(log_probs, 100)
+
+    alternatives = [
+        ForcedAlternativeToken(token_id=token_id.item(), logit=log_prob.item())
+        for token_id, log_prob in zip(top_token_ids, top_log_probs)
+    ]
+
+    return ForcedTokenStep(
+        logit=target_log_prob,
+        k=rank,
+        alternatives=alternatives
+    )
 
 @app.post("/model/{model_id}/logits")
 async def model_logits(model_id: str, request: LogitsRequest) -> LogitsResponse:
@@ -100,7 +126,46 @@ async def model_logits(model_id: str, request: LogitsRequest) -> LogitsResponse:
 
     return LogitsResponse(logits=logits[0][0])  # Adjust indexing based on model output
 
+@app.post("/model/{model_id}/forcing")
+async def forcing(model_id: str, request: ForcedSequenceRequest) -> ForcedSequenceResponse:
+    if model_id not in MODELS:
+        raise HTTPException(status_code=404, detail="Model not found")
 
+    if not request.token_input:
+        raise HTTPException(status_code=400, detail="token_ids cannot be empty.")
+
+    total_logprob = 0.0
+    step_results = []
+
+    # 1. Handle the first token from an empty context
+    empty_context_tensor = torch.tensor([[]], dtype=torch.long)
+    logits_np_first = await async_infer(model_id, empty_context_tensor)
+    logits_first = torch.from_numpy(np.array(logits_np_first)).squeeze(0)
+
+    first_step_result = analyze_logits_for_target(logits_first, request.token_input[0])
+    step_results.append(first_step_result)
+    total_logprob += first_step_result.logit
+
+    # 2. Handle the rest of the tokens in a single batch, if they exist
+    if len(request.token_input) > 1:
+        rest_context_tensor = torch.tensor([request.token_input[:-1]], dtype=torch.long)
+        logits_np_rest = await async_infer(model_id, rest_context_tensor)
+        logits_rest = torch.from_numpy(np.array(logits_np_rest)).squeeze(0)
+
+        # Ensure tensor is 2D for single-step context
+        if logits_rest.dim() == 1:
+            logits_rest = logits_rest.unsqueeze(0)
+
+        for i in range(logits_rest.shape[0]):
+            target_token_id = request.token_input[i + 1]
+            step_result = analyze_logits_for_target(logits_rest[i], target_token_id)
+            step_results.append(step_result)
+            total_logprob += step_result.logit
+
+    return ForcedSequenceResponse(
+        total_logprob=total_logprob,
+        steps=step_results
+    )
 
 @app.post("/birthyear")
 async def birthyear(request: BirthyearRequest) -> BirthyearResponse:
@@ -192,7 +257,6 @@ async def birthyear(request: BirthyearRequest) -> BirthyearResponse:
         prob_sum=prob_sum,
         discarded_prob_ratio=discarded_prob_ratio
     )
-
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

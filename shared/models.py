@@ -68,3 +68,19 @@ class BirthyearResponse(BaseModel):
     decade_results: dict[int, float]
     prob_sum: float
     discarded_prob_ratio: float
+
+class ForcedSequenceRequest(BaseModel):
+    token_input: list[int]
+
+class ForcedAlternativeToken(BaseModel):
+    token_id: int
+    logit: float
+
+class ForcedTokenStep(BaseModel):
+    logit: float
+    k: int
+    alternatives: list[ForcedAlternativeToken]
+
+class ForcedSequenceResponse(BaseModel):
+    total_logprob: float
+    steps: list[ForcedTokenStep]
