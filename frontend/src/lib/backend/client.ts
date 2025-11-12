@@ -12,7 +12,9 @@ import {
 	GeminiColumnResponse,
 	BirthyearResponse,
 	BirthyearRequest,
+	ForcedResponse,
 } from './types';
+import type {ZodSchema} from 'zod';
 
 const pathUtils = {
 	join: function (...paths: string[]) {
@@ -148,8 +150,8 @@ export class Client {
 		}
 	}
 
-	async modelLogits(modelName: string, tokens: Token[]): Promise<LogitsResponse> {
-		const apiPath = pathUtils.join(this.httpsBase, 'model', modelName, 'logits');
+	async #getModelTokens<T, Z extends ZodSchema<T>>(method: string, parser: Z, modelName: string, tokens: Token[]): Promise<T> {
+		const apiPath = pathUtils.join(this.httpsBase, 'model', modelName, method);
 		const response = await fetch(apiPath, {
 			method: 'POST',
 			headers: {
@@ -160,12 +162,20 @@ export class Client {
 			})
 		});
 		const json = await response.json();
-		const logitsResponse = await LogitsResponse.safeParseAsync(json);
-		if (logitsResponse.success) {
-			return logitsResponse.data;
+		const forcedResponse = await parser.safeParseAsync(json);
+		if (forcedResponse.success) {
+			return forcedResponse.data;
 		} else {
-			return Promise.reject('Could not parse response: ' + logitsResponse.error);
+			return Promise.reject("Could not parse response: " + forcedResponse.error);
 		}
+	}
+
+	async modelForcing(modelName: string, tokens: Token[]): Promise<ForcedResponse> {
+		return this.#getModelTokens("forcing", ForcedResponse, modelName, tokens);
+	}
+
+	async modelLogits(modelName: string, tokens: Token[]): Promise<LogitsResponse> {
+		return this.#getModelTokens("logits", LogitsResponse, modelName, tokens);
 	}
 
 	async *autoregressiveInference(
