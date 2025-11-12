@@ -10,7 +10,7 @@ import numpy as np
 import json
 import websockets
 import requests
-from models import GeminiColumnRequest, LogitsRequest, RequestUnion, InferenceRequest, BirthyearRequest
+from models import GeminiColumnRequest, LogitsRequest, RequestUnion, InferenceRequest, BirthyearRequest, ForcingRequest
 from vocabulary import Vocabulary
 from validate import validate_model_name
 from sklearn.neighbors import NearestNeighbors
@@ -243,3 +243,10 @@ async def birthyear(request: BirthyearRequest):
         json=jsonable_encoder(request)
     )
     return response.json()
+
+@app.post("/v0/model/{model_name}/forcing")
+async def forcing(model_name: str, request: ForcingRequest):
+    return requests.post(
+        DEEP_URL_HTTP + "/model/" + model_name + "/forcing",
+        json=jsonable_encoder(request),
+    ).json()
