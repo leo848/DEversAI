@@ -19,10 +19,10 @@ from models import (
     InferenceResponse,
     LogitsRequest,
     BirthyearStats,
-    ForcedTokenStep,
+    ForcingTokenStep,
     ForcedAlternativeToken,
     ForcedSequenceRequest,
-    ForcedSequenceResponse
+    ForcingSequenceResponse
 )
 from vocabulary import Vocabulary
 from gpt import GPT
@@ -92,7 +92,7 @@ async def async_infer(model_name: str, input_tensor):
 
 def analyze_logits_for_target(
     logits_vector: torch.Tensor, target_token_id: int
-) -> ForcedTokenStep:
+) -> ForcingTokenStep:
     log_probs = F.log_softmax(logits_vector, dim=-1)
 
     target_log_prob = log_probs[target_token_id].item()
@@ -107,7 +107,7 @@ def analyze_logits_for_target(
         for token_id, log_prob in zip(top_token_ids, top_log_probs)
     ]
 
-    return ForcedTokenStep(
+    return ForcingTokenStep(
         logit=target_log_prob,
         k=rank,
         alternatives=alternatives
@@ -127,7 +127,7 @@ async def model_logits(model_id: str, request: LogitsRequest) -> LogitsResponse:
     return LogitsResponse(logits=logits[0][0])  # Adjust indexing based on model output
 
 @app.post("/model/{model_id}/forcing")
-async def forcing(model_id: str, request: ForcedSequenceRequest) -> ForcedSequenceResponse:
+async def forcing(model_id: str, request: ForcedSequenceRequest) -> ForcingSequenceResponse:
     if model_id not in MODELS:
         raise HTTPException(status_code=404, detail="Model not found")
 
@@ -162,7 +162,7 @@ async def forcing(model_id: str, request: ForcedSequenceRequest) -> ForcedSequen
             step_results.append(step_result)
             total_logprob += step_result.logit
 
-    return ForcedSequenceResponse(
+    return ForcingSequenceResponse(
         total_logprob=total_logprob,
         steps=step_results
     )

@@ -76,11 +76,11 @@ class ForcedAlternativeToken(BaseModel):
     token_id: int
     logit: float
 
-class ForcedTokenStep(BaseModel):
+class ForcingTokenStep(BaseModel):
     logit: float
     k: int
     alternatives: list[ForcedAlternativeToken]
 
-class ForcedSequenceResponse(BaseModel):
+class ForcingSequenceResponse(BaseModel):
     total_logprob: float
-    steps: list[ForcedTokenStep]
+    steps: list[ForcingTokenStep]
