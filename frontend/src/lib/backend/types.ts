@@ -113,3 +113,4 @@ export const ForcedResponse = z.object({
 		})),
 	}))
 })
+export type ForcedResponse = z.infer<typeof ForcedResponse>;
