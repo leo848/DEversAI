@@ -46,7 +46,7 @@
 		</div>
 		<div class="opacity-50">
 			<div class="text-2xl xl:col-span-1">Tag</div>
-			<input type="number" bind:value={inputDay} />
+			<input bind:value={inputDay} />
 			<select bind:value={inputMonth}>
 				{#each germanMonths as month}
 					<option value={month}>{month}</option>
@@ -95,8 +95,10 @@
 			</div>
 			{#if data != null}
 				<div class="text-sm opacity-50 mt-4">
-					Anteil gültiger Ausgaben nach Token-Filter
-					<span>{(data.prob_sum * 100).toFixed(1)}%</span>
+					Anteil gültiger Ausgaben:
+					<span>{(100 - data.discarded_prob_ratio * 100).toFixed(2)}%</span>,
+					gefiltert: 
+					<span>{(data.prob_sum * 100).toFixed(2)}%</span>
 				</div>
 			{/if}
 		</div>

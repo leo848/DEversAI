@@ -93,5 +93,6 @@ export const BirthyearResponse = z.object({
 		skew: z.number(),
 	}),
 	prob_sum: z.number(),
+	discarded_prob_ratio: z.number(),
 })
 export type BirthyearResponse = z.infer<typeof BirthyearResponse>;
