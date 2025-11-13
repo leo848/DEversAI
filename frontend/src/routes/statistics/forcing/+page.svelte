@@ -11,13 +11,17 @@
 	const client = new Client();
 
 	let inputText: string = $state('Es war einmal ein Kind');
-	let tokens = $derived(fineweb2.tokenize(inputText));
+	let tokens = $state([]);
+	$effect(() => {
+		tokens = fineweb2.tokenize(inputText);
+	})
 
 	let styleOptions = $state({ coloringRoot: 4 });
 	let modelId = $state("-fw2");
+	let causality: "causal" | "anticausal" = $state("causal");
 
 	let data: null | ForcingResponse = $state(null);
-	let old: { tokens: Token[] } = $state({ tokens: [] });
+	let old: { tokens: Token[], causality: "causal" | "anticausal" } = $state({ tokens: [], causality: "causal" });
 
 	let scratchpadTokens: Token[] = $state([]);
 
@@ -31,8 +35,10 @@
 	async function refreshData() {
 		loading = true;
 		try {
-			data = await client.modelForcing('causal' + modelId, tokens);
+			let tokensOrdered = causality == "causal" ? tokens : tokens.toReversed();
+			data = await client.modelForcing(causality + modelId, tokensOrdered);
 			old.tokens = tokens;
+			old.causality = causality;
 			scratchpadTokens = [];
 		} finally {
 			loading = false;
@@ -58,6 +64,11 @@
 					<option value="-fw2-gutenberg1"> FineWeb (2) / Finetune Gutenberg </option>
 					<option value="-fw2-wikipedia1"> FineWeb (2) / Finetune Wikipedia </option>
 				</select>
+				<div class="mt-4">Kausalität</div>
+				<select bind:value={causality}>
+					<option value="causal"> kausal </option>
+					<option value="anticausal"> antikausal </option>
+				</select>
 			</BorderSection>
 		</div>
 		<div class="col-span-12 xl:col-span-8 w-full">
@@ -79,9 +90,10 @@
 			<BorderSection title="Tokens">
 				<div class="flex flex-row flex-wrap gap-y-2">
 					{#each tokens as token, tokenIndex}
+						{@const stepIndex = old.causality == "causal" ? tokenIndex - 1 : tokens.length - tokenIndex - 2}
 						{@const hueValue =
-							data && tokenIndex > 0 && tokensUpdated
-								? Math.exp(data.steps[tokenIndex - 1].logit) ** (1 / styleOptions.coloringRoot)
+							data && stepIndex >= 0 && tokensUpdated
+								? Math.exp(data.steps[stepIndex].logit) ** (1 / styleOptions.coloringRoot)
 								: 0}
 						<TokenComponent {token} {hueValue} />
 					{/each}
@@ -111,16 +123,17 @@
 						<div class="col-span-4 xl:col-span-8"><b>Alternativen</b></div>
 						{#each old.tokens as token, tokenIndex}
 							<div class="col-span-2"><TokenComponent {token} /></div>
-							{#if tokenIndex == 0}
+							{#if old.causality == "causal" && tokenIndex == 0 || old.causality == "anticausal" && tokenIndex == old.tokens.length - 1}
 								<div class="col-span-6 xl:col-span-10">–</div>
 							{:else}
-								{@const step = data.steps[tokenIndex - 1]}
-								{@const altTokens = step.alternatives}
+								{@const stepIndex = old.causality == "causal" ? tokenIndex - 1 : data.steps.length - tokenIndex - 1}
+								{@const step = data.steps[stepIndex]}
+								{@const altTokens = step?.alternatives ?? []}
 								<div class="col-span-1">
-									{(Math.exp(step.logit) * 100).toFixed(2)}%
+									{(Math.exp(step?.logit ?? 0) * 100).toFixed(2)}%
 								</div>
 								<div class="col-span-1">
-									{step.k + 1}
+									{(step?.k ?? -2) + 1}
 								</div>
 								<div class="col-span-4 flex flex-row gap-2 overflow-x-scroll xl:col-span-8">
 									{#each altTokens as { token_id, logit }}
@@ -140,7 +153,7 @@
 		{/if}
 
 		{#if scratchpadTokens.length}
-			<div class="w-full">
+			<div class="w-full scratchpad">
 				<textarea disabled value={scratchpadTokens.map((token) => token.toString()).join('')}
 				></textarea>
 			</div>
