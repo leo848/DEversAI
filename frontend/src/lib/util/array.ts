@@ -23,6 +23,10 @@ export function shuffleArray<T>(arr: T[]): T[] {
 	return array;
 }
 
+export function randomChoose<T>(arr: T[]): T {
+	return arr[Math.floor(Math.random() * arr.length)];
+}
+
 export function sortByKey<T, K = T>(
 	arr: T[],
 	key: (element: T) => K,

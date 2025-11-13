@@ -7,10 +7,12 @@
 	import TokenComponent from '$lib/components/Token.svelte';
 	import type { Token } from '$lib/tokenizing/token';
 	import BorderSection from '$lib/components/BorderSection.svelte';
+	import { randomChoose } from '$lib/util/array';
+	import { shorterGermanTextExamples } from '$lib/util/examples';
 
 	const client = new Client();
 
-	let inputText: string = $state('Es war einmal ein Kind');
+	let inputText: string = $state(randomChoose(shorterGermanTextExamples));
 	let tokens: Token[] = $state([]);
 	$effect(() => {
 		tokens = fineweb2.tokenize(inputText);
