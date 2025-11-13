@@ -11,7 +11,7 @@
 	const client = new Client();
 
 	let inputText: string = $state('Es war einmal ein Kind');
-	let tokens = $state([]);
+	let tokens: Token[] = $state([]);
 	$effect(() => {
 		tokens = fineweb2.tokenize(inputText);
 	});
