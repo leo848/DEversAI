@@ -14,14 +14,17 @@
 	let tokens = $state([]);
 	$effect(() => {
 		tokens = fineweb2.tokenize(inputText);
-	})
+	});
 
 	let styleOptions = $state({ coloringRoot: 4 });
-	let modelId = $state("-fw2");
-	let causality: "causal" | "anticausal" = $state("causal");
+	let modelId = $state('-fw2');
+	let causality: 'causal' | 'anticausal' = $state('causal');
 
 	let data: null | ForcingResponse = $state(null);
-	let old: { tokens: Token[], causality: "causal" | "anticausal" } = $state({ tokens: [], causality: "causal" });
+	let old: { tokens: Token[]; causality: 'causal' | 'anticausal' } = $state({
+		tokens: [],
+		causality: 'causal'
+	});
 
 	let scratchpadTokens: Token[] = $state([]);
 
@@ -35,7 +38,7 @@
 	async function refreshData() {
 		loading = true;
 		try {
-			let tokensOrdered = causality == "causal" ? tokens : tokens.toReversed();
+			let tokensOrdered = causality == 'causal' ? tokens : tokens.toReversed();
 			data = await client.modelForcing(causality + modelId, tokensOrdered);
 			old.tokens = tokens;
 			old.causality = causality;
@@ -49,7 +52,7 @@
 <div class="m-4 flex flex-col gap-8 xl:mx-16">
 	<div class="text-4xl font-bold">Forcing</div>
 
-	<div class="grid grid-cols-12 w-full gap-4">
+	<div class="grid w-full grid-cols-12 gap-4">
 		<div class="col-span-12 xl:col-span-4">
 			<BorderSection title="Einstellungen">
 				<div class="w-8">
@@ -71,12 +74,12 @@
 				</select>
 			</BorderSection>
 		</div>
-		<div class="col-span-12 xl:col-span-8 w-full">
-			<textarea bind:value={inputText} class="rounded-lg w-full border-2 border-gray-200 h-full"></textarea>
+		<div class="col-span-12 w-full xl:col-span-8">
+			<textarea bind:value={inputText} class="h-full w-full rounded-lg border-2 border-gray-200"
+			></textarea>
 		</div>
 
-
-		<div class="w-full p-2 text-xl col-span-12" transition:slide={{ axis: 'y' }}>
+		<div class="col-span-12 w-full p-2 text-xl" transition:slide={{ axis: 'y' }}>
 			<button class="rounded bg-fire-400 p-2" disabled={loading} onclick={refreshData}>
 				{#if loading}
 					<EmergentSpinner />
@@ -90,7 +93,8 @@
 			<BorderSection title="Tokens">
 				<div class="flex flex-row flex-wrap gap-y-2">
 					{#each tokens as token, tokenIndex}
-						{@const stepIndex = old.causality == "causal" ? tokenIndex - 1 : tokens.length - tokenIndex - 2}
+						{@const stepIndex =
+							old.causality == 'causal' ? tokenIndex - 1 : tokens.length - tokenIndex - 2}
 						{@const hueValue =
 							data && stepIndex >= 0 && tokensUpdated
 								? Math.exp(data.steps[stepIndex].logit) ** (1 / styleOptions.coloringRoot)
@@ -101,7 +105,7 @@
 			</BorderSection>
 		</div>
 
-		<div class="col-span-4 xl:col-span-0"></div>
+		<div class="hidden xl:visible xl:col-span-4"></div>
 
 		{#if data != null}
 			<div class="col-span-12 md:col-span-4">
@@ -123,10 +127,11 @@
 						<div class="col-span-4 xl:col-span-8"><b>Alternativen</b></div>
 						{#each old.tokens as token, tokenIndex}
 							<div class="col-span-2"><TokenComponent {token} /></div>
-							{#if old.causality == "causal" && tokenIndex == 0 || old.causality == "anticausal" && tokenIndex == old.tokens.length - 1}
+							{#if (old.causality == 'causal' && tokenIndex == 0) || (old.causality == 'anticausal' && tokenIndex == old.tokens.length - 1)}
 								<div class="col-span-6 xl:col-span-10">–</div>
 							{:else}
-								{@const stepIndex = old.causality == "causal" ? tokenIndex - 1 : data.steps.length - tokenIndex - 1}
+								{@const stepIndex =
+									old.causality == 'causal' ? tokenIndex - 1 : data.steps.length - tokenIndex - 1}
 								{@const step = data.steps[stepIndex]}
 								{@const altTokens = step?.alternatives ?? []}
 								<div class="col-span-1">
@@ -140,7 +145,16 @@
 										{@const token = fineweb2.tokens[token_id]}
 										<TokenComponent
 											token={fineweb2.tokens[token_id]}
-											onclick={() => (scratchpadTokens = [...old.tokens.slice(0, tokenIndex), token])}
+											onclick={() => {
+												if (old.causality == 'causal') {
+													scratchpadTokens = [...old.tokens.slice(0, tokenIndex), token];
+												} else {
+													scratchpadTokens = [
+														...old.tokens.slice(tokenIndex + 1).toReversed(),
+														token
+													].toReversed();
+												}
+											}}
 											hueValue={Math.exp(logit) ** (1 / styleOptions.coloringRoot)}
 										/>
 									{/each}
@@ -153,9 +167,16 @@
 		{/if}
 
 		{#if scratchpadTokens.length}
-			<div class="w-full scratchpad">
-				<textarea disabled value={scratchpadTokens.map((token) => token.toString()).join('')}
-				></textarea>
+			<div class="col-span-12 xl:col-span-6">
+				<BorderSection title="Scratchpad">
+					<div class="scratchpad w-full">
+						<textarea
+							disabled
+							class="w-full rounded-lg border-2 border-gray-200"
+							value={scratchpadTokens.map((token) => token.toString()).join('')}
+						></textarea>
+					</div>
+				</BorderSection>
 			</div>
 		{/if}
 	</div>
