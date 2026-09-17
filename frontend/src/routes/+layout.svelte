@@ -28,9 +28,9 @@
 							alt="Jugend forscht logo"
 						/>
 					</a>
-					<div class="">Ein <b>jugend forscht</b>-Projekt von Leo Blume</div>
+					<div class="">Ein <b>jugend forscht</b>-Projekt von Lina Blume</div>
 					<div class="opacity-50">
-						Copyright &copy; 2024, 2025 Leo Blume. Der Quelltext des Projekts (Frontend und Backend)
+						Copyright &copy; 2024-2026 Lina Blume. Der Quelltext des Projekts (Frontend und Backend)
 						steht unter der GNU GPL v3-Lizenz und ist damit freie Software; er kann unter den
 						Bedingungen dieser Lizenz geteilt und/oder modifiziert werden.
 					</div>
